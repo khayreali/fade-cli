@@ -244,3 +244,65 @@ func TestResultForUnlocatedShop(t *testing.T) {
 		t.Error("a shop with no coordinates should get no walk time")
 	}
 }
+
+// The browse loop retries after an empty result set, so relax must always make
+// progress and must eventually report exhaustion. Without that the UI spins
+// forever with nothing on screen.
+func TestRelaxAlwaysTerminates(t *testing.T) {
+	openNow, maxPrice, showAll := true, 40, false
+
+	var notes []string
+	for i := 0; ; i++ {
+		if i > 20 {
+			t.Fatal("relax never reported exhaustion")
+		}
+		note, ok := relax(&openNow, &maxPrice, &showAll)
+		if !ok {
+			break
+		}
+		if note == "" {
+			t.Error("relaxed a filter without explaining why")
+		}
+		notes = append(notes, note)
+	}
+
+	if len(notes) != 3 {
+		t.Errorf("relaxed %d filters, want 3: %v", len(notes), notes)
+	}
+	if openNow || maxPrice != 0 || !showAll {
+		t.Errorf("filters not fully relaxed: openNow=%v maxPrice=%d showAll=%v", openNow, maxPrice, showAll)
+	}
+}
+
+func TestRelaxDropsOpenNowFirst(t *testing.T) {
+	// Open-now is the most likely culprit and the least destructive to drop:
+	// clearing a price cap the user typed is more surprising.
+	openNow, maxPrice, showAll := true, 40, false
+	if _, ok := relax(&openNow, &maxPrice, &showAll); !ok {
+		t.Fatal("expected a relaxation")
+	}
+	if openNow {
+		t.Error("open-now should be dropped first")
+	}
+	if maxPrice != 40 {
+		t.Errorf("price cap = %d, should be untouched on the first relax", maxPrice)
+	}
+}
+
+func TestRelaxExhaustedIsANoop(t *testing.T) {
+	openNow, maxPrice, showAll := false, 0, true
+	if note, ok := relax(&openNow, &maxPrice, &showAll); ok || note != "" {
+		t.Errorf("got (%q, %v), want exhausted", note, ok)
+	}
+}
+
+func TestCountUnpriced(t *testing.T) {
+	got := countUnpriced([]catalog.Result{
+		result("a", 1, true, 0, 0, 0),
+		result("b", 1, true, 40, 65, 0),
+		result("c", 1, true, 0, 0, 4.5),
+	})
+	if got != 2 {
+		t.Errorf("countUnpriced = %d, want 2", got)
+	}
+}

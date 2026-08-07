@@ -115,6 +115,7 @@ func (a *app) browse(raw *ui.Raw) error {
 	maxPrice, sel := a.state.Profile.MaxPrice, 0
 	showAll, openNow := false, false
 	sortBy := catalog.SortNearest
+	notice := "" // explains a filter that had to be dropped to show anything
 
 	for {
 		origin, label, err := a.resolveOrigin("")
@@ -124,9 +125,15 @@ func (a *app) browse(raw *ui.Raw) error {
 
 		results, within := a.walkableShops(origin, maxPrice, showAll, openNow, sortBy)
 		if len(results) == 0 {
-			// Only the price filter can empty the list, since the radius
-			// widens on its own. Drop it rather than showing a dead screen.
-			maxPrice = 0
+			// Relax one filter and retry. This must be guaranteed to run out:
+			// an earlier version just cleared the price cap on the assumption
+			// that nothing else could empty the list, which stopped being true
+			// when the open-now filter arrived and left the loop able to spin.
+			note, relaxed := relax(&openNow, &maxPrice, &showAll)
+			if !relaxed {
+				return errors.New("no shops in the catalog to show")
+			}
+			notice = note
 			continue
 		}
 
@@ -136,7 +143,13 @@ func (a *app) browse(raw *ui.Raw) error {
 		}
 		subtitle += " · " + sortBy.Label()
 		if maxPrice > 0 {
+			// A price cap keeps shops whose price nobody has published -- we
+			// can't claim they're over budget. Say so, or a list of unpriced
+			// shops reads as a broken filter.
 			subtitle += fmt.Sprintf(" under $%d", maxPrice)
+			if unpriced := countUnpriced(results); unpriced > 0 {
+				subtitle += fmt.Sprintf(" (+%d unpriced)", unpriced)
+			}
 		}
 		if openNow {
 			subtitle += ", open now"
@@ -153,9 +166,16 @@ func (a *app) browse(raw *ui.Raw) error {
 			allLabel = "nearby only"
 		}
 
+		hint := ""
+		if notice != "" {
+			hint = ui.Yellow("! " + notice)
+			notice = ""
+		}
+
 		list := &ui.List{
 			Title:    "Near " + label,
 			Subtitle: subtitle,
+			Hint:     hint,
 			Rows:     rows,
 			Right:    right,
 			Height:   min(12, len(results)),
@@ -237,6 +257,37 @@ func (a *app) walkableShops(origin *geo.Point, maxPrice int, showAll, openNow bo
 
 	q.MaxMiles = 0
 	return a.cat.Find(q), 0
+}
+
+// countUnpriced reports how many results carry no published price.
+func countUnpriced(results []catalog.Result) int {
+	n := 0
+	for _, r := range results {
+		if r.Shop.PriceMin == 0 && r.Shop.PriceMax == 0 {
+			n++
+		}
+	}
+	return n
+}
+
+// relax drops one filter so an empty result set can recover, returning a note
+// for the user and whether anything was actually relaxed. The false return is
+// what guarantees the browse loop terminates: every call either changes state
+// or reports that there is nothing left to change.
+func relax(openNow *bool, maxPrice *int, showAll *bool) (string, bool) {
+	switch {
+	case *openNow:
+		*openNow = false
+		return "nothing open right now -- showing every shop", true
+	case *maxPrice > 0:
+		*maxPrice = 0
+		return "nothing under that price -- price filter cleared", true
+	case !*showAll:
+		*showAll = true
+		return "nothing nearby -- widened to the whole directory", true
+	default:
+		return "", false
+	}
 }
 
 // browseTable builds the browse rows, dropping any column that carries no
