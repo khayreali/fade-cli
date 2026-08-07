@@ -33,36 +33,40 @@ FLAGS
 		return nil
 	}
 
-	changed := false
-	if *setHome != "" {
+	// Apply flags the user actually typed, not flags with a non-empty value.
+	// Inferring intent from the value makes every zero and empty string
+	// unsettable, so `--set-interval 0` -- documented as "learn it from
+	// history" -- silently did nothing.
+	set := map[string]bool{}
+	fs.Visit(func(f *flag.Flag) { set[f.Name] = true })
+	changed := len(set) > 0
+
+	if set["set-home"] {
 		stop, ok := geo.StopByID(*setHome)
 		if !ok {
 			return fmt.Errorf("unknown stop %q -- run `fade-cli stops` to see them", *setHome)
 		}
 		a.state.Profile.HomeStop = stop.ID
 		a.state.Profile.HomePoint = nil // an explicit stop supersedes an old point
-		changed = true
 	}
-	for _, set := range []struct {
-		val *string
-		dst *string
+	for _, f := range []struct {
+		name string
+		val  *string
+		dst  *string
 	}{
-		{setName, &a.state.Profile.Name},
-		{setPhone, &a.state.Profile.Phone},
-		{setEmail, &a.state.Profile.Email},
+		{"set-name", setName, &a.state.Profile.Name},
+		{"set-phone", setPhone, &a.state.Profile.Phone},
+		{"set-email", setEmail, &a.state.Profile.Email},
 	} {
-		if *set.val != "" {
-			*set.dst = *set.val
-			changed = true
+		if set[f.name] {
+			*f.dst = *f.val
 		}
 	}
-	if *setMax > 0 {
+	if set["set-max-price"] {
 		a.state.Profile.MaxPrice = *setMax
-		changed = true
 	}
-	if fs.Lookup("set-interval").Value.String() != "0" {
+	if set["set-interval"] {
 		a.state.Profile.IntervalDays = *setInterval
-		changed = true
 	}
 
 	if changed {

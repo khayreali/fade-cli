@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"io"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -341,5 +342,62 @@ func TestOpenCellReportsClosed(t *testing.T) {
 	unknown := catalog.Shop{}
 	if got := openCell(unknown, fri); got != "—" {
 		t.Errorf("unknown hours rendered %q, want the placeholder", got)
+	}
+}
+
+// quiet swaps stdout for the duration of fn, so command tests don't spray
+// their tables through the test log.
+func quiet(t *testing.T, fn func()) {
+	t.Helper()
+	old := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stdout = w
+	done := make(chan struct{})
+	go func() { io.Copy(io.Discard, r); close(done) }()
+	defer func() { w.Close(); <-done; os.Stdout = old }()
+	fn()
+}
+
+// Zero and empty are meaningful values here -- "0" means "learn the interval
+// from history" -- so applying flags by value made those settings unclearable.
+func TestMeAppliesOnlyFlagsActuallyTyped(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("FADE_HOME", dir)
+
+	run := func(args ...string) {
+		a, err := newApp()
+		if err != nil {
+			t.Fatal(err)
+		}
+		quiet(t, func() {
+			if err := a.me(args); err != nil {
+				t.Fatalf("me %v: %v", args, err)
+			}
+		})
+	}
+
+	run("--set-home", "graham", "--set-max-price", "45", "--set-interval", "14", "--set-name", "Kh")
+	a, _ := newApp()
+	if a.state.Profile.MaxPrice != 45 || a.state.Profile.IntervalDays != 14 || a.state.Profile.Name != "Kh" {
+		t.Fatalf("setup failed: %+v", a.state.Profile)
+	}
+
+	run("--set-max-price", "0", "--set-interval", "0", "--set-name", "")
+	a, _ = newApp()
+	if a.state.Profile.MaxPrice != 0 {
+		t.Errorf("max price = %d, want cleared", a.state.Profile.MaxPrice)
+	}
+	if a.state.Profile.IntervalDays != 0 {
+		t.Errorf("interval = %d, want cleared", a.state.Profile.IntervalDays)
+	}
+	if a.state.Profile.Name != "" {
+		t.Errorf("name = %q, want cleared", a.state.Profile.Name)
+	}
+	// Untyped flags must not be disturbed by the ones that were typed.
+	if a.state.Profile.HomeStop != "graham" {
+		t.Errorf("home stop = %q, want graham", a.state.Profile.HomeStop)
 	}
 }
