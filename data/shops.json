@@ -431,7 +431,16 @@
         "kind": "fresha",
         "id": "otis-finn-williamsburg-new-york-154-grand-street-hwi5s0hz",
         "url": "https://www.fresha.com/a/otis-finn-williamsburg-new-york-154-grand-street-hwi5s0hz"
-      }
+      },
+      "hours": {
+        "tue": "11:00-20:00",
+        "wed": "11:00-20:00",
+        "thu": "11:00-20:00",
+        "fri": "11:00-20:00",
+        "sat": "10:00-18:00"
+      },
+      "price_min": 55,
+      "price_max": 55
     },
     {
       "id": "savant-williamsburg",
@@ -449,7 +458,13 @@
         "kind": "fresha",
         "id": "savant-williamsburg-new-york-221-south-4th-street-hx37oogb",
         "url": "https://www.fresha.com/a/savant-williamsburg-new-york-221-south-4th-street-hx37oogb"
-      }
+      },
+      "hours": {
+        "wed": "10:00-18:00",
+        "sat": "09:00-15:00",
+        "sun": "09:00-15:00"
+      },
+      "price_min": 35
     },
     {
       "id": "cabello-brooklyn",
@@ -467,7 +482,16 @@
         "kind": "fresha",
         "id": "cabello-brooklyn-new-york-476-humboldt-st-dd7oeem2",
         "url": "https://www.fresha.com/a/cabello-brooklyn-new-york-476-humboldt-st-dd7oeem2"
-      }
+      },
+      "hours": {
+        "mon": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "fri": "10:00-19:00",
+        "sat": "10:00-17:00"
+      },
+      "price_min": 55
     },
     {
       "id": "monteman-barber",
@@ -726,7 +750,16 @@
         "kind": "fresha",
         "id": "otis-finn-greenpoint-new-york-197-franklin-street-gm4oa9q3",
         "url": "https://www.fresha.com/a/otis-finn-greenpoint-new-york-197-franklin-street-gm4oa9q3"
-      }
+      },
+      "hours": {
+        "tue": "11:00-20:00",
+        "wed": "11:00-20:00",
+        "thu": "11:00-20:00",
+        "fri": "11:00-20:00",
+        "sat": "10:00-18:00"
+      },
+      "price_min": 55,
+      "price_max": 55
     },
     {
       "id": "land-of-barbers",
