@@ -43,8 +43,12 @@ what's nearby. Arrow keys move, enter selects.
 
     1–12 of 33
 
-  ↑↓ move   ⏎ select   f price   a show all   o open now   c stop   h history   q quit
+  ↑↓ move   ⏎ select   f price   a show all   o open now   s sort   c stop   h history   q quit
 ```
+
+`s` cycles the ordering between nearest, cheapest and best-rated. Shops with no
+price or no rating always sort last — a missing value never wins a ranking by
+looking like a zero.
 
 Shops with known hours are marked ● open / ○ closed, and `o` narrows to what's
 open right now. Hours are evaluated in New York time regardless of your
@@ -94,6 +98,7 @@ The flag interface is still there, and it's faster when you know the shop:
 ```sh
 fade-cli again                          # rebook wherever you went last
 fade-cli find --under 45 --min-rating 4.9
+fade-cli find --sort cheapest           # or: rated, nearest (default)
 fade-cli find --to montrose --collapse  # one row per address
 fade-cli slots --near graham --day fri  # sweep every shop in range at once
 fade-cli book "power of barbers"

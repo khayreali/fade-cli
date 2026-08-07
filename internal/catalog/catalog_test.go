@@ -309,3 +309,99 @@ func TestGreenpointHasPricesAndRatings(t *testing.T) {
 		t.Errorf("only %d of %d Greenpoint shops have a rating", rated, len(got))
 	}
 }
+
+func TestSortCheapestPutsUnknownPricesLast(t *testing.T) {
+	c := load(t)
+	got := c.Find(Query{Sort: SortCheapest})
+	if len(got) < 10 {
+		t.Fatalf("only %d results", len(got))
+	}
+
+	var seenUnknown bool
+	last := 0
+	for _, r := range got {
+		p := r.Shop.PriceMin
+		if p == 0 {
+			seenUnknown = true
+			continue
+		}
+		// A priced shop after an unpriced one means zero sorted as "cheapest".
+		if seenUnknown {
+			t.Fatalf("%s ($%d) ranked below a shop with no price", r.Shop.ID, p)
+		}
+		if p < last {
+			t.Errorf("%s ($%d) out of order after $%d", r.Shop.ID, p, last)
+		}
+		last = p
+	}
+	if !seenUnknown {
+		t.Skip("every shop has a price; nothing to check")
+	}
+}
+
+func TestSortBestRatedPutsUnratedLast(t *testing.T) {
+	c := load(t)
+	got := c.Find(Query{Sort: SortBestRated})
+
+	var seenUnrated bool
+	last := 5.1
+	for _, r := range got {
+		v := r.Shop.Rating
+		if v == 0 {
+			seenUnrated = true
+			continue
+		}
+		if seenUnrated {
+			t.Fatalf("%s (%.1f) ranked below an unrated shop", r.Shop.ID, v)
+		}
+		if v > last {
+			t.Errorf("%s (%.1f) out of order after %.1f", r.Shop.ID, v, last)
+		}
+		last = v
+	}
+}
+
+func TestSortDefaultStaysNearest(t *testing.T) {
+	c := load(t)
+	graham, _ := geo.StopByID("graham")
+	got := c.Find(Query{Origin: &graham.Point, MaxMiles: 1.0})
+	for i := 1; i < len(got); i++ {
+		if got[i-1].Miles > got[i].Miles {
+			t.Fatalf("default sort is no longer by distance: %.3f before %.3f", got[i-1].Miles, got[i].Miles)
+		}
+	}
+}
+
+func TestSortCycles(t *testing.T) {
+	seen := map[SortBy]bool{}
+	s := SortNearest
+	for i := 0; i < 3; i++ {
+		seen[s] = true
+		if s.Label() == "" {
+			t.Errorf("%q has no label", s)
+		}
+		s = s.Next()
+	}
+	if s != SortNearest {
+		t.Errorf("cycle did not return to the default, ended at %q", s)
+	}
+	if len(seen) != 3 {
+		t.Errorf("cycle covered %d sorts, want 3", len(seen))
+	}
+}
+
+// Ties break on distance: two equally cheap shops should list the nearer first.
+func TestSortCheapestBreaksTiesByDistance(t *testing.T) {
+	c := load(t)
+	graham, _ := geo.StopByID("graham")
+	got := c.Find(Query{Origin: &graham.Point, Sort: SortCheapest})
+	for i := 1; i < len(got); i++ {
+		a, b := got[i-1], got[i]
+		if a.Shop.PriceMin == b.Shop.PriceMin && a.Shop.PriceMin != 0 {
+			if a.Miles > b.Miles {
+				t.Errorf("equal prices not tie-broken by distance: %s (%.2f) before %s (%.2f)",
+					a.Shop.ID, a.Miles, b.Shop.ID, b.Miles)
+			}
+		}
+	}
+}

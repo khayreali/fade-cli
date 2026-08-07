@@ -2,6 +2,7 @@ package geo
 
 import (
 	"math"
+	"strings"
 	"testing"
 )
 
@@ -121,5 +122,16 @@ func TestCorridorByID(t *testing.T) {
 func TestStopByIDMiss(t *testing.T) {
 	if _, ok := StopByID("bedford-ave"); ok {
 		t.Error("StopByID matched a non-existent id")
+	}
+}
+
+// Naming only the first and last corridor hid Greenpoint once Ridgewood was
+// added. Every corridor in the service area must appear in the header.
+func TestAreaNameNamesEveryCorridor(t *testing.T) {
+	got := AreaName()
+	for _, c := range Corridors {
+		if !strings.Contains(got, c.Name) {
+			t.Errorf("AreaName() = %q, missing corridor %q", got, c.Name)
+		}
 	}
 }

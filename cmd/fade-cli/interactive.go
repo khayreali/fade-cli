@@ -114,6 +114,7 @@ const enoughShops = 6
 func (a *app) browse(raw *ui.Raw) error {
 	maxPrice, sel := a.state.Profile.MaxPrice, 0
 	showAll, openNow := false, false
+	sortBy := catalog.SortNearest
 
 	for {
 		origin, label, err := a.resolveOrigin("")
@@ -121,7 +122,7 @@ func (a *app) browse(raw *ui.Raw) error {
 			return err
 		}
 
-		results, within := a.walkableShops(origin, maxPrice, showAll, openNow)
+		results, within := a.walkableShops(origin, maxPrice, showAll, openNow, sortBy)
 		if len(results) == 0 {
 			// Only the price filter can empty the list, since the radius
 			// widens on its own. Drop it rather than showing a dead screen.
@@ -133,6 +134,7 @@ func (a *app) browse(raw *ui.Raw) error {
 		if within > 0 {
 			subtitle = fmt.Sprintf("%s within a %d min walk", plural(len(results), "shop"), within)
 		}
+		subtitle += " · " + sortBy.Label()
 		if maxPrice > 0 {
 			subtitle += fmt.Sprintf(" under $%d", maxPrice)
 		}
@@ -161,6 +163,7 @@ func (a *app) browse(raw *ui.Raw) error {
 				{Key: "f", Label: "price"},
 				{Key: "a", Label: allLabel},
 				{Key: "o", Label: openLabel(openNow)},
+				{Key: "s", Label: "sort"},
 				{Key: "c", Label: "stop"},
 				{Key: "h", Label: "history"},
 				{Key: "q", Label: "quit"},
@@ -191,6 +194,9 @@ func (a *app) browse(raw *ui.Raw) error {
 		case got.Cmd == "o":
 			openNow = !openNow
 			sel = 0
+		case got.Cmd == "s":
+			sortBy = sortBy.Next()
+			sel = 0
 		case got.Cmd == "h":
 			if err := a.historyScreen(raw, origin, label); err != nil {
 				if errors.Is(err, errAborted) {
@@ -214,8 +220,8 @@ func (a *app) browse(raw *ui.Raw) error {
 // sorted by distance buries the eight shops you'd actually walk to under
 // thirty you wouldn't, so the default is a radius that widens only when the
 // neighborhood is genuinely sparse.
-func (a *app) walkableShops(origin *geo.Point, maxPrice int, showAll, openNow bool) ([]catalog.Result, int) {
-	q := catalog.Query{Origin: origin, MaxPrice: maxPrice, CollapseBy: "venue"}
+func (a *app) walkableShops(origin *geo.Point, maxPrice int, showAll, openNow bool, by catalog.SortBy) ([]catalog.Result, int) {
+	q := catalog.Query{Origin: origin, MaxPrice: maxPrice, CollapseBy: "venue", Sort: by}
 	if openNow {
 		q.OpenAt = time.Now()
 	}

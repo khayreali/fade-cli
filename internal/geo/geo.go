@@ -4,7 +4,10 @@
 // adding corridors.
 package geo
 
-import "math"
+import (
+	"math"
+	"strings"
+)
 
 // Point is a WGS84 coordinate.
 type Point struct {
@@ -117,16 +120,18 @@ func CorridorByID(id string) (Corridor, bool) {
 	return Corridor{}, false
 }
 
-// AreaName summarises the whole service area for headers.
+// AreaName summarises the whole service area for headers. It names every
+// corridor: joining just the first and last silently dropped the middle one
+// once there were three.
 func AreaName() string {
-	switch len(Corridors) {
-	case 0:
+	if len(Corridors) == 0 {
 		return "no service area"
-	case 1:
-		return Corridors[0].Name
-	default:
-		return Corridors[0].Name + " + " + Corridors[len(Corridors)-1].Name
 	}
+	names := make([]string, 0, len(Corridors))
+	for _, c := range Corridors {
+		names = append(names, c.Name)
+	}
+	return strings.Join(names, " + ")
 }
 
 const earthRadiusMi = 3958.8

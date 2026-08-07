@@ -32,6 +32,7 @@ FLAGS
 		kind      = fs.String("kind", "", "booking kind: booksy, fresha, square, link, phone")
 		from      = fs.String("from", "", "only shops from this stop onward")
 		to        = fs.String("to", "", "only shops up to this stop")
+		sortBy    = fs.String("sort", "", "order: nearest (default), cheapest, rated")
 		collapse  = fs.Bool("collapse", false, "one row per address, not per bookable barber")
 		limit     = fs.Int("limit", 20, "max rows to show (0 for all)")
 		asJSON    = fs.Bool("json", false, "emit JSON instead of a table")
@@ -54,6 +55,15 @@ FLAGS
 	}
 	if *collapse {
 		q.CollapseBy = "venue"
+	}
+	switch *sortBy {
+	case "", "nearest":
+	case "cheapest":
+		q.Sort = catalog.SortCheapest
+	case "rated":
+		q.Sort = catalog.SortBestRated
+	default:
+		return fmt.Errorf("unknown --sort %q -- use nearest, cheapest or rated", *sortBy)
 	}
 	if *kind != "" {
 		q.Kinds = []catalog.BookingKind{catalog.BookingKind(*kind)}

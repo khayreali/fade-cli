@@ -206,6 +206,7 @@ type Query struct {
 	FromStop   string // inclusive corridor range, by stop id
 	ToStop     string
 	Text       string
+	Sort       SortBy
 	CollapseBy string // "venue" to show one row per address
 }
 
@@ -281,7 +282,7 @@ func (c *Catalog) Find(q Query) []Result {
 	if q.CollapseBy == "venue" {
 		out = collapseByVenue(out)
 	}
-	sortResults(out, q.Origin != nil)
+	sortResults(out, q.Sort, q.Origin != nil)
 	return out
 }
 
@@ -351,13 +352,72 @@ func better(a, b Shop) bool {
 	return a.Reviews > b.Reviews
 }
 
-func sortResults(rs []Result, byDistance bool) {
+// SortBy names an ordering for results.
+type SortBy string
+
+const (
+	SortNearest   SortBy = ""         // default: closest first
+	SortCheapest  SortBy = "cheapest" // lowest starting price first
+	SortBestRated SortBy = "rated"    // highest rating first
+)
+
+// Label is the human phrase for a sort, for headers.
+func (s SortBy) Label() string {
+	switch s {
+	case SortCheapest:
+		return "cheapest first"
+	case SortBestRated:
+		return "best rated first"
+	default:
+		return "sorted by walk time"
+	}
+}
+
+// Next cycles through the sorts, for a UI that toggles with one key.
+func (s SortBy) Next() SortBy {
+	switch s {
+	case SortNearest:
+		return SortCheapest
+	case SortCheapest:
+		return SortBestRated
+	default:
+		return SortNearest
+	}
+}
+
+func sortResults(rs []Result, by SortBy, byDistance bool) {
+	// A shop with no price or no rating has nothing to rank on, and must not
+	// win a sort by looking like a zero. Unknowns go last in every ordering.
 	sort.SliceStable(rs, func(i, j int) bool {
 		a, b := rs[i], rs[j]
+
+		switch by {
+		case SortCheapest:
+			ap, bp := a.Shop.PriceMin, b.Shop.PriceMin
+			if (ap == 0) != (bp == 0) {
+				return bp == 0
+			}
+			if ap != bp && ap != 0 {
+				return ap < bp
+			}
+		case SortBestRated:
+			ar, br := a.Shop.Rating, b.Shop.Rating
+			if (ar == 0) != (br == 0) {
+				return br == 0
+			}
+			if ar != br {
+				return ar > br
+			}
+			if a.Shop.Reviews != b.Shop.Reviews {
+				return a.Shop.Reviews > b.Shop.Reviews
+			}
+		}
+
+		// Distance is the tie-breaker for every sort: given two equally cheap
+		// or equally rated shops, you want the nearer one.
 		if byDistance && a.HasOrigin && b.HasOrigin && a.Miles != b.Miles {
 			return a.Miles < b.Miles
 		}
-		// Located shops outrank unplaceable ones in a distance-sorted list.
 		if byDistance && a.HasOrigin != b.HasOrigin {
 			return a.HasOrigin
 		}
