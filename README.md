@@ -164,7 +164,7 @@ checking twenty shops costs one round trip rather than twenty.
 
 ## Known data gaps
 
-- **Opening hours cover 9 of 50 shops.** `o` filters to open-now and browse
+- **Opening hours cover 12 of 66 shops.** `o` filters to open-now and browse
   marks each shop ●/○, but only where hours are on file. A shop nobody has
   researched shows no marker at all — never a false "closed". Fresha venue
   pages carry a full week; Booksy renders only today's behind a JS toggle, so
@@ -172,9 +172,11 @@ checking twenty shops costs one round trip rather than twenty.
 - **Thin at the Bushwick end.** Bedford has 7 shops, Montrose 10, but Grand,
   Jefferson, and Halsey have 1 each — and those are mostly call-only listings
   with no price or rating.
-- **Ridgewood is breadth-only.** All 16 shops came from call-only listings with
-  no price, rating or hours anywhere findable. Browse drops both columns there,
-  which is the adaptive-column behaviour working, not a display bug.
+- **Ridgewood is thin at source.** 3 of 16 have hours and 1 has a price; the
+  rest are small independents whose only web presence is a phone listing.
+  Directory aggregators cover roughly a fifth of them, so further depth there
+  needs a different approach (calling, or shop-by-shop social media) rather
+  than more scraping.
 - **Greenpoint is partly priced.** 3 of 9 shops now carry a price and a rating;
   the rest publish neither anywhere findable. Booksy's Greenpoint search returns
   LIC and Manhattan results, so it was no help.
