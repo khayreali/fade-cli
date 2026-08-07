@@ -42,8 +42,12 @@ what's nearby. Arrow keys move, enter selects.
 
     1–12 of 33
 
-  ↑↓ move   ⏎ select   f price   a show all   c stop   h history   q quit
+  ↑↓ move   ⏎ select   f price   a show all   o open now   c stop   h history   q quit
 ```
+
+Shops with known hours are marked ● open / ○ closed, and `o` narrows to what's
+open right now. Hours are evaluated in New York time regardless of your
+machine's clock.
 
 Browse shows what's actually walkable — a 20-minute radius that widens on its
 own where the map is sparse — and `a` switches to the whole directory. Columns
@@ -154,8 +158,9 @@ checking twenty shops costs one round trip rather than twenty.
 
 ## Known data gaps
 
-- **No opening hours.** Nothing in the seed has them, so there's no "open now"
-  filter. This is the biggest gap and the most valuable thing to fill next.
+- **Opening hours cover 5 of 50 shops.** `o` filters to open-now and browse
+  marks each shop ●/○, but only where hours are on file. A shop nobody has
+  researched shows no marker at all — never a false "closed".
 - **Thin at the Bushwick end.** Bedford has 7 shops, Montrose 10, but Grand,
   Jefferson, and Halsey have 1 each — and those are mostly call-only listings
   with no price or rating.

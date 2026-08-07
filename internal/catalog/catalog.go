@@ -8,6 +8,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"fadecli/data"
 	"fadecli/internal/geo"
@@ -55,7 +56,10 @@ type Shop struct {
 	PriceMin  int      `json:"price_min,omitempty"`
 	PriceMax  int      `json:"price_max,omitempty"`
 	Tags      []string `json:"tags,omitempty"`
-	Booking   Booking  `json:"booking"`
+	// Hours is nil when nobody has looked them up, which is distinct from
+	// closed -- see the Hours doc comment.
+	Hours   Hours   `json:"hours,omitempty"`
+	Booking Booking `json:"booking"`
 }
 
 // Located reports whether the shop has usable coordinates. Unresolved shops
@@ -190,12 +194,15 @@ func (c *Catalog) Resolve(q string) (Shop, []Shop, error) {
 
 // Query is the filter set behind `fade-cli find`.
 type Query struct {
-	Origin     *geo.Point // nil means "don't distance-filter"
-	MaxMiles   float64
-	MaxPrice   int
-	MinRating  float64
-	Kinds      []BookingKind
-	Corridor   string // limit to one corridor by id
+	Origin    *geo.Point // nil means "don't distance-filter"
+	MaxMiles  float64
+	MaxPrice  int
+	MinRating float64
+	Kinds     []BookingKind
+	Corridor  string // limit to one corridor by id
+	// OpenAt keeps only shops open at this instant. Zero disables it. Shops
+	// with unknown hours are excluded rather than assumed open.
+	OpenAt     time.Time
 	FromStop   string // inclusive corridor range, by stop id
 	ToStop     string
 	Text       string
@@ -234,6 +241,11 @@ func (c *Catalog) Find(q Query) []Result {
 		}
 		if len(q.Kinds) > 0 && !containsKind(q.Kinds, s.Booking.Kind) {
 			continue
+		}
+		if !q.OpenAt.IsZero() {
+			if st, _ := s.Hours.OpenAt(q.OpenAt); st != StatusOpen {
+				continue
+			}
 		}
 
 		r := Result{Shop: s}

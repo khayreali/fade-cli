@@ -14,14 +14,14 @@
       },
       "rating": 4.9,
       "reviews": 757,
+      "rating_src": "booksy",
       "price_min": 80,
       "price_max": 145,
       "booking": {
         "kind": "booksy",
         "id": "215669",
         "url": "https://booksy.com/en-us/215669_gentlemen-s-barbershop_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "nicks-international",
@@ -34,17 +34,26 @@
       },
       "rating": 4.9,
       "reviews": 434,
+      "rating_src": "booksy",
       "price_min": 43,
       "price_max": 58,
       "tags": [
         "24hr"
       ],
+      "hours": {
+        "fri": "00:00-24:00",
+        "mon": "00:00-24:00",
+        "sat": "00:00-24:00",
+        "sun": "00:00-24:00",
+        "thu": "00:00-24:00",
+        "tue": "00:00-24:00",
+        "wed": "00:00-24:00"
+      },
       "booking": {
         "kind": "booksy",
         "id": "101282",
         "url": "https://booksy.com/en-us/101282_nick-s-international-barber-studio-24hrs_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "jack-of-all-fadez",
@@ -57,14 +66,14 @@
       },
       "rating": 5,
       "reviews": 178,
+      "rating_src": "booksy",
       "price_min": 30,
       "price_max": 50,
       "booking": {
         "kind": "booksy",
         "id": "285375",
         "url": "https://booksy.com/en-us/285375_jack-of-all-fadez_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "great-commission-jean-lopez",
@@ -77,14 +86,14 @@
       },
       "rating": 5,
       "reviews": 164,
+      "rating_src": "booksy",
       "price_min": 36,
       "price_max": 60,
       "booking": {
         "kind": "booksy",
         "id": "1123000",
         "url": "https://booksy.com/en-us/1123000_jean-lopez-the-great-commission-barbershop_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "great-commission-richard-wladimir",
@@ -97,14 +106,14 @@
       },
       "rating": 5,
       "reviews": 85,
+      "rating_src": "booksy",
       "price_min": 22,
       "price_max": 31,
       "booking": {
         "kind": "booksy",
         "id": "1218312",
         "url": "https://booksy.com/en-us/1218312_richard-wladimir-the-great-commission-barber-shop_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "uraga-barber-shop",
@@ -117,14 +126,14 @@
       },
       "rating": 5,
       "reviews": 129,
+      "rating_src": "booksy",
       "price_min": 50,
       "price_max": 95,
       "booking": {
         "kind": "booksy",
         "id": "1175113",
         "url": "https://booksy.com/en-us/1175113_uraga-barber-shop_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "shear-483",
@@ -137,14 +146,14 @@
       },
       "rating": 5,
       "reviews": 56,
+      "rating_src": "booksy",
       "price_min": 55,
       "price_max": 60,
       "booking": {
         "kind": "booksy",
         "id": "1130879",
         "url": "https://booksy.com/en-us/1130879_shear-483_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "power-of-barbers",
@@ -157,14 +166,14 @@
       },
       "rating": 5,
       "reviews": 89,
+      "rating_src": "booksy",
       "price_min": 40,
       "price_max": 65,
       "booking": {
         "kind": "booksy",
         "id": "1343107",
         "url": "https://booksy.com/en-us/1343107_power-of-barbers_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "fancy-barber-shop",
@@ -177,14 +186,14 @@
       },
       "rating": 5,
       "reviews": 12,
+      "rating_src": "booksy",
       "price_min": 19,
       "price_max": 38,
       "booking": {
         "kind": "booksy",
         "id": "1684218",
         "url": "https://booksy.com/en-us/1684218_franklin-ptel-barber-fancy-barber-shop_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "el-blue-barber",
@@ -197,14 +206,14 @@
       },
       "rating": 4.9,
       "reviews": 35,
+      "rating_src": "booksy",
       "price_min": 14,
       "price_max": 90,
       "booking": {
         "kind": "booksy",
         "id": "951035",
         "url": "https://booksy.com/en-us/951035_el-blue-barber_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "cutmaster-serkiyo",
@@ -217,14 +226,14 @@
       },
       "rating": 5,
       "reviews": 401,
+      "rating_src": "booksy",
       "price_min": 39,
       "price_max": 69,
       "booking": {
         "kind": "booksy",
         "id": "407333",
         "url": "https://booksy.com/en-us/407333_cutmaster-by-serkiyo_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "cutmaster-malvin",
@@ -237,14 +246,14 @@
       },
       "rating": 5,
       "reviews": 205,
+      "rating_src": "booksy",
       "price_min": 50,
       "price_max": 100,
       "booking": {
         "kind": "booksy",
         "id": "468305",
         "url": "https://booksy.com/en-us/468305_malvin-at-cut-master_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "cutmaster-maiki",
@@ -257,14 +266,14 @@
       },
       "rating": 5,
       "reviews": 203,
+      "rating_src": "booksy",
       "price_min": 30,
       "price_max": 60,
       "booking": {
         "kind": "booksy",
         "id": "840783",
         "url": "https://booksy.com/en-us/840783_maiki-barber-at-cutmaster_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "cutmaster-tivibbs",
@@ -277,14 +286,14 @@
       },
       "rating": 4.8,
       "reviews": 171,
+      "rating_src": "booksy",
       "price_min": 31,
       "price_max": 54,
       "booking": {
         "kind": "booksy",
         "id": "765734",
         "url": "https://booksy.com/en-us/765734_tivibbs_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "cutmaster-jordan",
@@ -297,14 +306,14 @@
       },
       "rating": 4.9,
       "reviews": 120,
+      "rating_src": "booksy",
       "price_min": 24,
       "price_max": 29,
       "booking": {
         "kind": "booksy",
         "id": "624602",
         "url": "https://booksy.com/en-us/624602_jordan-cutmaster_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "sammy-barber",
@@ -317,14 +326,14 @@
       },
       "rating": 5,
       "reviews": 35,
+      "rating_src": "booksy",
       "price_min": 15,
       "price_max": 30,
       "booking": {
         "kind": "booksy",
         "id": "1628079",
         "url": "https://booksy.com/en-us/1628079_sammy-barber_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "eraylin",
@@ -337,14 +346,14 @@
       },
       "rating": 5,
       "reviews": 60,
+      "rating_src": "booksy",
       "price_min": 34,
       "price_max": 56,
       "booking": {
         "kind": "booksy",
         "id": "1483416",
         "url": "https://booksy.com/en-us/1483416_eraylin_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "ronny-fade",
@@ -357,14 +366,14 @@
       },
       "rating": 5,
       "reviews": 81,
+      "rating_src": "booksy",
       "price_min": 25,
       "price_max": 38,
       "booking": {
         "kind": "booksy",
         "id": "1120978",
         "url": "https://booksy.com/en-us/1120978_ronny-fade_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "blanco-mens-concept",
@@ -377,14 +386,14 @@
       },
       "rating": 5,
       "reviews": 49,
+      "rating_src": "booksy",
       "price_min": 40,
       "price_max": 75,
       "booking": {
         "kind": "booksy",
         "id": "1057289",
         "url": "https://booksy.com/en-us/1057289_blanco-mens-concept_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "sharp-blade",
@@ -397,14 +406,14 @@
       },
       "rating": 5,
       "reviews": 23,
+      "rating_src": "booksy",
       "price_min": 30,
       "price_max": 85,
       "booking": {
         "kind": "booksy",
         "id": "469168",
         "url": "https://booksy.com/en-us/469168_sharp-blade_barber-shop_29902_brooklyn"
-      },
-      "rating_src": "booksy"
+      }
     },
     {
       "id": "otis-and-finn-williamsburg",
@@ -417,12 +426,12 @@
       },
       "rating": 5,
       "reviews": 21,
+      "rating_src": "fresha",
       "booking": {
         "kind": "fresha",
         "id": "otis-finn-williamsburg-new-york-154-grand-street-hwi5s0hz",
         "url": "https://www.fresha.com/a/otis-finn-williamsburg-new-york-154-grand-street-hwi5s0hz"
-      },
-      "rating_src": "fresha"
+      }
     },
     {
       "id": "savant-williamsburg",
@@ -435,12 +444,12 @@
       },
       "rating": 5,
       "reviews": 78,
+      "rating_src": "fresha",
       "booking": {
         "kind": "fresha",
         "id": "savant-williamsburg-new-york-221-south-4th-street-hx37oogb",
         "url": "https://www.fresha.com/a/savant-williamsburg-new-york-221-south-4th-street-hx37oogb"
-      },
-      "rating_src": "fresha"
+      }
     },
     {
       "id": "cabello-brooklyn",
@@ -453,12 +462,12 @@
       },
       "rating": 5,
       "reviews": 325,
+      "rating_src": "fresha",
       "booking": {
         "kind": "fresha",
         "id": "cabello-brooklyn-new-york-476-humboldt-st-dd7oeem2",
         "url": "https://www.fresha.com/a/cabello-brooklyn-new-york-476-humboldt-st-dd7oeem2"
-      },
-      "rating_src": "fresha"
+      }
     },
     {
       "id": "monteman-barber",
@@ -528,18 +537,20 @@
       "phone": "+17183963300",
       "booking": {
         "kind": "link",
-        "url": "https://filthyrichbarbershop.com/"
+        "url": "https://frbswilliamsburg.resurva.com/"
       }
     },
     {
       "id": "razor-doc",
       "name": "Razor Doc Barbershop",
-      "venue": "Williamsburg",
-      "address": "175 Broadway, Brooklyn, NY 11211",
+      "venue": "168 Johnson Ave",
+      "address": "168 Johnson Ave, Brooklyn, NY 11206",
       "point": {
-        "lat": 40.7101259,
-        "lon": -73.9624552
+        "lat": 40.7065021,
+        "lon": -73.9427402
       },
+      "phone": "+19173846001",
+      "price_min": 55,
       "booking": {
         "kind": "link",
         "url": "https://www.therazordoc.com/"
@@ -707,15 +718,15 @@
         "lat": 40.7335834,
         "lon": -73.9584331
       },
+      "phone": "+19293970153",
       "rating": 5,
       "reviews": 43,
+      "rating_src": "fresha",
       "booking": {
         "kind": "fresha",
         "id": "otis-finn-greenpoint-new-york-197-franklin-street-gm4oa9q3",
         "url": "https://www.fresha.com/a/otis-finn-greenpoint-new-york-197-franklin-street-gm4oa9q3"
-      },
-      "rating_src": "fresha",
-      "phone": "+19293970153"
+      }
     },
     {
       "id": "land-of-barbers",
@@ -741,13 +752,13 @@
         "lon": -73.9479776
       },
       "phone": "+17186750200",
-      "booking": {
-        "kind": "phone"
-      },
       "rating": 4.9,
       "rating_src": "google",
       "price_min": 35,
-      "price_max": 35
+      "price_max": 35,
+      "booking": {
+        "kind": "phone"
+      }
     },
     {
       "id": "the-248-barbershop",
@@ -773,6 +784,15 @@
         "lon": -73.9513557
       },
       "phone": "+19174008552",
+      "hours": {
+        "fri": "10:00-20:00",
+        "mon": "10:00-20:00",
+        "sat": "10:00-19:00",
+        "sun": "10:00-19:00",
+        "thu": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00"
+      },
       "booking": {
         "kind": "square",
         "url": "https://hairbossbarbershopny.com/"
@@ -788,6 +808,14 @@
         "lon": -73.9536015
       },
       "phone": "+13472277570",
+      "hours": {
+        "fri": "09:00-16:00",
+        "mon": "10:00-19:30",
+        "sun": "10:00-18:00",
+        "thu": "10:00-19:30",
+        "tue": "10:00-19:30",
+        "wed": "10:00-19:30"
+      },
       "booking": {
         "kind": "phone"
       }
@@ -802,11 +830,11 @@
         "lon": -73.9508418
       },
       "phone": "+17183831515",
+      "price_min": 14,
+      "price_max": 14,
       "booking": {
         "kind": "phone"
-      },
-      "price_min": 14,
-      "price_max": 14
+      }
     },
     {
       "id": "equilibrium-barbershop",
@@ -818,13 +846,22 @@
         "lon": -73.9457533
       },
       "phone": "+15169378838",
-      "booking": {
-        "kind": "phone"
-      },
       "rating": 4.7,
       "rating_src": "google",
       "price_min": 20,
-      "price_max": 30
+      "price_max": 30,
+      "hours": {
+        "fri": "09:30-19:00",
+        "mon": "09:30-19:00",
+        "sat": "09:30-19:00",
+        "sun": "09:30-19:00",
+        "thu": "09:30-19:00",
+        "tue": "09:30-19:00",
+        "wed": "09:30-19:00"
+      },
+      "booking": {
+        "kind": "phone"
+      }
     },
     {
       "id": "sir-edmonds",
@@ -835,10 +872,37 @@
         "lat": 40.7260863,
         "lon": -73.9524199
       },
+      "phone": "+19175997829",
       "booking": {
         "kind": "phone"
+      }
+    },
+    {
+      "id": "persons-of-interest-williamsburg",
+      "name": "Persons of Interest",
+      "venue": "84 Havemeyer St",
+      "address": "84 Havemeyer St, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7139461,
+        "lon": -73.9561983
       },
-      "phone": "+19175997829"
+      "rating": 4.6,
+      "rating_src": "google",
+      "price_min": 55,
+      "price_max": 55,
+      "hours": {
+        "fri": "12:00-21:00",
+        "mon": "12:00-21:00",
+        "sat": "11:00-19:00",
+        "sun": "11:00-19:00",
+        "thu": "13:00-21:00",
+        "tue": "13:00-21:00",
+        "wed": "12:00-21:00"
+      },
+      "booking": {
+        "kind": "link",
+        "url": "https://personsofinterest.us/"
+      }
     }
   ]
 }
