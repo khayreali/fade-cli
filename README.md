@@ -29,7 +29,7 @@ what's nearby. Arrow keys move, enter selects.
 
 ```
   ▌ Near Graham Av
-    33 shops · sorted by walk time
+    Williamsburg → Halsey St · 17 shops within a 20 min walk
 
      Monteman Barber                     5 min        ?  —
      Groomers and Pomade                 6 min        ?  —
@@ -42,8 +42,13 @@ what's nearby. Arrow keys move, enter selects.
 
     1–12 of 33
 
-  ↑↓ move   ⏎ select   f price   c stop   h history   q quit
+  ↑↓ move   ⏎ select   f price   a show all   c stop   h history   q quit
 ```
+
+Browse shows what's actually walkable — a 20-minute radius that widens on its
+own where the map is sparse — and `a` switches to the whole directory. Columns
+with nothing in them are dropped, so a neighborhood of call-only shops doesn't
+render a column of dashes.
 
 Selecting a shop gets you the detail screen — walk time, rating, price, how
 they book, and whether you've been before:

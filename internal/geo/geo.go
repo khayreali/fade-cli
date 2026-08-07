@@ -145,6 +145,13 @@ func WalkMinutes(a, b Point) int {
 	return int(math.Round(mi / walkMph * 60))
 }
 
+// MilesForWalkMinutes inverts WalkMinutes: the crow-flies radius that
+// corresponds to a given walking time, for turning "within 20 minutes" into
+// the distance filter the catalog understands.
+func MilesForWalkMinutes(minutes int) float64 {
+	return float64(minutes) / 60 * walkMph / gridFactor
+}
+
 // NearestStop returns the closest stop in any corridor.
 func NearestStop(p Point) Stop {
 	all := AllStops()
