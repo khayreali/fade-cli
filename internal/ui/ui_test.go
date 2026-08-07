@@ -106,7 +106,7 @@ func TestDuration(t *testing.T) {
 
 func TestStarsHandlesUnrated(t *testing.T) {
 	SetColor(false)
-	if got := Stars(0, 0); got != "--" {
+	if got := Stars(0, 0); got != "—" {
 		t.Errorf("Stars(0,0) = %q", got)
 	}
 	if got := Stars(4.9, 757); got != "4.9 (757)" {

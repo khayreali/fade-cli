@@ -79,7 +79,7 @@ func (s Shop) NearestStop() (geo.Stop, bool) {
 func (s Shop) PriceLabel() string {
 	switch {
 	case s.PriceMin == 0 && s.PriceMax == 0:
-		return "?"
+		return "—"
 	case s.PriceMin == s.PriceMax:
 		return fmt.Sprintf("$%d", s.PriceMin)
 	case s.PriceMax == 0:

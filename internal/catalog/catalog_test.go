@@ -187,7 +187,7 @@ func TestPriceLabel(t *testing.T) {
 		shop Shop
 		want string
 	}{
-		{Shop{}, "?"},
+		{Shop{}, "—"},
 		{Shop{PriceMin: 40, PriceMax: 65}, "$40-65"},
 		{Shop{PriceMin: 55, PriceMax: 55}, "$55"},
 		{Shop{PriceMin: 30}, "$30+"},

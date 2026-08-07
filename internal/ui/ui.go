@@ -191,7 +191,7 @@ func visibleWidth(s string) int {
 // scan at a glance than the number itself, and misaligns in many fonts.
 func Stars(rating float64, reviews int) string {
 	if rating == 0 {
-		return Dim("--")
+		return Dim("—")
 	}
 	s := fmt.Sprintf("%.1f", rating)
 	if reviews > 0 {

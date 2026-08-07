@@ -116,11 +116,11 @@ func (a *app) logList(args []string) error {
 	t := ui.NewTable("when", "shop", "barber", "paid", "rated")
 	t.RightAlign(3)
 	for _, c := range cuts {
-		paid := ui.Dim("--")
+		paid := ui.Dim("—")
 		if c.Total() > 0 {
 			paid = fmt.Sprintf("$%d", c.Total())
 		}
-		rated := ui.Dim("--")
+		rated := ui.Dim("—")
 		if c.Rating > 0 {
 			rated = ratingCell(c.Rating)
 		}
@@ -210,7 +210,7 @@ func ratingCell(r int) string {
 
 func dimIfEmpty(s string) string {
 	if strings.TrimSpace(s) == "" {
-		return ui.Dim("--")
+		return ui.Dim("—")
 	}
 	return s
 }

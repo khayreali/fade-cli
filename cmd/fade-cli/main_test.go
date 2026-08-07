@@ -306,3 +306,40 @@ func TestCountUnpriced(t *testing.T) {
 		t.Errorf("countUnpriced = %d, want 2", got)
 	}
 }
+
+// Every booking kind must produce a label. A kind added to the catalog without
+// one here silently rendered as "website", which is wrong for vagaro.
+func TestHandoffLabelCoversEveryKind(t *testing.T) {
+	for _, k := range []catalog.BookingKind{
+		catalog.KindBooksy, catalog.KindFresha, catalog.KindSquare, catalog.KindVagaro,
+	} {
+		shop := catalog.Shop{Booking: catalog.Booking{Kind: k}}
+		if got := handoffLabel(shop); got != string(k) {
+			t.Errorf("handoffLabel(%s) = %q, want %q", k, got, k)
+		}
+	}
+	phone := catalog.Shop{Phone: "+13475991874", Booking: catalog.Booking{Kind: catalog.KindPhone}}
+	if got := handoffLabel(phone); got != "(347) 599-1874" {
+		t.Errorf("phone label = %q", got)
+	}
+	if got := handoffLabel(catalog.Shop{Booking: catalog.Booking{Kind: catalog.KindLink}}); got != "website" {
+		t.Errorf("link label = %q", got)
+	}
+}
+
+// slots exists to answer "when can I get in", so a closed shop must say so.
+func TestOpenCellReportsClosed(t *testing.T) {
+	ui.SetColor(false)
+	// 23:00 UTC is 19:00 in New York, comfortably after a 16:00 close. Hours
+	// are shop-local, so a UTC hour is not the hour the shop experiences.
+	fri := time.Date(2026, time.August, 7, 23, 0, 0, 0, time.UTC)
+
+	closed := catalog.Shop{Hours: catalog.Hours{"fri": "09:00-16:00"}}
+	if got := openCell(closed, fri); !strings.Contains(got, "opens") {
+		t.Errorf("closed shop rendered %q, want an opening time", got)
+	}
+	unknown := catalog.Shop{}
+	if got := openCell(unknown, fri); got != "—" {
+		t.Errorf("unknown hours rendered %q, want the placeholder", got)
+	}
+}

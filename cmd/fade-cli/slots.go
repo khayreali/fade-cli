@@ -118,13 +118,15 @@ func printSlots(results []provider.ShopSlots) {
 
 	if len(handoffs) > 0 {
 		fmt.Println(ui.Bold("  Book these directly"))
-		t := ui.NewTable("shop", "price", "rating", "how").Indent("  ")
+		t := ui.NewTable("shop", "price", "rating", "when", "how").Indent("  ")
 		t.RightAlign(1)
+		now := time.Now()
 		for _, r := range handoffs {
 			t.Row(
 				r.Shop.Name,
 				priceCell(r.Shop),
 				ui.Stars(r.Shop.Rating, r.Shop.Reviews),
+				openCell(r.Shop, now),
 				ui.Dim(handoffLabel(r.Shop)),
 			)
 		}
@@ -172,14 +174,25 @@ func handoffLabel(s catalog.Shop) string {
 			return provider.PrettyPhone(s.Phone)
 		}
 		return "call"
-	case catalog.KindBooksy:
-		return "booksy"
-	case catalog.KindFresha:
-		return "fresha"
-	case catalog.KindSquare:
-		return "square"
+	case catalog.KindBooksy, catalog.KindFresha, catalog.KindSquare, catalog.KindVagaro:
+		return string(s.Booking.Kind)
 	default:
 		return "website"
+	}
+}
+
+// openCell says whether a shop is open right now. `slots` exists to answer
+// "when can I get in", so listing a shop that shut three hours ago without
+// saying so is the one thing this screen must not do.
+func openCell(s catalog.Shop, now time.Time) string {
+	label := s.Hours.StatusLabel(now)
+	switch st, _ := s.Hours.OpenAt(now); st {
+	case catalog.StatusOpen:
+		return ui.Green(label)
+	case catalog.StatusClosed:
+		return ui.Yellow(label)
+	default:
+		return ui.Dim("—")
 	}
 }
 

@@ -29,7 +29,7 @@ FLAGS
 		within    = fs.Float64("within", 0, "max distance in miles")
 		under     = fs.Int("under", 0, "max price for the cheapest cut, in dollars")
 		minRating = fs.Float64("min-rating", 0, "minimum star rating")
-		kind      = fs.String("kind", "", "booking kind: booksy, fresha, square, link, phone")
+		kind      = fs.String("kind", "", "booking kind: booksy, fresha, square, vagaro, link, phone")
 		from      = fs.String("from", "", "only shops from this stop onward")
 		to        = fs.String("to", "", "only shops up to this stop")
 		sortBy    = fs.String("sort", "", "order: nearest (default), cheapest, rated")
@@ -150,7 +150,7 @@ func printResults(results []catalog.Result, withDistance bool) {
 	t.RightAlign(1, 2)
 
 	for _, r := range results {
-		walk := ui.Dim("--")
+		walk := ui.Dim("—")
 		if r.HasOrigin {
 			walk = fmt.Sprintf("%d min", r.WalkMin)
 		}
