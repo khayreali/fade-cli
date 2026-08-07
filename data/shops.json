@@ -1,0 +1,807 @@
+{
+  "version": 1,
+  "area": "bk-north",
+  "area_name": "Brooklyn: L corridor + Greenpoint",
+  "shops": [
+    {
+      "id": "gentlemens-barbershop",
+      "name": "Gentlemen's Barbershop",
+      "venue": "205 Johnson Ave",
+      "address": "205 Johnson Ave, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7068719,
+        "lon": -73.9416642
+      },
+      "rating": 4.9,
+      "reviews": 757,
+      "price_min": 80,
+      "price_max": 145,
+      "booking": {
+        "kind": "booksy",
+        "id": "215669",
+        "url": "https://booksy.com/en-us/215669_gentlemen-s-barbershop_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "nicks-international",
+      "name": "Nick's International Barber Studio",
+      "venue": "222 Johnson Ave",
+      "address": "222 Johnson Ave, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7068822,
+        "lon": -73.9392247
+      },
+      "rating": 4.9,
+      "reviews": 434,
+      "price_min": 43,
+      "price_max": 58,
+      "tags": [
+        "24hr"
+      ],
+      "booking": {
+        "kind": "booksy",
+        "id": "101282",
+        "url": "https://booksy.com/en-us/101282_nick-s-international-barber-studio-24hrs_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "jack-of-all-fadez",
+      "name": "Jack Of All Fadez",
+      "venue": "222 Johnson Ave",
+      "address": "222 Johnson Ave, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7068822,
+        "lon": -73.9392247
+      },
+      "rating": 5,
+      "reviews": 178,
+      "price_min": 30,
+      "price_max": 50,
+      "booking": {
+        "kind": "booksy",
+        "id": "285375",
+        "url": "https://booksy.com/en-us/285375_jack-of-all-fadez_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "great-commission-jean-lopez",
+      "name": "Jean Lopez | The Great Commission",
+      "venue": "1070 Broadway",
+      "address": "1070 Broadway, Brooklyn, NY 11221",
+      "point": {
+        "lat": 40.6945885,
+        "lon": -73.9315184
+      },
+      "rating": 5,
+      "reviews": 164,
+      "price_min": 36,
+      "price_max": 60,
+      "booking": {
+        "kind": "booksy",
+        "id": "1123000",
+        "url": "https://booksy.com/en-us/1123000_jean-lopez-the-great-commission-barbershop_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "great-commission-richard-wladimir",
+      "name": "Richard Wladimir | The Great Commission",
+      "venue": "1070 Broadway",
+      "address": "1070 Broadway, Brooklyn, NY 11221",
+      "point": {
+        "lat": 40.6945885,
+        "lon": -73.9315184
+      },
+      "rating": 5,
+      "reviews": 85,
+      "price_min": 22,
+      "price_max": 31,
+      "booking": {
+        "kind": "booksy",
+        "id": "1218312",
+        "url": "https://booksy.com/en-us/1218312_richard-wladimir-the-great-commission-barber-shop_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "uraga-barber-shop",
+      "name": "Uraga Barber Shop",
+      "venue": "384 South 2nd St",
+      "address": "384 South 2nd Street, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7094979,
+        "lon": -73.9522214
+      },
+      "rating": 5,
+      "reviews": 129,
+      "price_min": 50,
+      "price_max": 95,
+      "booking": {
+        "kind": "booksy",
+        "id": "1175113",
+        "url": "https://booksy.com/en-us/1175113_uraga-barber-shop_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "shear-483",
+      "name": "SHEAR 483",
+      "venue": "483 Lorimer St",
+      "address": "483 Lorimer St, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7115091,
+        "lon": -73.9490578
+      },
+      "rating": 5,
+      "reviews": 56,
+      "price_min": 55,
+      "price_max": 60,
+      "booking": {
+        "kind": "booksy",
+        "id": "1130879",
+        "url": "https://booksy.com/en-us/1130879_shear-483_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "power-of-barbers",
+      "name": "Power Of Barbers",
+      "venue": "372 Union Ave",
+      "address": "372 Union Ave, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7115458,
+        "lon": -73.9509512
+      },
+      "rating": 5,
+      "reviews": 89,
+      "price_min": 40,
+      "price_max": 65,
+      "booking": {
+        "kind": "booksy",
+        "id": "1343107",
+        "url": "https://booksy.com/en-us/1343107_power-of-barbers_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "fancy-barber-shop",
+      "name": "Fancy Barber Shop (Franklin Ptel)",
+      "venue": "61 Graham Ave",
+      "address": "61 Graham Ave, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7036368,
+        "lon": -73.9427516
+      },
+      "rating": 5,
+      "reviews": 12,
+      "price_min": 19,
+      "price_max": 38,
+      "booking": {
+        "kind": "booksy",
+        "id": "1684218",
+        "url": "https://booksy.com/en-us/1684218_franklin-ptel-barber-fancy-barber-shop_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "el-blue-barber",
+      "name": "EL BLUE BARBER",
+      "venue": "1249 Myrtle Ave",
+      "address": "1249 Myrtle Ave, Brooklyn, NY 11221",
+      "point": {
+        "lat": 40.6978022,
+        "lon": -73.9288299
+      },
+      "rating": 4.9,
+      "reviews": 35,
+      "price_min": 14,
+      "price_max": 90,
+      "booking": {
+        "kind": "booksy",
+        "id": "951035",
+        "url": "https://booksy.com/en-us/951035_el-blue-barber_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "cutmaster-serkiyo",
+      "name": "Cutmaster By Serkiyo",
+      "venue": "681 Broadway",
+      "address": "681 Broadway, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7019819,
+        "lon": -73.9437808
+      },
+      "rating": 5,
+      "reviews": 401,
+      "price_min": 39,
+      "price_max": 69,
+      "booking": {
+        "kind": "booksy",
+        "id": "407333",
+        "url": "https://booksy.com/en-us/407333_cutmaster-by-serkiyo_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "cutmaster-malvin",
+      "name": "Malvin at Cutmaster",
+      "venue": "681 Broadway",
+      "address": "681 Broadway, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7019819,
+        "lon": -73.9437808
+      },
+      "rating": 5,
+      "reviews": 205,
+      "price_min": 50,
+      "price_max": 100,
+      "booking": {
+        "kind": "booksy",
+        "id": "468305",
+        "url": "https://booksy.com/en-us/468305_malvin-at-cut-master_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "cutmaster-maiki",
+      "name": "Maiki at Cutmaster",
+      "venue": "681 Broadway",
+      "address": "681 Broadway, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7019819,
+        "lon": -73.9437808
+      },
+      "rating": 5,
+      "reviews": 203,
+      "price_min": 30,
+      "price_max": 60,
+      "booking": {
+        "kind": "booksy",
+        "id": "840783",
+        "url": "https://booksy.com/en-us/840783_maiki-barber-at-cutmaster_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "cutmaster-tivibbs",
+      "name": "Tivibbs at Cutmaster",
+      "venue": "681 Broadway",
+      "address": "681 Broadway, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7019819,
+        "lon": -73.9437808
+      },
+      "rating": 4.8,
+      "reviews": 171,
+      "price_min": 31,
+      "price_max": 54,
+      "booking": {
+        "kind": "booksy",
+        "id": "765734",
+        "url": "https://booksy.com/en-us/765734_tivibbs_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "cutmaster-jordan",
+      "name": "Jordan at Cutmaster",
+      "venue": "681 Broadway",
+      "address": "681 Broadway, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7019819,
+        "lon": -73.9437808
+      },
+      "rating": 4.9,
+      "reviews": 120,
+      "price_min": 24,
+      "price_max": 29,
+      "booking": {
+        "kind": "booksy",
+        "id": "624602",
+        "url": "https://booksy.com/en-us/624602_jordan-cutmaster_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "sammy-barber",
+      "name": "Sammy Barber",
+      "venue": "332 Hooper St",
+      "address": "332 Hooper St, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.708206,
+        "lon": -73.953194
+      },
+      "rating": 5,
+      "reviews": 35,
+      "price_min": 15,
+      "price_max": 30,
+      "booking": {
+        "kind": "booksy",
+        "id": "1628079",
+        "url": "https://booksy.com/en-us/1628079_sammy-barber_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "eraylin",
+      "name": "ERAYLIN",
+      "venue": "133 Stanhope St",
+      "address": "133 Stanhope St, Brooklyn, NY 11221",
+      "point": {
+        "lat": 40.6981611,
+        "lon": -73.9231466
+      },
+      "rating": 5,
+      "reviews": 60,
+      "price_min": 34,
+      "price_max": 56,
+      "booking": {
+        "kind": "booksy",
+        "id": "1483416",
+        "url": "https://booksy.com/en-us/1483416_eraylin_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "ronny-fade",
+      "name": "Ronny Fade",
+      "venue": "133 Stanhope St",
+      "address": "133 Stanhope St, Brooklyn, NY 11221",
+      "point": {
+        "lat": 40.6981611,
+        "lon": -73.9231466
+      },
+      "rating": 5,
+      "reviews": 81,
+      "price_min": 25,
+      "price_max": 38,
+      "booking": {
+        "kind": "booksy",
+        "id": "1120978",
+        "url": "https://booksy.com/en-us/1120978_ronny-fade_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "blanco-mens-concept",
+      "name": "Blanco Men's Concept",
+      "venue": "384 Broadway",
+      "address": "384 Broadway, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7072208,
+        "lon": -73.9548366
+      },
+      "rating": 5,
+      "reviews": 49,
+      "price_min": 40,
+      "price_max": 75,
+      "booking": {
+        "kind": "booksy",
+        "id": "1057289",
+        "url": "https://booksy.com/en-us/1057289_blanco-mens-concept_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "sharp-blade",
+      "name": "Sharp Blade",
+      "venue": "354 Broadway",
+      "address": "354 Broadway, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7075164,
+        "lon": -73.9558325
+      },
+      "rating": 5,
+      "reviews": 23,
+      "price_min": 30,
+      "price_max": 85,
+      "booking": {
+        "kind": "booksy",
+        "id": "469168",
+        "url": "https://booksy.com/en-us/469168_sharp-blade_barber-shop_29902_brooklyn"
+      }
+    },
+    {
+      "id": "otis-and-finn-williamsburg",
+      "name": "Otis & Finn Williamsburg",
+      "venue": "154 Grand St",
+      "address": "154 Grand Street, Brooklyn, NY 11249",
+      "point": {
+        "lat": 40.7145985,
+        "lon": -73.9617562
+      },
+      "rating": 5,
+      "reviews": 21,
+      "booking": {
+        "kind": "fresha",
+        "id": "otis-finn-williamsburg-new-york-154-grand-street-hwi5s0hz",
+        "url": "https://www.fresha.com/a/otis-finn-williamsburg-new-york-154-grand-street-hwi5s0hz"
+      }
+    },
+    {
+      "id": "savant-williamsburg",
+      "name": "SAVANT Williamsburg",
+      "venue": "221 South 4th St",
+      "address": "221 South 4th Street, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7106949,
+        "lon": -73.959194
+      },
+      "rating": 5,
+      "reviews": 78,
+      "booking": {
+        "kind": "fresha",
+        "id": "savant-williamsburg-new-york-221-south-4th-street-hx37oogb",
+        "url": "https://www.fresha.com/a/savant-williamsburg-new-york-221-south-4th-street-hx37oogb"
+      }
+    },
+    {
+      "id": "cabello-brooklyn",
+      "name": "Cabello Brooklyn",
+      "venue": "476 Humboldt St",
+      "address": "476 Humboldt Street, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7185683,
+        "lon": -73.943094
+      },
+      "rating": 5,
+      "reviews": 325,
+      "booking": {
+        "kind": "fresha",
+        "id": "cabello-brooklyn-new-york-476-humboldt-st-dd7oeem2",
+        "url": "https://www.fresha.com/a/cabello-brooklyn-new-york-476-humboldt-st-dd7oeem2"
+      }
+    },
+    {
+      "id": "monteman-barber",
+      "name": "Monteman Barber",
+      "venue": "422 Graham Ave",
+      "address": "422 Graham Ave, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7175628,
+        "lon": -73.9446507
+      },
+      "phone": "+13475991874",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "groomers-and-pomade",
+      "name": "Groomers and Pomade",
+      "venue": "796 Grand St",
+      "address": "796 Grand St, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7116967,
+        "lon": -73.9414218
+      },
+      "phone": "+19174780571",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "kent-avenue-barber",
+      "name": "Kent Avenue Barber Shop",
+      "venue": "416 Kent Ave",
+      "address": "416 Kent Ave, Brooklyn, NY 11249",
+      "point": {
+        "lat": 40.7102277,
+        "lon": -73.968632
+      },
+      "phone": "+17184899550",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "wythe-barber",
+      "name": "Wythe Barber Williamsburg",
+      "venue": "158 Wythe Ave",
+      "address": "158 Wythe Ave, Brooklyn, NY 11249",
+      "point": {
+        "lat": 40.7198377,
+        "lon": -73.9602861
+      },
+      "phone": "+15188889200",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "filthy-rich-williamsburg",
+      "name": "Filthy Rich Barbershop",
+      "venue": "148 Havemeyer St",
+      "address": "148 Havemeyer St, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7117884,
+        "lon": -73.9575542
+      },
+      "phone": "+17183963300",
+      "booking": {
+        "kind": "link",
+        "url": "https://filthyrichbarbershop.com/"
+      }
+    },
+    {
+      "id": "razor-doc",
+      "name": "Razor Doc Barbershop",
+      "venue": "Williamsburg",
+      "address": "175 Broadway, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7101259,
+        "lon": -73.9624552
+      },
+      "booking": {
+        "kind": "link",
+        "url": "https://www.therazordoc.com/"
+      }
+    },
+    {
+      "id": "fellow-barber-williamsburg",
+      "name": "Fellow Barber Williamsburg",
+      "venue": "101 N 8th St",
+      "address": "101 North 8th Street, Brooklyn, NY 11249",
+      "point": {
+        "lat": 40.7198324,
+        "lon": -73.9590706
+      },
+      "booking": {
+        "kind": "link",
+        "url": "https://fellowbarber.com/pages/williamsburg"
+      }
+    },
+    {
+      "id": "black-rabbit",
+      "name": "Black Rabbit Barbershop",
+      "venue": "Bushwick",
+      "address": "91 Wyckoff Ave, Brooklyn, NY 11237",
+      "point": {
+        "lat": 40.705115,
+        "lon": -73.9201671
+      },
+      "booking": {
+        "kind": "link",
+        "url": "https://blackrabbitbarbershop.com/"
+      }
+    },
+    {
+      "id": "adrian-fanus-grooming",
+      "name": "Adrian Fanus Grooming",
+      "venue": "651 Bushwick Ave",
+      "address": "651 Bushwick Ave, Brooklyn, NY 11221",
+      "point": {
+        "lat": 40.6978261,
+        "lon": -73.9326417
+      },
+      "phone": "+13475338827",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "troys-barber-shop",
+      "name": "Troy's Barber Shop",
+      "venue": "820 Wyckoff Ave",
+      "address": "820 Wyckoff Ave, Brooklyn, NY 11237",
+      "point": {
+        "lat": 40.6978157,
+        "lon": -73.9082153
+      },
+      "phone": "+17183868645",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "cloak-and-razor",
+      "name": "Cloak & Razor",
+      "venue": "217 Boerum St",
+      "address": "217 Boerum St, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7063915,
+        "lon": -73.9391761
+      },
+      "phone": "+19292956883",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "dai-tin-barbershop",
+      "name": "Dai Tin Barbershop",
+      "venue": "153 Wilson Ave",
+      "address": "153 Wilson Ave, Brooklyn, NY 11237",
+      "point": {
+        "lat": 40.700429,
+        "lon": -73.9248564
+      },
+      "phone": "+16313264290",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "rada-flow",
+      "name": "Rada Flow Barbershop",
+      "venue": "1544 Myrtle Ave",
+      "address": "1544 Myrtle Ave, Brooklyn, NY 11237",
+      "point": {
+        "lat": 40.6993711,
+        "lon": -73.9118894
+      },
+      "phone": "+13472946019",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "marys-unisex",
+      "name": "Mary's Unisex Salon Barber Shop",
+      "venue": "1486 DeKalb Ave",
+      "address": "1486 DeKalb Ave, Brooklyn, NY 11237",
+      "point": {
+        "lat": 40.7014904,
+        "lon": -73.921729
+      },
+      "phone": "+17184973173",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "new-york-new-york-barbershop",
+      "name": "New York New York Barbershop",
+      "venue": "115 Wyckoff Ave",
+      "address": "115 Wyckoff Ave, Brooklyn, NY 11237",
+      "point": {
+        "lat": 40.704607,
+        "lon": -73.9193422
+      },
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "trios-for-hair",
+      "name": "Trios For Hair",
+      "venue": "274 Troutman St",
+      "address": "274 Troutman St, Brooklyn, NY 11237",
+      "point": {
+        "lat": 40.7034387,
+        "lon": -73.9257541
+      },
+      "phone": "+13472405430",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "topline-1",
+      "name": "Topline #1 Barbershop",
+      "venue": "448 Wilson Ave",
+      "address": "448 Wilson Ave, Brooklyn, NY 11221",
+      "point": {
+        "lat": 40.6929728,
+        "lon": -73.9123732
+      },
+      "phone": "+13477255421",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "otis-and-finn-greenpoint",
+      "name": "Otis & Finn Greenpoint",
+      "venue": "197 Franklin St",
+      "address": "197 Franklin Street, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7335834,
+        "lon": -73.9584331
+      },
+      "rating": 5,
+      "reviews": 43,
+      "booking": {
+        "kind": "fresha",
+        "id": "otis-finn-greenpoint-new-york-197-franklin-street-gm4oa9q3",
+        "url": "https://www.fresha.com/a/otis-finn-greenpoint-new-york-197-franklin-street-gm4oa9q3"
+      }
+    },
+    {
+      "id": "land-of-barbers",
+      "name": "Land of Barbers",
+      "venue": "146 Franklin St",
+      "address": "146 Franklin Street, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7301033,
+        "lon": -73.957422
+      },
+      "booking": {
+        "kind": "vagaro",
+        "url": "https://thelandofbarbers.com/"
+      }
+    },
+    {
+      "id": "thee-brooklyn-barber",
+      "name": "Thee Brooklyn Barber",
+      "venue": "141 Nassau Ave",
+      "address": "141 Nassau Ave, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7249034,
+        "lon": -73.9479776
+      },
+      "phone": "+17186750200",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "the-248-barbershop",
+      "name": "The 248 Barbershop",
+      "venue": "248 Driggs Ave",
+      "address": "248 Driggs Ave, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7228638,
+        "lon": -73.9477998
+      },
+      "phone": "+13478313652",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "hairboss-barbershop",
+      "name": "Hairboss Barbershop",
+      "venue": "99 Norman Ave",
+      "address": "99 Norman Ave, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7257535,
+        "lon": -73.9513557
+      },
+      "phone": "+19174008552",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "barber-doc-and-co",
+      "name": "Barber Doc & Co",
+      "venue": "172 Greenpoint Ave",
+      "address": "172 Greenpoint Ave, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7301145,
+        "lon": -73.9536015
+      },
+      "phone": "+13472277570",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "fade-2-famous",
+      "name": "Fade 2 Famous",
+      "venue": "213 Greenpoint Ave",
+      "address": "213 Greenpoint Ave, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7307087,
+        "lon": -73.9508418
+      },
+      "phone": "+17183831515",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "equilibrium-barbershop",
+      "name": "Equilibrium Barbershop",
+      "venue": "186 Nassau Ave",
+      "address": "186 Nassau Ave, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7253379,
+        "lon": -73.9457533
+      },
+      "phone": "+15169378838",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "sir-edmonds",
+      "name": "Sir Edmond's Barber Shop",
+      "venue": "729 Manhattan Ave",
+      "address": "729 Manhattan Ave, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7260863,
+        "lon": -73.9524199
+      },
+      "booking": {
+        "kind": "phone"
+      }
+    }
+  ]
+}
