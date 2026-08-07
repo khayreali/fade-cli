@@ -130,6 +130,11 @@ credentials for. Today that means:
 Shops without credentials degrade to a deep link rather than erroring. That's
 the intended state, not a bug — the CLI is useful with zero API access.
 
+**Hairboss Barbershop** (99 Norman Ave, Greenpoint) is the best first target for
+a real integration: it hosts its calendar on Square Appointments, which is the
+one platform with an open API. It needs a `location_id:service_variation_id`
+pair, which requires the shop to authorize the app.
+
 Availability queries fan out concurrently across every shop and provider, so
 checking twenty shops costs one round trip rather than twenty.
 
@@ -154,9 +159,9 @@ checking twenty shops costs one round trip rather than twenty.
 - **Thin at the Bushwick end.** Bedford has 7 shops, Montrose 10, but Grand,
   Jefferson, and Halsey have 1 each — and those are mostly call-only listings
   with no price or rating.
-- **Greenpoint has no prices or ratings.** All 9 shops came from call-only
-  listings; Booksy's Greenpoint search returns LIC and Manhattan results, so it
-  was no help. Needs a per-shop pass.
+- **Greenpoint is partly priced.** 3 of 9 shops now carry a price and a rating;
+  the rest publish neither anywhere findable. Booksy's Greenpoint search returns
+  LIC and Manhattan results, so it was no help.
 - **Prices missing on call-only shops.** Booksy and Fresha publish price ranges;
   walk-in shops don't.
 - **Booksy models individual barbers as separate businesses.** Five barbers at
@@ -175,6 +180,12 @@ embedded seed by `id`, so you can fix a price without waiting on a release.
 
 ## Data sources
 
-Shop data was compiled from public Booksy and Fresha listings for Williamsburg,
-East Williamsburg, and Bushwick, and geocoded via OpenStreetMap Nominatim.
-Ratings and prices are point-in-time snapshots — verify before relying on them.
+Shop data was compiled from public Booksy, Fresha and Vagaro listings plus shop
+websites, and geocoded via OpenStreetMap Nominatim. Ratings and prices are
+point-in-time snapshots — verify before relying on them.
+
+Every rating carries a `rating_src` (`booksy`, `fresha`, `google`, `web`) and
+the shop screen shows it. Booksy, Fresha and Google score different populations
+on different scales, so a bare number invites a comparison it can't support.
+Ratings without a findable review count are stored without one rather than
+being given a plausible-looking figure.

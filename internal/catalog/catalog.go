@@ -40,18 +40,22 @@ type Booking struct {
 // often their own bookable business at a shared address, so several Shops can
 // share a Venue. `fade-cli find` collapses them unless asked not to.
 type Shop struct {
-	ID       string    `json:"id"`
-	Name     string    `json:"name"`
-	Venue    string    `json:"venue,omitempty"`
-	Address  string    `json:"address"`
-	Point    geo.Point `json:"point"`
-	Phone    string    `json:"phone,omitempty"`
-	Rating   float64   `json:"rating,omitempty"`
-	Reviews  int       `json:"reviews,omitempty"`
-	PriceMin int       `json:"price_min,omitempty"`
-	PriceMax int       `json:"price_max,omitempty"`
-	Tags     []string  `json:"tags,omitempty"`
-	Booking  Booking   `json:"booking"`
+	ID      string    `json:"id"`
+	Name    string    `json:"name"`
+	Venue   string    `json:"venue,omitempty"`
+	Address string    `json:"address"`
+	Point   geo.Point `json:"point"`
+	Phone   string    `json:"phone,omitempty"`
+	Rating  float64   `json:"rating,omitempty"`
+	Reviews int       `json:"reviews,omitempty"`
+	// RatingSrc names where Rating came from. Booksy, Fresha and Google score
+	// different populations on different scales, so a bare number across
+	// sources invites a comparison it can't support.
+	RatingSrc string   `json:"rating_src,omitempty"`
+	PriceMin  int      `json:"price_min,omitempty"`
+	PriceMax  int      `json:"price_max,omitempty"`
+	Tags      []string `json:"tags,omitempty"`
+	Booking   Booking  `json:"booking"`
 }
 
 // Located reports whether the shop has usable coordinates. Unresolved shops

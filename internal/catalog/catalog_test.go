@@ -258,3 +258,54 @@ func TestEveryCorridorHasShops(t *testing.T) {
 		}
 	}
 }
+
+// A rating with no source can't be compared against the others -- Booksy,
+// Fresha and Google score different populations.
+func TestEveryRatingDeclaresItsSource(t *testing.T) {
+	c := load(t)
+	valid := map[string]bool{"booksy": true, "fresha": true, "google": true, "web": true}
+	for _, s := range c.Shops {
+		if s.Rating == 0 {
+			if s.RatingSrc != "" {
+				t.Errorf("%s has a rating source but no rating", s.ID)
+			}
+			continue
+		}
+		if s.RatingSrc == "" {
+			t.Errorf("%s has rating %.1f with no source", s.ID, s.Rating)
+		} else if !valid[s.RatingSrc] {
+			t.Errorf("%s has unknown rating source %q", s.ID, s.RatingSrc)
+		}
+	}
+}
+
+func TestRatingsAreInRange(t *testing.T) {
+	c := load(t)
+	for _, s := range c.Shops {
+		if s.Rating < 0 || s.Rating > 5 {
+			t.Errorf("%s has out-of-range rating %.1f", s.ID, s.Rating)
+		}
+	}
+}
+
+// Greenpoint shipped with no prices or ratings at all; this guards the pass
+// that filled them in from being quietly reverted.
+func TestGreenpointHasPricesAndRatings(t *testing.T) {
+	c := load(t)
+	got := c.Find(Query{Corridor: "g-greenpoint"})
+	var priced, rated int
+	for _, r := range got {
+		if r.Shop.PriceMin > 0 {
+			priced++
+		}
+		if r.Shop.Rating > 0 {
+			rated++
+		}
+	}
+	if priced < 3 {
+		t.Errorf("only %d of %d Greenpoint shops have a price", priced, len(got))
+	}
+	if rated < 3 {
+		t.Errorf("only %d of %d Greenpoint shops have a rating", rated, len(got))
+	}
+}
