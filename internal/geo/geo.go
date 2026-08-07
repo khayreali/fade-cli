@@ -39,7 +39,7 @@ type Corridor struct {
 }
 
 // Corridors is the full service area, in the order they were added.
-var Corridors = []Corridor{lCorridor, gCorridor}
+var Corridors = []Corridor{lCorridor, gCorridor, mCorridor}
 
 var lCorridor = Corridor{
 	ID:   "l-bk",
@@ -66,6 +66,20 @@ var gCorridor = Corridor{
 	Stops: []Stop{
 		stop("greenpoint-av", "Greenpoint Av", "G", "g-greenpoint", 1, 40.731352, -73.954449),
 		stop("nassau", "Nassau Av", "G", "g-greenpoint", 2, 40.724635, -73.951277),
+	},
+}
+
+// mCorridor picks up east of the L's Bushwick end. The M also serves
+// Myrtle-Wyckoff, but that stop already anchors the L corridor and listing it
+// twice would split one cluster of shops between two service areas.
+var mCorridor = Corridor{
+	ID:   "m-ridgewood",
+	Name: "Ridgewood",
+	Line: "M",
+	Stops: []Stop{
+		stop("seneca", "Seneca Av", "M", "m-ridgewood", 1, 40.702762, -73.907744),
+		stop("forest", "Forest Av", "M", "m-ridgewood", 2, 40.704423, -73.900861),
+		stop("fresh-pond", "Fresh Pond Rd", "M", "m-ridgewood", 3, 40.706186, -73.895877),
 	},
 }
 

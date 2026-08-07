@@ -2,9 +2,10 @@
 
 Book a haircut from the command line.
 
-Covers two corridors — the **L from Bedford Ave to Halsey St** (Williamsburg,
-East Williamsburg, Bushwick) and the **G through Greenpoint** — with 49 seeded
-shops across Booksy, Fresha, Vagaro, and direct booking.
+Covers three corridors — the **L from Bedford Ave to Halsey St** (Williamsburg,
+East Williamsburg, Bushwick), the **G through Greenpoint**, and the **M through
+Ridgewood** — with 66 seeded shops across Booksy, Fresha, Square, Vagaro, and
+direct booking.
 
 ## Install
 
@@ -166,6 +167,9 @@ checking twenty shops costs one round trip rather than twenty.
 - **Thin at the Bushwick end.** Bedford has 7 shops, Montrose 10, but Grand,
   Jefferson, and Halsey have 1 each — and those are mostly call-only listings
   with no price or rating.
+- **Ridgewood is breadth-only.** All 16 shops came from call-only listings with
+  no price, rating or hours anywhere findable. Browse drops both columns there,
+  which is the adaptive-column behaviour working, not a display bug.
 - **Greenpoint is partly priced.** 3 of 9 shops now carry a price and a rating;
   the rest publish neither anywhere findable. Booksy's Greenpoint search returns
   LIC and Manhattan results, so it was no help.

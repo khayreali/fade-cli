@@ -427,20 +427,20 @@
       "rating": 5,
       "reviews": 21,
       "rating_src": "fresha",
+      "price_min": 55,
+      "price_max": 55,
+      "hours": {
+        "fri": "11:00-20:00",
+        "sat": "10:00-18:00",
+        "thu": "11:00-20:00",
+        "tue": "11:00-20:00",
+        "wed": "11:00-20:00"
+      },
       "booking": {
         "kind": "fresha",
         "id": "otis-finn-williamsburg-new-york-154-grand-street-hwi5s0hz",
         "url": "https://www.fresha.com/a/otis-finn-williamsburg-new-york-154-grand-street-hwi5s0hz"
-      },
-      "hours": {
-        "tue": "11:00-20:00",
-        "wed": "11:00-20:00",
-        "thu": "11:00-20:00",
-        "fri": "11:00-20:00",
-        "sat": "10:00-18:00"
-      },
-      "price_min": 55,
-      "price_max": 55
+      }
     },
     {
       "id": "savant-williamsburg",
@@ -454,17 +454,17 @@
       "rating": 5,
       "reviews": 78,
       "rating_src": "fresha",
+      "price_min": 35,
+      "hours": {
+        "sat": "09:00-15:00",
+        "sun": "09:00-15:00",
+        "wed": "10:00-18:00"
+      },
       "booking": {
         "kind": "fresha",
         "id": "savant-williamsburg-new-york-221-south-4th-street-hx37oogb",
         "url": "https://www.fresha.com/a/savant-williamsburg-new-york-221-south-4th-street-hx37oogb"
-      },
-      "hours": {
-        "wed": "10:00-18:00",
-        "sat": "09:00-15:00",
-        "sun": "09:00-15:00"
-      },
-      "price_min": 35
+      }
     },
     {
       "id": "cabello-brooklyn",
@@ -478,20 +478,20 @@
       "rating": 5,
       "reviews": 325,
       "rating_src": "fresha",
+      "price_min": 55,
+      "hours": {
+        "fri": "10:00-19:00",
+        "mon": "10:00-20:00",
+        "sat": "10:00-17:00",
+        "thu": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00"
+      },
       "booking": {
         "kind": "fresha",
         "id": "cabello-brooklyn-new-york-476-humboldt-st-dd7oeem2",
         "url": "https://www.fresha.com/a/cabello-brooklyn-new-york-476-humboldt-st-dd7oeem2"
-      },
-      "hours": {
-        "mon": "10:00-20:00",
-        "tue": "10:00-20:00",
-        "wed": "10:00-20:00",
-        "thu": "10:00-20:00",
-        "fri": "10:00-19:00",
-        "sat": "10:00-17:00"
-      },
-      "price_min": 55
+      }
     },
     {
       "id": "monteman-barber",
@@ -746,20 +746,20 @@
       "rating": 5,
       "reviews": 43,
       "rating_src": "fresha",
+      "price_min": 55,
+      "price_max": 55,
+      "hours": {
+        "fri": "11:00-20:00",
+        "sat": "10:00-18:00",
+        "thu": "11:00-20:00",
+        "tue": "11:00-20:00",
+        "wed": "11:00-20:00"
+      },
       "booking": {
         "kind": "fresha",
         "id": "otis-finn-greenpoint-new-york-197-franklin-street-gm4oa9q3",
         "url": "https://www.fresha.com/a/otis-finn-greenpoint-new-york-197-franklin-street-gm4oa9q3"
-      },
-      "hours": {
-        "tue": "11:00-20:00",
-        "wed": "11:00-20:00",
-        "thu": "11:00-20:00",
-        "fri": "11:00-20:00",
-        "sat": "10:00-18:00"
-      },
-      "price_min": 55,
-      "price_max": 55
+      }
     },
     {
       "id": "land-of-barbers",
@@ -935,6 +935,230 @@
       "booking": {
         "kind": "link",
         "url": "https://personsofinterest.us/"
+      }
+    },
+    {
+      "id": "eddos-barber-shop",
+      "name": "Eddo's Barber Shop",
+      "venue": "6624 Forest Ave",
+      "address": "6624 Forest Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.7024452,
+        "lon": -73.9009844
+      },
+      "phone": "+17184186390",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "marks-barber-shop",
+      "name": "Mark's Barber Shop",
+      "venue": "70-20 Fresh Pond Rd",
+      "address": "70-20 Fresh Pond Rd, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.7020131,
+        "lon": -73.8951779
+      },
+      "phone": "+17184183193",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "rigoberto-barber-shop",
+      "name": "Rigoberto Barber Shop",
+      "venue": "1082 Cypress Ave",
+      "address": "1082 Cypress Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.6963277,
+        "lon": -73.9004285
+      },
+      "phone": "+17184187488",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "willys-barbershop",
+      "name": "Willy's Barbershop",
+      "venue": "351 St Nicholas Ave",
+      "address": "351 St Nicholas Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.700417,
+        "lon": -73.909282
+      },
+      "phone": "+13475990650",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "nicks-barbershop-4",
+      "name": "Nicks Barbershop 4",
+      "venue": "6099 Putnam Ave",
+      "address": "6099 Putnam Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.6991249,
+        "lon": -73.9078997
+      },
+      "phone": "+17185763300",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "crew-barber",
+      "name": "Crew Barber",
+      "venue": "10-48 Wyckoff Ave",
+      "address": "10-48 Wyckoff Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.6938542,
+        "lon": -73.9011886
+      },
+      "phone": "+17183868700",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "black-gold-barbershop",
+      "name": "Black Gold Barbershop",
+      "venue": "502 Grandview Ave",
+      "address": "502 Grandview Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.7095369,
+        "lon": -73.9077583
+      },
+      "phone": "+17184188017",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "all-star-barbers",
+      "name": "All Star Barbers",
+      "venue": "56-15 Catalpa Ave",
+      "address": "56-15 Catalpa Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.7006873,
+        "lon": -73.9046807
+      },
+      "phone": "+19292950284",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "clippers-barber-shop",
+      "name": "Clippers Barber Shop",
+      "venue": "65-18 Fresh Pond Rd",
+      "address": "65-18 Fresh Pond Rd, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.7020355,
+        "lon": -73.8950006
+      },
+      "phone": "+19177742070",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "el-figaro-barber-shop",
+      "name": "El Figaro Barber Shop",
+      "venue": "66-97 Forest Ave",
+      "address": "66-97 Forest Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.7046126,
+        "lon": -73.9016796
+      },
+      "phone": "+13478730766",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "mr-finesse-barber-lounge",
+      "name": "Mr. Finesse Barber Lounge",
+      "venue": "851 Wyckoff Ave",
+      "address": "851 Wyckoff Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.6978972,
+        "lon": -73.9077538
+      },
+      "phone": "+13472278883",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "onyx-barber-shop",
+      "name": "Onyx Barber Shop",
+      "venue": "665 Seneca Ave",
+      "address": "665 Seneca Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.7034528,
+        "lon": -73.9084052
+      },
+      "phone": "+13479887029",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "cut-it-out-barbershop",
+      "name": "Cut It Out Barbershop",
+      "venue": "803 Seneca Ave",
+      "address": "803 Seneca Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.7015181,
+        "lon": -73.9051369
+      },
+      "phone": "+19177498626",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "migue-barbershop",
+      "name": "Migue Barbershop",
+      "venue": "1108 Cypress Ave",
+      "address": "1108 Cypress Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.6959069,
+        "lon": -73.8997827
+      },
+      "phone": "+13475675974",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "fly-high-styles",
+      "name": "Fly High Styles Barbershop",
+      "venue": "61-01 Catalpa Ave",
+      "address": "61-01 Catalpa Ave, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.7041293,
+        "lon": -73.8954641
+      },
+      "phone": "+13475991231",
+      "booking": {
+        "kind": "phone"
+      }
+    },
+    {
+      "id": "polski-barber-shop",
+      "name": "Polski Barber Shop",
+      "venue": "65-02 Fresh Pond Rd",
+      "address": "65-02 Fresh Pond Rd, Ridgewood, NY 11385",
+      "point": {
+        "lat": 40.709502,
+        "lon": -73.8991149
+      },
+      "phone": "+16462866683",
+      "booking": {
+        "kind": "phone"
       }
     }
   ]
