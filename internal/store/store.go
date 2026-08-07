@@ -100,7 +100,17 @@ func Load() (*State, error) {
 		return nil, fmt.Errorf("parsing state.json: %w", err)
 	}
 	s.dir = dir
+	// LastCut, Interval and DueIn all assume newest-first. This file is
+	// documented as hand-editable, and a person listing cuts oldest-first --
+	// the natural way to type them -- would otherwise get the wrong "last cut",
+	// the wrong due date, and `again` rebooking the wrong shop.
+	s.sortCuts()
 	return s, nil
+}
+
+// sortCuts puts history newest-first, which every reader here relies on.
+func (s *State) sortCuts() {
+	sort.SliceStable(s.Cuts, func(i, j int) bool { return s.Cuts[i].Date.After(s.Cuts[j].Date) })
 }
 
 // LocalCatalogPath is where user-added or user-corrected shops live.
@@ -127,7 +137,7 @@ func (s *State) Save() error {
 // AddCut records a haircut and keeps history newest-first.
 func (s *State) AddCut(c Cut) {
 	s.Cuts = append(s.Cuts, c)
-	sort.SliceStable(s.Cuts, func(i, j int) bool { return s.Cuts[i].Date.After(s.Cuts[j].Date) })
+	s.sortCuts()
 }
 
 // LastCut returns the most recent logged cut.

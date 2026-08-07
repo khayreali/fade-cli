@@ -1,6 +1,8 @@
 package store
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -155,5 +157,43 @@ func TestProfileOriginPrefersExplicitPoint(t *testing.T) {
 
 	if _, ok := (Profile{}).Origin(); ok {
 		t.Error("empty profile should have no origin")
+	}
+}
+
+// state.json is documented as hand-editable, and the natural way to type a
+// history is oldest-first. Every reader here assumes newest-first, so Load
+// must normalise it -- otherwise `due` reports the wrong last cut and `again`
+// rebooks the wrong shop.
+func TestLoadSortsHandEditedCuts(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("FADE_HOME", dir)
+
+	raw := `{"profile":{"home_stop":"graham"},"cuts":[
+	  {"date":"2026-06-20T12:00:00Z","shop_id":"a","shop_name":"Oldest"},
+	  {"date":"2026-08-01T12:00:00Z","shop_id":"c","shop_name":"Newest"},
+	  {"date":"2026-07-11T12:00:00Z","shop_id":"b","shop_name":"Middle"}]}`
+	if err := os.WriteFile(filepath.Join(dir, "state.json"), []byte(raw), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	s, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	last, ok := s.LastCut()
+	if !ok {
+		t.Fatal("no cuts loaded")
+	}
+	if last.ShopName != "Newest" {
+		t.Errorf("LastCut = %q, want Newest", last.ShopName)
+	}
+	for i, want := range []string{"Newest", "Middle", "Oldest"} {
+		if s.Cuts[i].ShopName != want {
+			t.Errorf("position %d = %q, want %q", i, s.Cuts[i].ShopName, want)
+		}
+	}
+	// With the order fixed, the learned cadence is the real 21-day gap.
+	if got := s.Interval(); got < 20*24*time.Hour || got > 22*24*time.Hour {
+		t.Errorf("Interval = %v, want about 21 days", got)
 	}
 }
