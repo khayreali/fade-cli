@@ -192,7 +192,7 @@ read stale data without saying so.
 
 ## Known data gaps
 
-- **Opening hours cover 28 of 71 shops.** `o` filters to open-now and browse
+- **Opening hours cover 31 of 71 shops.** `o` filters to open-now and browse
   marks each shop ●/○, but only where hours are on file. A shop nobody has
   researched shows no marker at all — never a false "closed". Fresha venue
   pages carry a full week; Booksy renders only today's behind a JS toggle, so

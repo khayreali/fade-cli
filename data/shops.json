@@ -919,7 +919,16 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/thee-brooklyn-barber-nassau-avenue-46ybYx"
+      "info_url": "https://www.fresha.com/lvp/thee-brooklyn-barber-nassau-avenue-46ybYx",
+      "hours": {
+        "mon": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "fri": "10:00-20:00",
+        "sat": "10:00-19:00",
+        "sun": "10:00-19:00"
+      }
     },
     {
       "id": "the-248-barbershop",
@@ -1140,7 +1149,15 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/marks-barber-shop-beauty-salon-fresh-pond-road-ovvYJM"
+      "info_url": "https://www.fresha.com/lvp/marks-barber-shop-beauty-salon-fresh-pond-road-ovvYJM",
+      "hours": {
+        "mon": "09:00-20:00",
+        "tue": "09:00-20:00",
+        "wed": "09:00-20:00",
+        "thu": "09:00-20:00",
+        "fri": "09:00-18:00",
+        "sun": "09:00-18:00"
+      }
     },
     {
       "id": "rigoberto-barber-shop",
@@ -1189,7 +1206,16 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/nicks-barbershop-4-putnam-avenue-G555bo"
+      "info_url": "https://www.fresha.com/lvp/nicks-barbershop-4-putnam-avenue-G555bo",
+      "hours": {
+        "mon": "09:00-20:00",
+        "tue": "09:00-20:00",
+        "wed": "09:00-20:00",
+        "thu": "09:00-20:00",
+        "fri": "09:00-22:00",
+        "sat": "09:00-20:00",
+        "sun": "09:00-18:00"
+      }
     },
     {
       "id": "crew-barber",
