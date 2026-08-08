@@ -188,7 +188,7 @@ func handoffLabel(s catalog.Shop) string {
 			return provider.PrettyPhone(s.Phone)
 		}
 		return "call"
-	case catalog.KindBooksy, catalog.KindFresha, catalog.KindSquare, catalog.KindVagaro:
+	case catalog.KindBooksy, catalog.KindFresha, catalog.KindSquare, catalog.KindVagaro, catalog.KindSquire:
 		return string(s.Booking.Kind)
 	default:
 		return "website"

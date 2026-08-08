@@ -827,6 +827,8 @@ func bookingPhrase(s catalog.Shop) string {
 		return "books on Fresha"
 	case catalog.KindSquare:
 		return "books on Square"
+	case catalog.KindSquire:
+		return "books on Squire"
 	default:
 		return "books on their site"
 	}

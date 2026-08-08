@@ -12,6 +12,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"fadecli/data"
@@ -25,6 +26,7 @@ const devUsage = `fade-cli dev <task>
 TASKS
   geocode   fill in missing coordinates from street addresses
   check     report gaps in the catalog
+  links     check that every booking URL still resolves
 
 Run 'fade-cli dev <task> -h' for that task's flags.
 `
@@ -43,6 +45,8 @@ func (a *app) dev(args []string) error {
 		return a.devGeocode(args[1:])
 	case "check":
 		return a.devCheck(args[1:])
+	case "links":
+		return a.devLinks(args[1:])
 	default:
 		return fmt.Errorf("unknown dev task %q", args[0])
 	}
@@ -220,6 +224,106 @@ func geocode(client *http.Client, address string) (pt geo.Point, exact bool, err
 		return geo.Point{}, false, err
 	}
 	return geo.Point{Lat: lat, Lon: lon}, hits[0].Address.HouseNumber != "", nil
+}
+
+// devLinks verifies every booking URL still resolves. A dead link is the worst
+// kind of catalog rot: the shop looks bookable right up until the browser
+// opens on nothing.
+func (a *app) devLinks(args []string) error {
+	fs := flag.NewFlagSet("dev links", flag.ContinueOnError)
+	workers := fs.Int("workers", 8, "how many URLs to check at once")
+	if err := parse(fs, args); err != nil {
+		return nil
+	}
+
+	type target struct{ id, url string }
+	var targets []target
+	for _, s := range a.cat.Shops {
+		if u := s.Booking.URL; u != "" {
+			targets = append(targets, target{s.ID, u})
+		}
+	}
+
+	fmt.Printf("\nchecking %s\n\n", plural(len(targets), "booking link"))
+
+	client := &http.Client{Timeout: 15 * time.Second}
+	sem := make(chan struct{}, max(1, *workers))
+	var mu sync.Mutex
+	var broken, blocked int
+
+	var wg sync.WaitGroup
+	for _, t := range targets {
+		wg.Add(1)
+		go func(t target) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			// HEAD first; some booking hosts refuse it, so fall back to GET
+			// rather than reporting a live shop as dead.
+			status, err := probe(client, http.MethodHead, t.url)
+			if err != nil || status >= 400 {
+				status, err = probe(client, http.MethodGet, t.url)
+			}
+
+			mu.Lock()
+			defer mu.Unlock()
+			switch {
+			case err != nil:
+				broken++
+				fmt.Printf("%s   %-34s %s\n", ui.Red("dead"), t.id, ui.Dim(err.Error()))
+			case isBotBlock(status):
+				// A booking host refusing scripted traffic tells us nothing
+				// about whether a person can book there. Report it, don't
+				// count it as broken.
+				blocked++
+				fmt.Printf("%s %-34s %s\n", ui.Yellow("blocked"), t.id,
+					ui.Dim(fmt.Sprintf("HTTP %d -- check by hand", status)))
+			case status >= 400:
+				broken++
+				fmt.Printf("%s     %-34s %s\n", ui.Red(fmt.Sprint(status)), t.id, ui.Dim(t.url))
+			}
+		}(t)
+	}
+	wg.Wait()
+
+	fmt.Println()
+	switch {
+	case broken > 0:
+		fmt.Printf("%s\n", ui.Red(fmt.Sprintf("%d of %d unreachable", broken, len(targets))))
+	default:
+		fmt.Printf("%s %d links resolve", ui.Green("ok"), len(targets)-blocked)
+		if blocked > 0 {
+			fmt.Printf(", %s", ui.Yellow(fmt.Sprintf("%d blocked to scripts", blocked)))
+		}
+		fmt.Println()
+	}
+	fmt.Println()
+	return nil
+}
+
+// isBotBlock reports statuses that mean "not to a script", not "not there".
+func isBotBlock(status int) bool {
+	switch status {
+	case http.StatusUnauthorized, http.StatusForbidden,
+		http.StatusMethodNotAllowed, http.StatusTooManyRequests:
+		return true
+	}
+	return false
+}
+
+func probe(client *http.Client, method, url string) (int, error) {
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return 0, err
+	}
+	req.Header.Set("User-Agent", "fade-cli/"+version+" (link check)")
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode, nil
 }
 
 // devCheck reports what the catalog is missing, which is the practical guide

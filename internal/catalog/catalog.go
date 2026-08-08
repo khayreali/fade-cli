@@ -26,6 +26,7 @@ const (
 	KindFresha BookingKind = "fresha" // Fresha-hosted
 	KindSquare BookingKind = "square" // Square Appointments
 	KindVagaro BookingKind = "vagaro" // Vagaro-hosted
+	KindSquire BookingKind = "squire" // SQUIRE, barbershop-specific
 )
 
 // Booking describes how to reach a shop's scheduling system.

@@ -120,6 +120,7 @@ Every shop is bookable on day one. How depends on what the shop uses:
 | `fresha` | no         | deep link to the venue           |
 | `link`   | no         | the shop's own site              |
 | `vagaro` | no         | deep link to the venue           |
+| `squire` | no         | deep link to the venue           |
 | `phone`  | no         | `fade-cli book` dials them       |
 
 ### Live availability
@@ -159,7 +160,10 @@ checking twenty shops costs one round trip rather than twenty.
 3. `fade-cli dev geocode` — fills coordinates from OpenStreetMap, rate-limited to
    OSM's 1 req/sec policy.
 4. `fade-cli dev check` — reports what's still missing.
-5. `fade-cli dev geocode --force --dry-run` — re-resolves every address and
+5. `fade-cli dev links` — checks every booking URL still resolves. Hosts that
+   refuse scripted traffic are reported as blocked rather than dead, since that
+   says nothing about whether a person can book there.
+6. `fade-cli dev geocode --force --dry-run` — re-resolves every address and
    reports drift, flagging any shop whose stored point would move to a
    different stop, and any that only matched at street level. Takes about a
    second per shop (OSM's rate limit).
@@ -168,7 +172,7 @@ checking twenty shops costs one round trip rather than twenty.
    some streets under the run-together form. Where the canonical address
    doesn't resolve, set `geocode_as` on the shop; the displayed address stays
    canonical.
-6. Rebuild to embed the new data.
+7. Rebuild to embed the new data.
 
 `fade-cli dev check` is the practical guide to what to research next. It also
 warns when `data/shops.json` has been edited since the binary was built — the

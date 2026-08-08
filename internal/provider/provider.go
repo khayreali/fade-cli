@@ -75,6 +75,7 @@ func NewRegistry(env func(string) string) *Registry {
 		&Booksy{APIKey: env("FADE_BOOKSY_API_KEY"), Client: defaultClient()},
 		&Fresha{Client: defaultClient()},
 		&Vagaro{Client: defaultClient()},
+		&Squire{Client: defaultClient()},
 		&Square{Token: env("FADE_SQUARE_TOKEN"), Client: defaultClient()},
 	} {
 		r.providers[p.Kind()] = p
