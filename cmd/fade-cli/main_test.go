@@ -401,3 +401,42 @@ func TestMeAppliesOnlyFlagsActuallyTyped(t *testing.T) {
 		t.Errorf("home stop = %q, want graham", a.state.Profile.HomeStop)
 	}
 }
+
+// The usage text promises "Run 'fade-cli <command> -h' for flags", and two
+// commands didn't honour it: `dev -h` errored, and `again -h` printed book's
+// usage under a heading the user never typed.
+func TestEveryCommandAnswersDashH(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("FADE_HOME", dir)
+
+	a, err := newApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cmds := map[string]func([]string) error{
+		"find":  a.find,
+		"slots": a.slots,
+		"book":  a.book,
+		"again": a.againCmd,
+		"log":   a.log,
+		"due":   a.due,
+		"me":    a.me,
+		"dev":   a.dev,
+	}
+
+	// -h goes to stderr for flag sets and stdout for hand-written usage; hide
+	// both so the test log stays readable.
+	oldErr := os.Stderr
+	devNull, _ := os.Open(os.DevNull)
+	os.Stderr = devNull
+	defer func() { os.Stderr = oldErr; devNull.Close() }()
+
+	for name, fn := range cmds {
+		var err error
+		quiet(t, func() { err = fn([]string{"-h"}) })
+		if err != nil {
+			t.Errorf("%s -h returned %v, want nil -- asking for help is not an error", name, err)
+		}
+	}
+}

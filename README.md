@@ -13,9 +13,10 @@ direct booking.
 make install       # builds and puts fade-cli on your PATH
 ```
 
-Or just `make build` and run `./fade-cli` in place. One dependency
-(`golang.org/x/term`, for raw-mode key input); the shop catalog is compiled into
-the binary, so it works offline and starts in about 10ms.
+Or just `make build` and run `./fade-cli` in place. One direct dependency,
+`golang.org/x/term` for raw-mode key input (which pulls in `golang.org/x/sys`);
+everything else is the standard library. The shop catalog is compiled into the
+binary, so it works offline and starts in single-digit milliseconds.
 
 ## Start here
 

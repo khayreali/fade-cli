@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -747,6 +749,27 @@ func (a *app) resultFor(shop catalog.Shop, origin *geo.Point) catalog.Result {
 // again rebooks wherever you went last, which is the single most common thing
 // anyone wants from a tool like this.
 func (a *app) againCmd(args []string) error {
+	// again has its own flag set rather than forwarding raw args to book:
+	// passing -h straight through printed book's usage under the heading of a
+	// command the user didn't run.
+	fs := flag.NewFlagSet("again", flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprint(os.Stderr, `fade-cli again [flags]
+
+Rebook wherever you went last.
+
+FLAGS
+`)
+		fs.PrintDefaults()
+	}
+	var (
+		yes       = fs.Bool("y", false, "skip the confirmation prompt")
+		printOnly = fs.Bool("print", false, "print the target instead of opening it")
+	)
+	if err := parse(fs, args); err != nil {
+		return nil // flag package already reported it
+	}
+
 	last, ok := a.state.LastCut()
 	if !ok {
 		return errors.New("no cut history yet -- run `fade-cli` and book one first")
@@ -759,9 +782,14 @@ func (a *app) againCmd(args []string) error {
 	fmt.Printf("\n  %s %s\n", ui.Dim("last cut:"), ui.Bold(shop.Name))
 	fmt.Printf("  %s\n", ui.Dim(fmt.Sprintf("%s · $%d", ui.RelDay(last.Date, time.Now()), last.Total())))
 
-	// Forward any flags the user passed, so `again --print` behaves like
-	// `book <shop> --print`.
-	return a.book(append([]string{shop.ID}, args...))
+	fwd := []string{shop.ID}
+	if *yes {
+		fwd = append(fwd, "-y")
+	}
+	if *printOnly {
+		fwd = append(fwd, "--print")
+	}
+	return a.book(fwd)
 }
 
 func (a *app) visitsTo(shopID string) int {

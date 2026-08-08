@@ -18,17 +18,25 @@ import (
 	"fadecli/internal/ui"
 )
 
-func (a *app) dev(args []string) error {
-	if len(args) == 0 {
-		fmt.Fprint(os.Stderr, `fade-cli dev <task>
+const devUsage = `fade-cli dev <task>
 
 TASKS
   geocode   fill in missing coordinates from street addresses
   check     report gaps in the catalog
-`)
+
+Run 'fade-cli dev <task> -h' for that task's flags.
+`
+
+func (a *app) dev(args []string) error {
+	if len(args) == 0 {
+		fmt.Fprint(os.Stderr, devUsage)
 		return errors.New("name a task")
 	}
 	switch args[0] {
+	// Asking for help is not an error, and every other command answers -h.
+	case "-h", "--help", "help":
+		fmt.Print(devUsage)
+		return nil
 	case "geocode":
 		return a.devGeocode(args[1:])
 	case "check":
