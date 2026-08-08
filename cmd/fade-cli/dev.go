@@ -326,6 +326,15 @@ func probe(client *http.Client, method, url string) (int, error) {
 	return resp.StatusCode, nil
 }
 
+// verb picks the form agreeing with n, so a count of one does not read as
+// "1 shop have".
+func verb(n int, singular, plural string) string {
+	if n == 1 {
+		return singular
+	}
+	return plural
+}
+
 // devCheck reports what the catalog is missing, which is the practical guide
 // to what to research next when expanding to a new neighborhood.
 func (a *app) devCheck(args []string) error {
@@ -404,7 +413,7 @@ func (a *app) devCheck(args []string) error {
 	report("phone or link", noContact)
 	if len(mineable) > 0 {
 		fmt.Printf("  %s %-14s %s\n", ui.Cyan("note"), "listings",
-			ui.Dim(fmt.Sprintf("%d shops have a directory page but no hours yet", len(mineable))))
+			ui.Dim(plural(len(mineable), "shop")+verb(len(mineable), " has", " have")+" a directory page but no hours yet"))
 		for _, id := range mineable {
 			fmt.Printf("       %s\n", ui.Dim(id))
 		}
