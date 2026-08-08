@@ -78,7 +78,7 @@ func (a *app) devGeocode(args []string) error {
 	}
 
 	client := &http.Client{Timeout: 12 * time.Second}
-	var resolved, failed, drifted int
+	var resolved, failed, drifted, approx int
 
 	for i := range cat.Shops {
 		s := &cat.Shops[i]
@@ -91,7 +91,11 @@ func (a *app) devGeocode(args []string) error {
 		}
 
 		old, hadPoint := s.Point, s.Located()
-		pt, err := geocode(client, s.Address)
+		query := s.Address
+		if s.GeocodeAs != "" {
+			query = s.GeocodeAs
+		}
+		pt, exact, err := geocode(client, query)
 		if err != nil {
 			failed++
 			fmt.Printf("%s %s %s\n", ui.Red("fail"), s.ID, ui.Dim(err.Error()))
@@ -99,11 +103,17 @@ func (a *app) devGeocode(args []string) error {
 			continue
 		}
 
+		if !exact {
+			approx++
+		}
 		stop := geo.NearestStop(pt)
 		// With --force the shop already had coordinates, so the useful output
 		// is what would change, not what the geocoder said. Reporting drift
 		// turns this into a way to audit the catalog against its source.
 		switch {
+		case !exact:
+			fmt.Printf("%s %-38s %s\n", ui.Yellow("approx"), s.ID,
+				ui.Yellow("no house number matched -- street-level only"))
 		case !hadPoint:
 			fmt.Printf("%s %-38s %s\n", ui.Green(" ok "), s.ID,
 				ui.Dim(fmt.Sprintf("%.5f,%.5f  near %s", pt.Lat, pt.Lon, stop.Name)))
@@ -135,6 +145,9 @@ func (a *app) devGeocode(args []string) error {
 	if drifted > 0 {
 		fmt.Printf(", %s", ui.Yellow(fmt.Sprintf("%d drifted", drifted)))
 	}
+	if approx > 0 {
+		fmt.Printf(", %s", ui.Yellow(fmt.Sprintf("%d street-level only", approx)))
+	}
 	fmt.Println()
 	if *dry || resolved == 0 {
 		return nil
@@ -156,49 +169,57 @@ func (a *app) devGeocode(args []string) error {
 	return nil
 }
 
-func geocode(client *http.Client, address string) (geo.Point, error) {
+// geocode resolves an address. exact reports whether Nominatim matched the
+// house number; when it can't, it silently returns a point on the street
+// instead, which is both imprecise and unstable between runs -- two shops five
+// blocks apart came back 15 m apart that way.
+func geocode(client *http.Client, address string) (pt geo.Point, exact bool, err error) {
 	q := url.Values{}
 	q.Set("q", address)
 	q.Set("format", "jsonv2")
 	q.Set("limit", "1")
 	q.Set("countrycodes", "us")
+	q.Set("addressdetails", "1")
 
 	req, err := http.NewRequest(http.MethodGet, "https://nominatim.openstreetmap.org/search?"+q.Encode(), nil)
 	if err != nil {
-		return geo.Point{}, err
+		return geo.Point{}, false, err
 	}
 	// Nominatim rejects requests without an identifying User-Agent.
 	req.Header.Set("User-Agent", "fade-cli/"+version+" (haircut booking CLI)")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return geo.Point{}, err
+		return geo.Point{}, false, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return geo.Point{}, fmt.Errorf("status %d", resp.StatusCode)
+		return geo.Point{}, false, fmt.Errorf("status %d", resp.StatusCode)
 	}
 
 	var hits []struct {
-		Lat string `json:"lat"`
-		Lon string `json:"lon"`
+		Lat     string `json:"lat"`
+		Lon     string `json:"lon"`
+		Address struct {
+			HouseNumber string `json:"house_number"`
+		} `json:"address"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&hits); err != nil {
-		return geo.Point{}, err
+		return geo.Point{}, false, err
 	}
 	if len(hits) == 0 {
-		return geo.Point{}, errors.New("no match")
+		return geo.Point{}, false, errors.New("no match")
 	}
 
 	lat, err := strconv.ParseFloat(hits[0].Lat, 64)
 	if err != nil {
-		return geo.Point{}, err
+		return geo.Point{}, false, err
 	}
 	lon, err := strconv.ParseFloat(hits[0].Lon, 64)
 	if err != nil {
-		return geo.Point{}, err
+		return geo.Point{}, false, err
 	}
-	return geo.Point{Lat: lat, Lon: lon}, nil
+	return geo.Point{Lat: lat, Lon: lon}, hits[0].Address.HouseNumber != "", nil
 }
 
 // devCheck reports what the catalog is missing, which is the practical guide

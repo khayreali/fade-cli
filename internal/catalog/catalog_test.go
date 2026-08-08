@@ -416,3 +416,26 @@ func TestEveryShopIsReachable(t *testing.T) {
 		}
 	}
 }
+
+// Two distinct venues sharing a point is the signature of a geocode that fell
+// back to a street centroid: Clippers and Mark's are five blocks apart on
+// Fresh Pond Rd and once sat 15 m apart because neither house number resolved.
+// The real minimum here is ~21 m (adjacent buildings on one block), so this
+// only catches genuine stacking, not close neighbours.
+func TestDistinctVenuesAreNotStacked(t *testing.T) {
+	const stackedMiles = 0.006 // ~10 m
+
+	c := load(t)
+	for i := range c.Shops {
+		for j := i + 1; j < len(c.Shops); j++ {
+			a, b := c.Shops[i], c.Shops[j]
+			if a.Venue == b.Venue || !a.Located() || !b.Located() {
+				continue
+			}
+			if d := geo.MilesBetween(a.Point, b.Point); d < stackedMiles {
+				t.Errorf("%s and %s are %.0f m apart at different venues -- likely a street-level geocode",
+					a.ID, b.ID, d*1609)
+			}
+		}
+	}
+}

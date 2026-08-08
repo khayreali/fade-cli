@@ -41,14 +41,19 @@ type Booking struct {
 // often their own bookable business at a shared address, so several Shops can
 // share a Venue. `fade-cli find` collapses them unless asked not to.
 type Shop struct {
-	ID      string    `json:"id"`
-	Name    string    `json:"name"`
-	Venue   string    `json:"venue,omitempty"`
-	Address string    `json:"address"`
-	Point   geo.Point `json:"point"`
-	Phone   string    `json:"phone,omitempty"`
-	Rating  float64   `json:"rating,omitempty"`
-	Reviews int       `json:"reviews,omitempty"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Venue   string `json:"venue,omitempty"`
+	Address string `json:"address"`
+	// GeocodeAs overrides Address when resolving coordinates. Queens house
+	// numbers are hyphenated ("66-24 Forest Ave") but OSM is inconsistent about
+	// which form it indexes, so a handful of shops only match one spelling.
+	// The displayed address stays canonical.
+	GeocodeAs string    `json:"geocode_as,omitempty"`
+	Point     geo.Point `json:"point"`
+	Phone     string    `json:"phone,omitempty"`
+	Rating    float64   `json:"rating,omitempty"`
+	Reviews   int       `json:"reviews,omitempty"`
 	// RatingSrc names where Rating came from. Booksy, Fresha and Google score
 	// different populations on different scales, so a bare number across
 	// sources invites a comparison it can't support.

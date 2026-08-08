@@ -17,18 +17,18 @@
       "rating_src": "booksy",
       "price_min": 80,
       "price_max": 145,
+      "hours": {
+        "fri": "10:00-17:00",
+        "mon": "10:00-19:30",
+        "sun": "09:30-17:00",
+        "thu": "10:00-19:30",
+        "tue": "10:00-19:30",
+        "wed": "10:00-19:30"
+      },
       "booking": {
         "kind": "booksy",
         "id": "215669",
         "url": "https://booksy.com/en-us/215669_gentlemen-s-barbershop_barber-shop_29902_brooklyn"
-      },
-      "hours": {
-        "mon": "10:00-19:30",
-        "tue": "10:00-19:30",
-        "wed": "10:00-19:30",
-        "thu": "10:00-19:30",
-        "fri": "10:00-17:00",
-        "sun": "09:30-17:00"
       }
     },
     {
@@ -137,19 +137,19 @@
       "rating_src": "booksy",
       "price_min": 50,
       "price_max": 95,
+      "hours": {
+        "fri": "08:00-21:00",
+        "mon": "08:00-21:00",
+        "sat": "08:00-21:00",
+        "sun": "08:00-21:00",
+        "thu": "08:00-21:00",
+        "tue": "08:00-21:00",
+        "wed": "08:00-21:00"
+      },
       "booking": {
         "kind": "booksy",
         "id": "1175113",
         "url": "https://booksy.com/en-us/1175113_uraga-barber-shop_barber-shop_29902_brooklyn"
-      },
-      "hours": {
-        "mon": "08:00-21:00",
-        "tue": "08:00-21:00",
-        "wed": "08:00-21:00",
-        "thu": "08:00-21:00",
-        "fri": "08:00-21:00",
-        "sat": "08:00-21:00",
-        "sun": "08:00-21:00"
       }
     },
     {
@@ -161,24 +161,24 @@
         "lat": 40.7115091,
         "lon": -73.9490578
       },
+      "phone": "+17187752420",
       "rating": 5,
       "reviews": 56,
       "rating_src": "booksy",
       "price_min": 55,
       "price_max": 60,
+      "hours": {
+        "fri": "11:00-19:00",
+        "mon": "12:00-20:00",
+        "sun": "11:00-17:00",
+        "thu": "12:00-20:00",
+        "tue": "12:00-20:00",
+        "wed": "12:00-20:00"
+      },
       "booking": {
         "kind": "booksy",
         "id": "1130879",
         "url": "https://booksy.com/en-us/1130879_shear-483_barber-shop_29902_brooklyn"
-      },
-      "phone": "+17187752420",
-      "hours": {
-        "mon": "12:00-20:00",
-        "tue": "12:00-20:00",
-        "wed": "12:00-20:00",
-        "thu": "12:00-20:00",
-        "fri": "11:00-19:00",
-        "sun": "11:00-17:00"
       }
     },
     {
@@ -727,10 +727,10 @@
         "lat": 40.704607,
         "lon": -73.9193422
       },
+      "phone": "+17183663925",
       "booking": {
         "kind": "phone"
-      },
-      "phone": "+17183663925"
+      }
     },
     {
       "id": "trios-for-hair",
@@ -967,26 +967,26 @@
     {
       "id": "eddos-barber-shop",
       "name": "Eddo's Barber Shop",
-      "venue": "6624 Forest Ave",
-      "address": "6624 Forest Ave, Ridgewood, NY 11385",
+      "venue": "66-24 Forest Ave",
+      "address": "66-24 Forest Ave, Ridgewood, NY 11385",
       "point": {
-        "lat": 40.7024452,
-        "lon": -73.9009844
+        "lat": 40.7068296,
+        "lon": -73.9032663
       },
       "phone": "+17184186390",
-      "booking": {
-        "kind": "phone"
-      },
       "price_min": 25,
       "price_max": 25,
       "hours": {
-        "mon": "10:00-19:30",
-        "tue": "10:00-19:30",
-        "wed": "10:00-19:30",
-        "thu": "10:00-19:30",
         "fri": "10:00-19:00",
+        "mon": "10:00-19:30",
         "sat": "10:00-19:30",
-        "sun": "10:00-17:30"
+        "sun": "10:00-17:30",
+        "thu": "10:00-19:30",
+        "tue": "10:00-19:30",
+        "wed": "10:00-19:30"
+      },
+      "booking": {
+        "kind": "phone"
       }
     },
     {
@@ -1050,21 +1050,22 @@
       "name": "Crew Barber",
       "venue": "10-48 Wyckoff Ave",
       "address": "10-48 Wyckoff Ave, Ridgewood, NY 11385",
+      "geocode_as": "1048 Wyckoff Ave, Ridgewood, NY 11385",
       "point": {
-        "lat": 40.6938542,
-        "lon": -73.9011886
+        "lat": 40.6949604,
+        "lon": -73.9033613
       },
       "phone": "+17183868700",
-      "booking": {
-        "kind": "phone"
-      },
       "hours": {
-        "tue": "08:30-20:00",
-        "wed": "08:30-20:00",
-        "thu": "08:30-20:00",
         "fri": "08:30-20:00",
         "sat": "08:30-18:00",
-        "sun": "11:00-18:00"
+        "sun": "11:00-18:00",
+        "thu": "08:30-20:00",
+        "tue": "08:30-20:00",
+        "wed": "08:30-20:00"
+      },
+      "booking": {
+        "kind": "phone"
       }
     },
     {
@@ -1100,20 +1101,21 @@
       "name": "Clippers Barber Shop",
       "venue": "65-18 Fresh Pond Rd",
       "address": "65-18 Fresh Pond Rd, Ridgewood, NY 11385",
+      "geocode_as": "6518 Fresh Pond Road, Ridgewood, NY 11385",
       "point": {
-        "lat": 40.7020355,
-        "lon": -73.8950006
+        "lat": 40.7094553,
+        "lon": -73.8988691
       },
       "phone": "+19177742070",
+      "hours": {
+        "fri": "10:00-18:00",
+        "sat": "10:00-15:00",
+        "thu": "10:00-18:00",
+        "tue": "10:00-18:00",
+        "wed": "10:00-18:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "hours": {
-        "tue": "10:00-18:00",
-        "wed": "10:00-18:00",
-        "thu": "10:00-18:00",
-        "fri": "10:00-18:00",
-        "sat": "10:00-15:00"
       }
     },
     {

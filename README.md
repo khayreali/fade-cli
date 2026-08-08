@@ -161,7 +161,13 @@ checking twenty shops costs one round trip rather than twenty.
 4. `fade-cli dev check` — reports what's still missing.
 5. `fade-cli dev geocode --force --dry-run` — re-resolves every address and
    reports drift, flagging any shop whose stored point would move to a
-   different stop. Takes about a second per shop (OSM's rate limit).
+   different stop, and any that only matched at street level. Takes about a
+   second per shop (OSM's rate limit).
+
+   Queens house numbers are hyphenated (`66-24 Forest Ave`) but OSM indexes
+   some streets under the run-together form. Where the canonical address
+   doesn't resolve, set `geocode_as` on the shop; the displayed address stays
+   canonical.
 6. Rebuild to embed the new data.
 
 `fade-cli dev check` is the practical guide to what to research next. It also
