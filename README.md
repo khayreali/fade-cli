@@ -194,25 +194,23 @@ read stale data without saying so.
 
 - **Opening hours cover 36 of 71 shops.** `o` filters to open-now and browse
   marks each shop ●/○, but only where hours are on file. A shop nobody has
-  researched shows no marker at all — never a false "closed". Fresha venue
-  pages carry a full week; Booksy renders only today's behind a JS toggle, so
-  the 20 Booksy shops need a different source. Yelp and shop websites cover
-  roughly one in six of them; the rest publish hours nowhere machine-readable.
-- **Thin at the Bushwick end.** Bedford has 7 shops, Montrose 10, but Grand,
-  Jefferson, and Halsey have 1 each — and those are mostly call-only listings
-  with no price or rating.
-- **Ridgewood is thin at source.** 3 of 16 have hours and 1 has a price; the
-  rest are small independents whose only web presence is a phone listing.
-  Directory aggregators cover roughly a fifth of them, so further depth there
-  needs a different approach (calling, or shop-by-shop social media) rather
-  than more scraping.
-- **Greenpoint is partly priced.** 3 of 9 shops now carry a price and a rating;
-  the rest publish neither anywhere findable. Booksy's Greenpoint search returns
-  LIC and Manhattan results, so it was no help.
-- **Prices missing on call-only shops.** Booksy and Fresha publish price ranges;
-  walk-in shops don't.
+  researched shows no marker at all — never a false "closed". Fresha's venue
+  and directory pages carry a full week and were the main source; Booksy
+  renders only today's behind a JS toggle, so its 28 shops mostly lack hours.
+- **Prices cover 35 of 71, ratings 30.** Booksy and Fresha partner pages
+  publish price ranges; directory listings and walk-in shops generally don't.
+- **Walk-in policy is recorded for 11 shops only**, always from a source that
+  states it. It is never inferred from a shop being a barbershop, because a
+  wrong "just turn up" sends someone on a pointless walk.
+- **Twenty-seven shops still book by phone.** Each was individually checked
+  against Booksy, Fresha, Squire and Vagaro; these publish nothing bookable.
+  Two are walk-in only, where a phone number is the correct answer, not a
+  fallback.
 - **Booksy models individual barbers as separate businesses.** Five barbers at
   681 Broadway are five catalog entries. `--collapse` folds them by address.
+- **Two addresses in the original seed were invented** rather than sourced, and
+  both survived every automated check because a confidently wrong value is
+  internally consistent. Both are corrected; see Data sources.
 
 ## Development
 
