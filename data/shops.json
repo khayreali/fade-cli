@@ -1063,7 +1063,9 @@
       },
       "phone": "+13475990650",
       "booking": {
-        "kind": "phone"
+        "kind": "booksy",
+        "id": "1137706",
+        "url": "https://booksy.com/en-us/1137706_willys-barbershop-corp_barber-shop_30067_new-york-city"
       }
     },
     {
@@ -1201,7 +1203,9 @@
       },
       "phone": "+13479887029",
       "booking": {
-        "kind": "phone"
+        "kind": "fresha",
+        "id": "751-barbershop-seneca-avenue-PVVKRY",
+        "url": "https://www.fresha.com/lvp/751-barbershop-seneca-avenue-PVVKRY"
       }
     },
     {
@@ -1257,7 +1261,9 @@
       },
       "phone": "+16462866683",
       "booking": {
-        "kind": "phone"
+        "kind": "fresha",
+        "id": "polski-barber-shop-fresh-pond-road-7rrnNz",
+        "url": "https://www.fresha.com/lvp/polski-barber-shop-fresh-pond-road-7rrnNz"
       }
     },
     {
