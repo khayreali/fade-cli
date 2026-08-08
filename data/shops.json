@@ -530,8 +530,20 @@
       },
       "phone": "+13475991874",
       "booking": {
-        "kind": "phone"
-      }
+        "kind": "link",
+        "url": "https://montemanbarber.com/"
+      },
+      "hours": {
+        "mon": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "fri": "10:00-20:00",
+        "sat": "10:00-20:00",
+        "sun": "10:00-20:00"
+      },
+      "price_min": 35,
+      "price_max": 85
     },
     {
       "id": "groomers-and-pomade",
@@ -544,7 +556,9 @@
       },
       "phone": "+19174780571",
       "booking": {
-        "kind": "phone"
+        "kind": "booksy",
+        "id": "130895",
+        "url": "https://booksy.com/en-us/130895_groomers-pomade-barbershop_barber-shop_29902_brooklyn"
       }
     },
     {
@@ -558,8 +572,15 @@
       },
       "phone": "+17184899550",
       "booking": {
-        "kind": "phone"
-      }
+        "kind": "booksy",
+        "id": "676216",
+        "url": "https://booksy.com/en-us/676216_kent-avenue-barber-shop_barber-shop_29902_brooklyn"
+      },
+      "rating": 4.9,
+      "reviews": 127,
+      "rating_src": "booksy",
+      "price_min": 30,
+      "price_max": 55
     },
     {
       "id": "wythe-barber",
@@ -645,7 +666,9 @@
       },
       "phone": "+13475338827",
       "booking": {
-        "kind": "phone"
+        "kind": "booksy",
+        "id": "182973",
+        "url": "https://booksy.com/en-us/182973_adrian-fanus-grooming_barber-shop_29902_brooklyn"
       }
     },
     {
@@ -673,7 +696,8 @@
       },
       "phone": "+19292956883",
       "booking": {
-        "kind": "phone"
+        "kind": "link",
+        "url": "https://www.cloakandrazor.com/"
       }
     },
     {
