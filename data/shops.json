@@ -738,7 +738,15 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/dai-tin-barbershop-wilson-avenue-RvVG0M"
+      "info_url": "https://www.fresha.com/lvp/dai-tin-barbershop-wilson-avenue-RvVG0M",
+      "hours": {
+        "tue": "11:00-19:00",
+        "wed": "11:00-19:00",
+        "thu": "11:00-19:00",
+        "fri": "11:00-19:00",
+        "sat": "11:00-19:00",
+        "sun": "12:00-19:00"
+      }
     },
     {
       "id": "rada-flow",
@@ -777,7 +785,16 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/marys-unisex-salon-barber-shop-inc-dekalb-avenue-PVwRN9"
+      "info_url": "https://www.fresha.com/lvp/marys-unisex-salon-barber-shop-inc-dekalb-avenue-PVwRN9",
+      "hours": {
+        "mon": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "fri": "10:00-20:00",
+        "sat": "10:00-20:00",
+        "sun": "10:00-20:00"
+      }
     },
     {
       "id": "new-york-new-york-barbershop",
@@ -830,7 +847,16 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/topline-1-barbershop-wilson-avenue-eXlDa1"
+      "info_url": "https://www.fresha.com/lvp/topline-1-barbershop-wilson-avenue-eXlDa1",
+      "hours": {
+        "mon": "09:00-21:00",
+        "tue": "09:00-21:00",
+        "wed": "09:00-21:00",
+        "thu": "09:00-21:00",
+        "fri": "09:00-21:00",
+        "sat": "09:00-21:00",
+        "sun": "09:00-18:00"
+      }
     },
     {
       "id": "otis-and-finn-greenpoint",
