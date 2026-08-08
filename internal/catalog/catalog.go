@@ -70,6 +70,10 @@ type Shop struct {
 	Name    string `json:"name"`
 	Venue   string `json:"venue,omitempty"`
 	Address string `json:"address"`
+	// InfoURL is a directory page that is NOT a booking flow -- Fresha's /lvp/
+	// listings, say. Worth keeping for hours and services, never offered as a
+	// way to book.
+	InfoURL string `json:"info_url,omitempty"`
 	// GeocodeAs overrides Address when resolving coordinates. Queens house
 	// numbers are hyphenated ("66-24 Forest Ave") but OSM is inconsistent about
 	// which form it indexes, so a handful of shops only match one spelling.

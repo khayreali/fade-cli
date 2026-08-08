@@ -509,3 +509,13 @@ func TestNoFreshaDirectoryPagesAreTreatedAsBooking(t *testing.T) {
 		}
 	}
 }
+
+// InfoURL exists precisely so a directory page is never mistaken for booking.
+func TestInfoURLIsNeverABookingLink(t *testing.T) {
+	c := load(t)
+	for _, s := range c.Shops {
+		if s.InfoURL != "" && s.InfoURL == s.Booking.URL {
+			t.Errorf("%s uses its directory page as a booking link", s.ID)
+		}
+	}
+}

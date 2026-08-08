@@ -129,7 +129,9 @@ Every shop is bookable on day one. How depends on what the shop uses:
 Fresha publishes two kinds of page. `/a/` is a partner venue with a booking
 flow. `/lvp/` is a directory listing it generates for shops that are *not*
 partners — it says so on the page and offers only "Call to book". Only `/a/`
-counts as bookable, and a test enforces it.
+counts as bookable, and a test enforces it. The directory pages are still
+useful for hours and services, so they are kept on the shop as `info_url`,
+which is never presented as a way to book.
 | `phone`  | no         | `fade-cli book` dials them       |
 
 ### Live availability

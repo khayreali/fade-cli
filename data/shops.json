@@ -737,7 +737,8 @@
       "phone": "+16313264290",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/dai-tin-barbershop-wilson-avenue-RvVG0M"
     },
     {
       "id": "rada-flow",
@@ -760,7 +761,8 @@
       },
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/rada-flow-barbershop-myrtle-avenue-zn5wLn"
     },
     {
       "id": "marys-unisex",
@@ -774,7 +776,8 @@
       "phone": "+17184973173",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/marys-unisex-salon-barber-shop-inc-dekalb-avenue-PVwRN9"
     },
     {
       "id": "new-york-new-york-barbershop",
@@ -802,7 +805,8 @@
       "phone": "+13472405430",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/trios-for-hair-troutman-street-NooMy7"
     },
     {
       "id": "topline-1",
@@ -816,7 +820,8 @@
       "phone": "+13477255421",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/topline-1-barbershop-wilson-avenue-eXlDa1"
     },
     {
       "id": "otis-and-finn-greenpoint",
@@ -878,7 +883,8 @@
       "walk_in": "welcome",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/thee-brooklyn-barber-nassau-avenue-46ybYx"
     },
     {
       "id": "the-248-barbershop",
@@ -892,6 +898,16 @@
       "phone": "+13478313652",
       "booking": {
         "kind": "phone"
+      },
+      "info_url": "https://www.fresha.com/lvp/the-248-barbershop-driggs-avenue-n6Axge",
+      "hours": {
+        "mon": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "fri": "10:00-20:00",
+        "sat": "10:00-20:00",
+        "sun": "10:00-20:00"
       }
     },
     {
@@ -957,7 +973,8 @@
       "price_max": 14,
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/fade-2-famous-greenpoint-avenue-YKqbV3"
     },
     {
       "id": "equilibrium-barbershop",
@@ -985,7 +1002,8 @@
       },
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/equilibrium-barbershop-nassau-avenue-YKqGZK"
     },
     {
       "id": "sir-edmonds",
@@ -999,7 +1017,8 @@
       "phone": "+19175997829",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/sir-edmonds-barber-shop-manhattan-avenue-A88BVq"
     },
     {
       "id": "persons-of-interest-williamsburg",
@@ -1054,7 +1073,8 @@
       },
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/eddos-barber-shop-since-2002-forest-avenue-A88l8Z"
     },
     {
       "id": "marks-barber-shop",
@@ -1068,7 +1088,8 @@
       "phone": "+17184183193",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/marks-barber-shop-beauty-salon-fresh-pond-road-ovvYJM"
     },
     {
       "id": "rigoberto-barber-shop",
@@ -1116,7 +1137,8 @@
       "phone": "+17185763300",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/nicks-barbershop-4-putnam-avenue-G555bo"
     },
     {
       "id": "crew-barber",
@@ -1160,6 +1182,16 @@
       "phone": "+17184188017",
       "booking": {
         "kind": "phone"
+      },
+      "info_url": "https://www.fresha.com/lvp/black-gold-barbershop-grandview-avenue-MxLkL4",
+      "hours": {
+        "mon": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "fri": "10:00-20:00",
+        "sat": "10:00-20:00",
+        "sun": "10:00-20:00"
       }
     },
     {
@@ -1174,6 +1206,15 @@
       "phone": "+19292950284",
       "booking": {
         "kind": "phone"
+      },
+      "info_url": "https://www.fresha.com/lvp/all-star-barbers-catalpa-avenue-EvJ1QK",
+      "hours": {
+        "mon": "10:00-18:30",
+        "tue": "10:00-18:30",
+        "wed": "10:00-18:30",
+        "thu": "10:00-18:30",
+        "fri": "10:00-20:00",
+        "sat": "10:00-17:30"
       }
     },
     {
@@ -1196,7 +1237,8 @@
       },
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/clippers-barber-shop-fresh-pond-road-D78njY"
     },
     {
       "id": "el-figaro-barber-shop",
@@ -1210,7 +1252,8 @@
       "phone": "+13478730766",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/el-figaro-barber-shop-forest-avenue-BoojA3"
     },
     {
       "id": "mr-finesse-barber-lounge",
@@ -1238,7 +1281,8 @@
       "phone": "+13479887029",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/751-barbershop-seneca-avenue-PVVKRY"
     },
     {
       "id": "cut-it-out-barbershop",
@@ -1253,7 +1297,8 @@
       "walk_in": "welcome",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/cut-it-out-barbershop-seneca-avenue-PVVj4V"
     },
     {
       "id": "migue-barbershop",
@@ -1267,7 +1312,8 @@
       "phone": "+13475675974",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/migue-barbershop-cypress-avenue-8JJjDQ"
     },
     {
       "id": "fly-high-styles",
@@ -1295,7 +1341,8 @@
       "phone": "+16462866683",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/polski-barber-shop-fresh-pond-road-7rrnNz"
     },
     {
       "id": "cotter-barber-graham",
@@ -1373,7 +1420,8 @@
       "phone": "+17188210500",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "info_url": "https://www.fresha.com/lvp/the-ridgewood-barbershop-centre-street-ridgewood-G55qxG"
     }
   ]
 }
