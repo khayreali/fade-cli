@@ -66,6 +66,35 @@ func PrettyPhone(p string) string {
 	return fmt.Sprintf("(%s) %s-%s", digits[:3], digits[3:6], digits[6:])
 }
 
+// Copy puts text on the system clipboard, reporting whether it worked. Half
+// the catalog books by phone, and a number you can paste beats one you have to
+// read off the screen and retype.
+func Copy(text string) bool {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.Command("pbcopy")
+	case "windows":
+		cmd = exec.Command("clip")
+	default:
+		switch {
+		case lookPath("wl-copy"):
+			cmd = exec.Command("wl-copy")
+		case lookPath("xclip"):
+			cmd = exec.Command("xclip", "-selection", "clipboard")
+		default:
+			return false
+		}
+	}
+	cmd.Stdin = strings.NewReader(text)
+	return cmd.Run() == nil
+}
+
+func lookPath(bin string) bool {
+	_, err := exec.LookPath(bin)
+	return err == nil
+}
+
 // Open launches a URL or tel: link with the OS handler. It deliberately does
 // not wait: the browser taking a moment to start shouldn't block the CLI.
 func Open(target string) error {
