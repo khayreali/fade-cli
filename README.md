@@ -168,11 +168,12 @@ checking twenty shops costs one round trip rather than twenty.
 
 ## Known data gaps
 
-- **Opening hours cover 12 of 66 shops.** `o` filters to open-now and browse
+- **Opening hours cover 15 of 66 shops.** `o` filters to open-now and browse
   marks each shop ●/○, but only where hours are on file. A shop nobody has
   researched shows no marker at all — never a false "closed". Fresha venue
   pages carry a full week; Booksy renders only today's behind a JS toggle, so
-  the 20 Booksy shops need a different source.
+  the 20 Booksy shops need a different source. Yelp and shop websites cover
+  roughly one in six of them; the rest publish hours nowhere machine-readable.
 - **Thin at the Bushwick end.** Bedford has 7 shops, Montrose 10, but Grand,
   Jefferson, and Halsey have 1 each — and those are mostly call-only listings
   with no price or rating.

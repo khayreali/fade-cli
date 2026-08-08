@@ -21,6 +21,14 @@
         "kind": "booksy",
         "id": "215669",
         "url": "https://booksy.com/en-us/215669_gentlemen-s-barbershop_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "mon": "10:00-19:30",
+        "tue": "10:00-19:30",
+        "wed": "10:00-19:30",
+        "thu": "10:00-19:30",
+        "fri": "10:00-17:00",
+        "sun": "09:30-17:00"
       }
     },
     {
@@ -133,6 +141,15 @@
         "kind": "booksy",
         "id": "1175113",
         "url": "https://booksy.com/en-us/1175113_uraga-barber-shop_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "mon": "08:00-21:00",
+        "tue": "08:00-21:00",
+        "wed": "08:00-21:00",
+        "thu": "08:00-21:00",
+        "fri": "08:00-21:00",
+        "sat": "08:00-21:00",
+        "sun": "08:00-21:00"
       }
     },
     {
@@ -153,6 +170,15 @@
         "kind": "booksy",
         "id": "1130879",
         "url": "https://booksy.com/en-us/1130879_shear-483_barber-shop_29902_brooklyn"
+      },
+      "phone": "+17187752420",
+      "hours": {
+        "mon": "12:00-20:00",
+        "tue": "12:00-20:00",
+        "wed": "12:00-20:00",
+        "thu": "12:00-20:00",
+        "fri": "11:00-19:00",
+        "sun": "11:00-17:00"
       }
     },
     {
