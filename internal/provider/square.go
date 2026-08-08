@@ -32,7 +32,11 @@ type Square struct {
 func (*Square) Kind() catalog.BookingKind { return catalog.KindSquare }
 
 func (s *Square) Availability(ctx context.Context, shop catalog.Shop, day time.Time) ([]Slot, error) {
-	if s.Token == "" {
+	// A missing token and a missing location/variation pair are both "this
+	// shop isn't set up yet", not a failure -- the id is per-shop credential
+	// data the merchant has to grant, so reporting it as an error would make
+	// an unconfigured shop look broken.
+	if s.Token == "" || shop.Booking.ID == "" {
 		return nil, ErrNeedsCredentials
 	}
 	locationID, variationID, err := splitSquareID(shop.Booking.ID)

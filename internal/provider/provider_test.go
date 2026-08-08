@@ -243,3 +243,38 @@ func TestParseSlotTime(t *testing.T) {
 		t.Error("expected an error for unparseable slot time")
 	}
 }
+
+// A Square shop with no location/variation pair is unconfigured, not broken.
+// Reporting a hard error made an un-onboarded shop look like a failure, and
+// slots rendered it identically to a shop with no live availability at all.
+func TestSquareWithoutBookingIDNeedsCredentials(t *testing.T) {
+	r := NewRegistry(func(k string) string {
+		if k == "FADE_SQUARE_TOKEN" {
+			return "fake-token"
+		}
+		return ""
+	})
+	shop := catalog.Shop{
+		ID:      "hairboss",
+		Booking: catalog.Booking{Kind: catalog.KindSquare, URL: "https://example.test/"},
+	}
+	_, err := r.For(shop).Availability(context.Background(), shop, time.Now())
+	if !errors.Is(err, ErrNeedsCredentials) {
+		t.Errorf("got %v, want ErrNeedsCredentials", err)
+	}
+}
+
+// A malformed id is still a real error: it means someone typed it wrong.
+func TestSquareWithMalformedBookingIDStillErrors(t *testing.T) {
+	r := NewRegistry(func(k string) string {
+		if k == "FADE_SQUARE_TOKEN" {
+			return "fake-token"
+		}
+		return ""
+	})
+	shop := catalog.Shop{Booking: catalog.Booking{Kind: catalog.KindSquare, ID: "no-colon-here"}}
+	_, err := r.For(shop).Availability(context.Background(), shop, time.Now())
+	if err == nil || errors.Is(err, ErrNeedsCredentials) {
+		t.Errorf("got %v, want a distinct malformed-id error", err)
+	}
+}

@@ -96,6 +96,7 @@ func printSlots(results []provider.ShopSlots) {
 	var (
 		live      int
 		handoffs  []provider.ShopSlots
+		failed    []provider.ShopSlots
 		needsCred bool
 	)
 
@@ -105,8 +106,14 @@ func printSlots(results []provider.ShopSlots) {
 			printShopSlots(r)
 			continue
 		}
-		if errors.Is(r.Err, provider.ErrNeedsCredentials) {
+		switch {
+		case errors.Is(r.Err, provider.ErrNeedsCredentials):
 			needsCred = true
+		case r.Err != nil && !errors.Is(r.Err, provider.ErrNoLiveAvailability):
+			// A bad token, a dead network or a changed API used to render
+			// identically to "this shop has no live availability", so a broken
+			// setup looked exactly like a working one.
+			failed = append(failed, r)
 		}
 		handoffs = append(handoffs, r)
 	}
@@ -137,6 +144,13 @@ func printSlots(results []provider.ShopSlots) {
 
 	if needsCred {
 		ui.Hint("some shops support live times but need API access -- see README 'Live availability'")
+	}
+	if len(failed) > 0 {
+		fmt.Println()
+		ui.Warn("%s could not be checked:", plural(len(failed), "shop"))
+		for _, r := range failed {
+			fmt.Printf("    %s %s\n", r.Shop.Name, ui.Dim(r.Err.Error()))
+		}
 	}
 }
 
