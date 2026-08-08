@@ -529,21 +529,21 @@
         "lon": -73.9446507
       },
       "phone": "+13475991874",
+      "price_min": 35,
+      "price_max": 85,
+      "hours": {
+        "fri": "10:00-20:00",
+        "mon": "10:00-20:00",
+        "sat": "10:00-20:00",
+        "sun": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00"
+      },
       "booking": {
         "kind": "link",
         "url": "https://montemanbarber.com/"
-      },
-      "hours": {
-        "mon": "10:00-20:00",
-        "tue": "10:00-20:00",
-        "wed": "10:00-20:00",
-        "thu": "10:00-20:00",
-        "fri": "10:00-20:00",
-        "sat": "10:00-20:00",
-        "sun": "10:00-20:00"
-      },
-      "price_min": 35,
-      "price_max": 85
+      }
     },
     {
       "id": "groomers-and-pomade",
@@ -571,16 +571,16 @@
         "lon": -73.968632
       },
       "phone": "+17184899550",
-      "booking": {
-        "kind": "booksy",
-        "id": "676216",
-        "url": "https://booksy.com/en-us/676216_kent-avenue-barber-shop_barber-shop_29902_brooklyn"
-      },
       "rating": 4.9,
       "reviews": 127,
       "rating_src": "booksy",
       "price_min": 30,
-      "price_max": 55
+      "price_max": 55,
+      "booking": {
+        "kind": "booksy",
+        "id": "676216",
+        "url": "https://booksy.com/en-us/676216_kent-avenue-barber-shop_barber-shop_29902_brooklyn"
+      }
     },
     {
       "id": "wythe-barber",
@@ -904,7 +904,9 @@
         "wed": "10:00-19:30"
       },
       "booking": {
-        "kind": "phone"
+        "kind": "booksy",
+        "id": "624360",
+        "url": "https://booksy.com/en-us/624360_barber-doc-co_barber-shop_29902_brooklyn"
       }
     },
     {
@@ -1095,8 +1097,15 @@
         "wed": "08:30-20:00"
       },
       "booking": {
-        "kind": "phone"
-      }
+        "kind": "booksy",
+        "id": "1131412",
+        "url": "https://booksy.com/en-us/1131412_crew-barber_barber-shop_30067_new-york-city"
+      },
+      "price_min": 45,
+      "price_max": 45,
+      "rating": 5.0,
+      "reviews": 13,
+      "rating_src": "booksy"
     },
     {
       "id": "black-gold-barbershop",
@@ -1292,6 +1301,21 @@
       "booking": {
         "kind": "link",
         "url": "https://www.kinshipcuts.com/book-now"
+      }
+    },
+    {
+      "id": "tomcats-barbershop",
+      "name": "Tomcats Barbershop",
+      "venue": "135 India St",
+      "address": "135 India St, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7323874,
+        "lon": -73.9549952
+      },
+      "booking": {
+        "kind": "booksy",
+        "id": "184249",
+        "url": "https://booksy.com/en-us/184249_tomcats-barbershop_barber-shop_29902_brooklyn"
       }
     }
   ]
