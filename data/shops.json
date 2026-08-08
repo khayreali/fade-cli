@@ -682,7 +682,8 @@
       },
       "phone": "+17183868645",
       "booking": {
-        "kind": "phone"
+        "kind": "square",
+        "url": "https://troysbarbershop.square.site/"
       }
     },
     {
@@ -1046,7 +1047,9 @@
       },
       "phone": "+17184187488",
       "booking": {
-        "kind": "phone"
+        "kind": "booksy",
+        "id": "1107825",
+        "url": "https://booksy.com/en-us/1107825_rigobertos-barbershop_barber-shop_30067_new-york-city"
       }
     },
     {
@@ -1168,7 +1171,9 @@
       },
       "phone": "+13478730766",
       "booking": {
-        "kind": "phone"
+        "kind": "fresha",
+        "id": "el-figaro-barber-shop-forest-avenue-BoojA3",
+        "url": "https://www.fresha.com/lvp/el-figaro-barber-shop-forest-avenue-BoojA3"
       }
     },
     {
