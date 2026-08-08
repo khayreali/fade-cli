@@ -609,7 +609,7 @@
     {
       "id": "fellow-barber-williamsburg",
       "name": "Fellow Barber Williamsburg",
-      "venue": "101 N 8th St",
+      "venue": "101 North 8th Street",
       "address": "101 North 8th Street, Brooklyn, NY 11249",
       "point": {
         "lat": 40.7198324,
@@ -623,7 +623,7 @@
     {
       "id": "black-rabbit",
       "name": "Black Rabbit Barbershop",
-      "venue": "Bushwick",
+      "venue": "91 Wyckoff Ave",
       "address": "91 Wyckoff Ave, Brooklyn, NY 11237",
       "point": {
         "lat": 40.705115,

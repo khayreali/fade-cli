@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"strings"
 	"testing"
 
 	"fadecli/internal/geo"
@@ -437,5 +438,35 @@ func TestDistinctVenuesAreNotStacked(t *testing.T) {
 					a.ID, b.ID, d*1609)
 			}
 		}
+	}
+}
+
+// Venue is the collapse key, so it has to identify a building. One shop had
+// "Bushwick" as its venue -- a neighbourhood, which would have merged it with
+// every future shop tagged the same way. Requiring the venue to be the leading
+// part of the address keeps the key tied to a street address.
+func TestVenueIdentifiesABuilding(t *testing.T) {
+	c := load(t)
+	for _, s := range c.Shops {
+		if s.Venue == "" {
+			t.Errorf("%s has no venue; collapse would fall back to the full address", s.ID)
+			continue
+		}
+		if !strings.HasPrefix(strings.ToLower(s.Address), strings.ToLower(s.Venue)) {
+			t.Errorf("%s: venue %q is not the start of address %q", s.ID, s.Venue, s.Address)
+		}
+	}
+}
+
+// A venue must not span two addresses, or collapse merges unrelated shops.
+func TestVenueMapsToOneAddress(t *testing.T) {
+	c := load(t)
+	seen := map[string]string{}
+	for _, s := range c.Shops {
+		key := strings.ToLower(s.Venue)
+		if prev, ok := seen[key]; ok && prev != strings.ToLower(s.Address) {
+			t.Errorf("venue %q covers two addresses: %q and %q", s.Venue, prev, s.Address)
+		}
+		seen[key] = strings.ToLower(s.Address)
 	}
 }
