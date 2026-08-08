@@ -844,7 +844,9 @@
       "price_max": 35,
       "walk_in": "welcome",
       "booking": {
-        "kind": "phone"
+        "kind": "fresha",
+        "id": "thee-brooklyn-barber-nassau-avenue-46ybYx",
+        "url": "https://www.fresha.com/lvp/thee-brooklyn-barber-nassau-avenue-46ybYx"
       }
     },
     {
@@ -858,7 +860,9 @@
       },
       "phone": "+13478313652",
       "booking": {
-        "kind": "phone"
+        "kind": "fresha",
+        "id": "the-248-barbershop-driggs-avenue-n6Axge",
+        "url": "https://www.fresha.com/lvp/the-248-barbershop-driggs-avenue-n6Axge"
       }
     },
     {
@@ -923,7 +927,9 @@
       "price_min": 14,
       "price_max": 14,
       "booking": {
-        "kind": "phone"
+        "kind": "fresha",
+        "id": "fade-2-famous-greenpoint-avenue-YKqbV3",
+        "url": "https://www.fresha.com/lvp/fade-2-famous-greenpoint-avenue-YKqbV3"
       }
     },
     {
@@ -951,7 +957,9 @@
         "wed": "09:30-19:00"
       },
       "booking": {
-        "kind": "phone"
+        "kind": "fresha",
+        "id": "equilibrium-barbershop-nassau-avenue-YKqGZK",
+        "url": "https://www.fresha.com/lvp/equilibrium-barbershop-nassau-avenue-YKqGZK"
       }
     },
     {
@@ -965,7 +973,9 @@
       },
       "phone": "+19175997829",
       "booking": {
-        "kind": "phone"
+        "kind": "fresha",
+        "id": "sir-edmonds-barber-shop-manhattan-avenue-A88BVq",
+        "url": "https://www.fresha.com/lvp/sir-edmonds-barber-shop-manhattan-avenue-A88BVq"
       }
     },
     {
