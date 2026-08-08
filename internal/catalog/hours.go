@@ -144,21 +144,40 @@ func (h Hours) nextOpen(midnight time.Time, mins int, today time.Weekday) time.T
 
 func prevDay(d time.Weekday) time.Weekday { return time.Weekday((int(d) + 6) % 7) }
 
-// TodayLabel renders the day's hours the way a shop window would, or "closed".
-func (h Hours) TodayLabel(t time.Time) string {
+// OnDay returns the opening ranges for the weekday of t, and whether the shop
+// trades at all that day. Unlike OpenAt it says nothing about the time of day,
+// which is what you want when asking about a date rather than about right now.
+func (h Hours) OnDay(t time.Time) (label string, trades bool) {
 	if !h.Known() {
-		return ""
+		return "", false
 	}
-	local := t.In(shopTZ)
-	spans := h.spansOn(local.Weekday())
+	spans := h.spansOn(t.In(shopTZ).Weekday())
 	if len(spans) == 0 {
-		return "closed today"
+		return "", false
 	}
 	parts := make([]string, 0, len(spans))
 	for _, s := range spans {
 		parts = append(parts, clockLabel(s.start)+"–"+clockLabel(s.end%(24*60)))
 	}
-	return strings.Join(parts, ", ")
+	return strings.Join(parts, ", "), true
+}
+
+// TodayLabel renders the day's hours the way a shop window would, or "closed".
+func (h Hours) TodayLabel(t time.Time) string {
+	if !h.Known() {
+		return ""
+	}
+	if label, trades := h.OnDay(t); trades {
+		return label
+	}
+	return "closed today"
+}
+
+// SameShopDay reports whether two instants fall on the same calendar day where
+// the shops are, which is the only comparison that makes sense for hours.
+func SameShopDay(a, b time.Time) bool {
+	x, y := a.In(shopTZ), b.In(shopTZ)
+	return x.Year() == y.Year() && x.YearDay() == y.YearDay()
 }
 
 // clockLabel renders minutes-from-midnight as a compact 12-hour time.

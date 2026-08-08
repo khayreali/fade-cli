@@ -61,7 +61,7 @@ FLAGS
 		ui.Dim(label))
 
 	results := a.reg.AvailabilityAcross(ctx, shops, when)
-	printSlots(results)
+	printSlots(results, when)
 	return nil
 }
 
@@ -92,7 +92,7 @@ func (a *app) slotTargets(nameArgs []string, near string, within float64, under 
 	return shops, fmt.Sprintf("%d shops within %.2g mi of %s", len(shops), within, originLabel), nil
 }
 
-func printSlots(results []provider.ShopSlots) {
+func printSlots(results []provider.ShopSlots, when time.Time) {
 	var (
 		live      int
 		handoffs  []provider.ShopSlots
@@ -133,7 +133,7 @@ func printSlots(results []provider.ShopSlots) {
 				r.Shop.Name,
 				priceCell(r.Shop),
 				ui.Stars(r.Shop.Rating, r.Shop.Reviews),
-				openCell(r.Shop, now),
+				openCellFor(r.Shop, when, now),
 				ui.Dim(handoffLabel(r.Shop)),
 			)
 		}
@@ -193,6 +193,23 @@ func handoffLabel(s catalog.Shop) string {
 	default:
 		return "website"
 	}
+}
+
+// openCellFor answers for the day the user asked about. For today that's the
+// live status; for any other date it's that day's opening hours, since "open
+// until 8pm" is meaningless about next Wednesday.
+func openCellFor(s catalog.Shop, day, now time.Time) string {
+	if !s.Hours.Known() {
+		return ui.Dim("—")
+	}
+	if catalog.SameShopDay(day, now) {
+		return openCell(s, now)
+	}
+	label, trades := s.Hours.OnDay(day)
+	if !trades {
+		return ui.Yellow("closed " + day.Format("Mon"))
+	}
+	return ui.Green(label)
 }
 
 // openCell says whether a shop is open right now. `slots` exists to answer
