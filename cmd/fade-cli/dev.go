@@ -388,10 +388,27 @@ func (a *app) devCheck(args []string) error {
 			fmt.Printf("       %s\n", ui.Dim(id))
 		}
 	}
+	// InfoURL is research data -- a directory page that is not bookable but does
+	// carry hours and services. Surfacing it here is the only thing that reads
+	// the field; otherwise it is written and never used.
+	var mineable []string
+	for _, s := range a.cat.Shops {
+		if s.InfoURL != "" && !s.Hours.Known() {
+			mineable = append(mineable, s.ID)
+		}
+	}
+
 	report("coordinates", noCoords)
 	report("price range", noPrice)
 	report("opening hours", noHours)
 	report("phone or link", noContact)
+	if len(mineable) > 0 {
+		fmt.Printf("  %s %-14s %s\n", ui.Cyan("note"), "listings",
+			ui.Dim(fmt.Sprintf("%d shops have a directory page but no hours yet", len(mineable))))
+		for _, id := range mineable {
+			fmt.Printf("       %s\n", ui.Dim(id))
+		}
+	}
 
 	a.reportStaleSeed()
 	fmt.Println()
