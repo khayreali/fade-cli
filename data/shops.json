@@ -592,14 +592,14 @@
         "lon": -73.9602861
       },
       "phone": "+19174203103",
-      "booking": {
-        "kind": "phone"
-      },
-      "walk_in": "welcome",
+      "rating": 4.8,
+      "rating_src": "google",
       "price_min": 35,
       "price_max": 35,
-      "rating": 4.8,
-      "rating_src": "google"
+      "walk_in": "welcome",
+      "booking": {
+        "kind": "phone"
+      }
     },
     {
       "id": "filthy-rich-williamsburg",
@@ -628,8 +628,8 @@
       "phone": "+19173846001",
       "price_min": 55,
       "booking": {
-        "kind": "link",
-        "url": "https://www.therazordoc.com/"
+        "kind": "squire",
+        "url": "https://getsquire.com/booking/brands/the-razor-doc"
       }
     },
     {
@@ -649,15 +649,24 @@
     {
       "id": "black-rabbit",
       "name": "Black Rabbit Barbershop",
-      "venue": "91 Wyckoff Ave",
-      "address": "91 Wyckoff Ave, Brooklyn, NY 11237",
+      "venue": "444 Melrose St",
+      "address": "444 Melrose St, Brooklyn, NY 11237",
       "point": {
-        "lat": 40.705115,
-        "lon": -73.9201671
+        "lat": 40.7055251,
+        "lon": -73.9260987
+      },
+      "phone": "+13474707457",
+      "hours": {
+        "fri": "10:00-20:00",
+        "mon": "10:00-20:00",
+        "sat": "11:00-17:00",
+        "sun": "12:00-17:00",
+        "thu": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00"
       },
       "booking": {
-        "kind": "link",
-        "url": "https://blackrabbitbarbershop.com/"
+        "kind": "phone"
       }
     },
     {
@@ -730,17 +739,17 @@
         "lon": -73.9118894
       },
       "phone": "+13472946019",
+      "hours": {
+        "fri": "09:00-22:00",
+        "mon": "09:00-22:00",
+        "sat": "09:00-22:00",
+        "sun": "09:00-22:00",
+        "thu": "09:00-22:00",
+        "tue": "09:00-22:00",
+        "wed": "09:00-22:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "hours": {
-        "mon": "09:00-22:00",
-        "tue": "09:00-22:00",
-        "wed": "09:00-22:00",
-        "thu": "09:00-22:00",
-        "fri": "09:00-22:00",
-        "sat": "09:00-22:00",
-        "sun": "09:00-22:00"
       }
     },
     {
@@ -839,7 +848,7 @@
       "walk_in": "welcome",
       "booking": {
         "kind": "vagaro",
-        "url": "https://thelandofbarbers.com/"
+        "url": "https://www.vagaro.com/landofbarbershairsalon"
       }
     },
     {
@@ -1023,6 +1032,7 @@
       "phone": "+17184186390",
       "price_min": 25,
       "price_max": 25,
+      "walk_in": "welcome",
       "hours": {
         "fri": "10:00-19:00",
         "mon": "10:00-19:30",
@@ -1034,8 +1044,7 @@
       },
       "booking": {
         "kind": "phone"
-      },
-      "walk_in": "welcome"
+      }
     },
     {
       "id": "marks-barber-shop",
@@ -1061,6 +1070,8 @@
         "lon": -73.9004285
       },
       "phone": "+17184187488",
+      "price_min": 25,
+      "price_max": 40,
       "booking": {
         "kind": "booksy",
         "id": "1107825",
@@ -1229,10 +1240,10 @@
         "lon": -73.9051369
       },
       "phone": "+19177498626",
+      "walk_in": "welcome",
       "booking": {
         "kind": "phone"
-      },
-      "walk_in": "welcome"
+      }
     },
     {
       "id": "migue-barbershop",
