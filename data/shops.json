@@ -1408,7 +1408,16 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/migue-barbershop-cypress-avenue-8JJjDQ"
+      "info_url": "https://www.fresha.com/lvp/migue-barbershop-cypress-avenue-8JJjDQ",
+      "hours": {
+        "mon": "09:00-20:00",
+        "tue": "09:00-20:00",
+        "wed": "09:00-20:00",
+        "thu": "09:00-20:00",
+        "fri": "09:00-20:00",
+        "sat": "09:00-20:00",
+        "sun": "09:00-18:00"
+      }
     },
     {
       "id": "fly-high-styles",
@@ -1437,7 +1446,14 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/polski-barber-shop-fresh-pond-road-7rrnNz"
+      "info_url": "https://www.fresha.com/lvp/polski-barber-shop-fresh-pond-road-7rrnNz",
+      "hours": {
+        "tue": "10:00-19:00",
+        "wed": "10:00-19:00",
+        "thu": "10:00-19:00",
+        "fri": "10:00-19:00",
+        "sat": "09:00-17:00"
+      }
     },
     {
       "id": "cotter-barber-graham",
@@ -1516,7 +1532,15 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/the-ridgewood-barbershop-centre-street-ridgewood-G55qxG"
+      "info_url": "https://www.fresha.com/lvp/the-ridgewood-barbershop-centre-street-ridgewood-G55qxG",
+      "hours": {
+        "mon": "10:00-19:00",
+        "tue": "10:00-19:00",
+        "wed": "10:00-19:00",
+        "thu": "10:00-19:00",
+        "fri": "10:00-19:00",
+        "sat": "10:00-19:00"
+      }
     }
   ]
 }
