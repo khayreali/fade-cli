@@ -496,3 +496,16 @@ func TestSeededWalkInValuesAreValid(t *testing.T) {
 		}
 	}
 }
+
+// Fresha publishes two kinds of page: /a/ is a partner venue you can book, and
+// /lvp/ is an SEO directory listing for a shop that is NOT a Fresha partner --
+// it carries no booking flow, only "Call to book". Twenty-two shops were once
+// linked to /lvp/ pages and counted as bookable online, which was false.
+func TestNoFreshaDirectoryPagesAreTreatedAsBooking(t *testing.T) {
+	c := load(t)
+	for _, s := range c.Shops {
+		if strings.Contains(s.Booking.URL, "/lvp/") {
+			t.Errorf("%s links a Fresha directory page as if it were bookable: %s", s.ID, s.Booking.URL)
+		}
+	}
+}
