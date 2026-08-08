@@ -89,7 +89,15 @@ FLAGS
 	q.Origin = origin
 
 	results := a.cat.Find(q)
+
+	// JSON is machine output, so the default row cap must not silently
+	// truncate it -- but an explicitly typed --limit is an instruction.
+	typed := map[string]bool{}
+	fs.Visit(func(f *flag.Flag) { typed[f.Name] = true })
 	if *asJSON {
+		if typed["limit"] && *limit > 0 && len(results) > *limit {
+			results = results[:*limit]
+		}
 		return json.NewEncoder(os.Stdout).Encode(results)
 	}
 

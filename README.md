@@ -158,7 +158,10 @@ checking twenty shops costs one round trip rather than twenty.
 3. `fade-cli dev geocode` — fills coordinates from OpenStreetMap, rate-limited to
    OSM's 1 req/sec policy.
 4. `fade-cli dev check` — reports what's still missing.
-5. Rebuild to embed the new data.
+5. `fade-cli dev geocode --force --dry-run` — re-resolves every address and
+   reports drift, flagging any shop whose stored point would move to a
+   different stop. Takes about a second per shop (OSM's rate limit).
+6. Rebuild to embed the new data.
 
 `fade-cli dev check` is the practical guide to what to research next.
 

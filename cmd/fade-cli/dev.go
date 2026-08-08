@@ -42,6 +42,11 @@ TASKS
 // real User-Agent. Expansion runs are one-off, so being polite costs nothing.
 const nominatimRate = 1100 * time.Millisecond
 
+// driftThreshold is how far a re-geocode may move a shop before it's worth
+// flagging. A block or so of jitter between Nominatim runs is normal; a
+// quarter mile means the stored point or the address is wrong.
+const driftThreshold = 0.15
+
 func (a *app) devGeocode(args []string) error {
 	fs := flag.NewFlagSet("dev geocode", flag.ContinueOnError)
 	var (
@@ -63,7 +68,7 @@ func (a *app) devGeocode(args []string) error {
 	}
 
 	client := &http.Client{Timeout: 12 * time.Second}
-	var resolved, failed int
+	var resolved, failed, drifted int
 
 	for i := range cat.Shops {
 		s := &cat.Shops[i]
@@ -75,6 +80,7 @@ func (a *app) devGeocode(args []string) error {
 			continue
 		}
 
+		old, hadPoint := s.Point, s.Located()
 		pt, err := geocode(client, s.Address)
 		if err != nil {
 			failed++
@@ -84,8 +90,30 @@ func (a *app) devGeocode(args []string) error {
 		}
 
 		stop := geo.NearestStop(pt)
-		fmt.Printf("%s %-38s %s\n", ui.Green(" ok "), s.ID,
-			ui.Dim(fmt.Sprintf("%.5f,%.5f  near %s", pt.Lat, pt.Lon, stop.Name)))
+		// With --force the shop already had coordinates, so the useful output
+		// is what would change, not what the geocoder said. Reporting drift
+		// turns this into a way to audit the catalog against its source.
+		switch {
+		case !hadPoint:
+			fmt.Printf("%s %-38s %s\n", ui.Green(" ok "), s.ID,
+				ui.Dim(fmt.Sprintf("%.5f,%.5f  near %s", pt.Lat, pt.Lon, stop.Name)))
+		default:
+			moved := geo.MilesBetween(old, pt)
+			oldStop := geo.NearestStop(old)
+			switch {
+			case oldStop.ID != stop.ID:
+				drifted++
+				fmt.Printf("%s %-38s %s\n", ui.Red("MOVE"), s.ID,
+					ui.Yellow(fmt.Sprintf("%.2f mi, %s -> %s", moved, oldStop.Name, stop.Name)))
+			case moved > driftThreshold:
+				drifted++
+				fmt.Printf("%s %-38s %s\n", ui.Yellow("drift"), s.ID,
+					ui.Dim(fmt.Sprintf("%.2f mi, still near %s", moved, stop.Name)))
+			default:
+				fmt.Printf("%s %-38s %s\n", ui.Green(" ok "), s.ID,
+					ui.Dim(fmt.Sprintf("%.3f mi from stored", moved)))
+			}
+		}
 		if !*dry {
 			s.Point = pt
 		}
@@ -93,7 +121,11 @@ func (a *app) devGeocode(args []string) error {
 		time.Sleep(nominatimRate)
 	}
 
-	fmt.Printf("\n%d resolved, %d failed\n", resolved, failed)
+	fmt.Printf("\n%d resolved, %d failed", resolved, failed)
+	if drifted > 0 {
+		fmt.Printf(", %s", ui.Yellow(fmt.Sprintf("%d drifted", drifted)))
+	}
+	fmt.Println()
 	if *dry || resolved == 0 {
 		return nil
 	}
