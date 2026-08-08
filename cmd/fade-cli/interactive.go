@@ -314,6 +314,9 @@ func browseTable(results []catalog.Result, now time.Time) ([][]string, map[int]b
 	var anyWalk, anyPrice, anyRating bool
 	for i, r := range results {
 		name[i] = openDot(r.Shop, now, anyHours) + r.Shop.Name
+		if l := r.Shop.Type.Label(); l != "" {
+			name[i] += ui.Dim("  " + l)
+		}
 		if extra := len(r.Alongside); extra > 0 {
 			name[i] += ui.Dim(fmt.Sprintf("  +%d", extra))
 		}
@@ -514,6 +517,9 @@ func shopFacts(a *app, shop catalog.Shop, r catalog.Result, from string) string 
 		facts = append(facts, priceCell(shop))
 	}
 	facts = append(facts, hoursFact(shop, time.Now())...)
+	if l := shop.Type.Label(); l != "" {
+		facts = append(facts, ui.Dim(l))
+	}
 	if l := shop.WalkIn.Label(); l != "" {
 		facts = append(facts, ui.Cyan(l))
 	}

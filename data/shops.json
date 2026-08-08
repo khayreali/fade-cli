@@ -641,19 +641,19 @@
         "lat": 40.7198324,
         "lon": -73.9590706
       },
-      "booking": {
-        "kind": "phone"
-      },
       "phone": "+13477271184",
       "walk_in": "only",
       "hours": {
-        "mon": "09:00-20:00",
-        "tue": "09:00-20:00",
-        "wed": "09:00-20:00",
-        "thu": "09:00-20:00",
         "fri": "09:00-20:00",
+        "mon": "09:00-20:00",
         "sat": "09:00-20:00",
-        "sun": "10:00-20:00"
+        "sun": "10:00-20:00",
+        "thu": "09:00-20:00",
+        "tue": "09:00-20:00",
+        "wed": "09:00-20:00"
+      },
+      "booking": {
+        "kind": "phone"
       }
     },
     {
@@ -730,22 +730,22 @@
       "name": "Dai Tin Barbershop",
       "venue": "153 Wilson Ave",
       "address": "153 Wilson Ave, Brooklyn, NY 11237",
+      "info_url": "https://www.fresha.com/lvp/dai-tin-barbershop-wilson-avenue-RvVG0M",
       "point": {
         "lat": 40.700429,
         "lon": -73.9248564
       },
       "phone": "+16313264290",
-      "booking": {
-        "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/dai-tin-barbershop-wilson-avenue-RvVG0M",
       "hours": {
-        "tue": "11:00-19:00",
-        "wed": "11:00-19:00",
-        "thu": "11:00-19:00",
         "fri": "11:00-19:00",
         "sat": "11:00-19:00",
-        "sun": "12:00-19:00"
+        "sun": "12:00-19:00",
+        "thu": "11:00-19:00",
+        "tue": "11:00-19:00",
+        "wed": "11:00-19:00"
+      },
+      "booking": {
+        "kind": "phone"
       }
     },
     {
@@ -753,6 +753,7 @@
       "name": "Rada Flow Barbershop",
       "venue": "1544 Myrtle Ave",
       "address": "1544 Myrtle Ave, Brooklyn, NY 11237",
+      "info_url": "https://www.fresha.com/lvp/rada-flow-barbershop-myrtle-avenue-zn5wLn",
       "point": {
         "lat": 40.6993711,
         "lon": -73.9118894
@@ -769,31 +770,30 @@
       },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/rada-flow-barbershop-myrtle-avenue-zn5wLn"
+      }
     },
     {
       "id": "marys-unisex",
       "name": "Mary's Unisex Salon Barber Shop",
       "venue": "1486 DeKalb Ave",
       "address": "1486 DeKalb Ave, Brooklyn, NY 11237",
+      "info_url": "https://www.fresha.com/lvp/marys-unisex-salon-barber-shop-inc-dekalb-avenue-PVwRN9",
       "point": {
         "lat": 40.7014904,
         "lon": -73.921729
       },
       "phone": "+17184973173",
+      "hours": {
+        "fri": "10:00-20:00",
+        "mon": "10:00-20:00",
+        "sat": "10:00-20:00",
+        "sun": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/marys-unisex-salon-barber-shop-inc-dekalb-avenue-PVwRN9",
-      "hours": {
-        "mon": "10:00-20:00",
-        "tue": "10:00-20:00",
-        "wed": "10:00-20:00",
-        "thu": "10:00-20:00",
-        "fri": "10:00-20:00",
-        "sat": "10:00-20:00",
-        "sun": "10:00-20:00"
       }
     },
     {
@@ -815,23 +815,23 @@
       "name": "Trios For Hair",
       "venue": "274 Troutman St",
       "address": "274 Troutman St, Brooklyn, NY 11237",
+      "info_url": "https://www.fresha.com/lvp/trios-for-hair-troutman-street-NooMy7",
       "point": {
         "lat": 40.7034387,
         "lon": -73.9257541
       },
       "phone": "+13472405430",
+      "hours": {
+        "fri": "11:00-19:00",
+        "mon": "11:00-19:00",
+        "sat": "11:00-19:00",
+        "sun": "11:00-18:00",
+        "thu": "11:00-19:00",
+        "tue": "11:00-19:00",
+        "wed": "11:00-19:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/trios-for-hair-troutman-street-NooMy7",
-      "hours": {
-        "mon": "11:00-19:00",
-        "tue": "11:00-19:00",
-        "wed": "11:00-19:00",
-        "thu": "11:00-19:00",
-        "fri": "11:00-19:00",
-        "sat": "11:00-19:00",
-        "sun": "11:00-18:00"
       }
     },
     {
@@ -839,23 +839,23 @@
       "name": "Topline #1 Barbershop",
       "venue": "448 Wilson Ave",
       "address": "448 Wilson Ave, Brooklyn, NY 11221",
+      "info_url": "https://www.fresha.com/lvp/topline-1-barbershop-wilson-avenue-eXlDa1",
       "point": {
         "lat": 40.6929728,
         "lon": -73.9123732
       },
       "phone": "+13477255421",
+      "hours": {
+        "fri": "09:00-21:00",
+        "mon": "09:00-21:00",
+        "sat": "09:00-21:00",
+        "sun": "09:00-18:00",
+        "thu": "09:00-21:00",
+        "tue": "09:00-21:00",
+        "wed": "09:00-21:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/topline-1-barbershop-wilson-avenue-eXlDa1",
-      "hours": {
-        "mon": "09:00-21:00",
-        "tue": "09:00-21:00",
-        "wed": "09:00-21:00",
-        "thu": "09:00-21:00",
-        "fri": "09:00-21:00",
-        "sat": "09:00-21:00",
-        "sun": "09:00-18:00"
       }
     },
     {
@@ -906,6 +906,7 @@
       "name": "Thee Brooklyn Barber (Greenpoint)",
       "venue": "141 Nassau Ave",
       "address": "141 Nassau Ave, Brooklyn, NY 11222",
+      "info_url": "https://www.fresha.com/lvp/thee-brooklyn-barber-nassau-avenue-46ybYx",
       "point": {
         "lat": 40.7249034,
         "lon": -73.9479776
@@ -916,18 +917,17 @@
       "price_min": 35,
       "price_max": 35,
       "walk_in": "welcome",
+      "hours": {
+        "fri": "10:00-20:00",
+        "mon": "10:00-20:00",
+        "sat": "10:00-19:00",
+        "sun": "10:00-19:00",
+        "thu": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/thee-brooklyn-barber-nassau-avenue-46ybYx",
-      "hours": {
-        "mon": "10:00-20:00",
-        "tue": "10:00-20:00",
-        "wed": "10:00-20:00",
-        "thu": "10:00-20:00",
-        "fri": "10:00-20:00",
-        "sat": "10:00-19:00",
-        "sun": "10:00-19:00"
       }
     },
     {
@@ -935,23 +935,23 @@
       "name": "The 248 Barbershop",
       "venue": "248 Driggs Ave",
       "address": "248 Driggs Ave, Brooklyn, NY 11222",
+      "info_url": "https://www.fresha.com/lvp/the-248-barbershop-driggs-avenue-n6Axge",
       "point": {
         "lat": 40.7228638,
         "lon": -73.9477998
       },
       "phone": "+13478313652",
+      "hours": {
+        "fri": "10:00-20:00",
+        "mon": "10:00-20:00",
+        "sat": "10:00-20:00",
+        "sun": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/the-248-barbershop-driggs-avenue-n6Axge",
-      "hours": {
-        "mon": "10:00-20:00",
-        "tue": "10:00-20:00",
-        "wed": "10:00-20:00",
-        "thu": "10:00-20:00",
-        "fri": "10:00-20:00",
-        "sat": "10:00-20:00",
-        "sun": "10:00-20:00"
       }
     },
     {
@@ -1008,6 +1008,7 @@
       "name": "Fade 2 Famous",
       "venue": "213 Greenpoint Ave",
       "address": "213 Greenpoint Ave, Brooklyn, NY 11222",
+      "info_url": "https://www.fresha.com/lvp/fade-2-famous-greenpoint-avenue-YKqbV3",
       "point": {
         "lat": 40.7307087,
         "lon": -73.9508418
@@ -1015,17 +1016,16 @@
       "phone": "+17183831515",
       "price_min": 14,
       "price_max": 14,
+      "hours": {
+        "fri": "10:00-19:00",
+        "mon": "10:00-19:00",
+        "sat": "10:00-19:00",
+        "thu": "10:00-19:00",
+        "tue": "10:00-19:00",
+        "wed": "10:00-19:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/fade-2-famous-greenpoint-avenue-YKqbV3",
-      "hours": {
-        "mon": "10:00-19:00",
-        "tue": "10:00-19:00",
-        "wed": "10:00-19:00",
-        "thu": "10:00-19:00",
-        "fri": "10:00-19:00",
-        "sat": "10:00-19:00"
       }
     },
     {
@@ -1033,6 +1033,7 @@
       "name": "Equilibrium Barbershop",
       "venue": "186 Nassau Ave",
       "address": "186 Nassau Ave, Brooklyn, NY 11222",
+      "info_url": "https://www.fresha.com/lvp/equilibrium-barbershop-nassau-avenue-YKqGZK",
       "point": {
         "lat": 40.7253379,
         "lon": -73.9457533
@@ -1054,30 +1055,29 @@
       },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/equilibrium-barbershop-nassau-avenue-YKqGZK"
+      }
     },
     {
       "id": "sir-edmonds",
       "name": "Sir Edmond's Barber Shop",
       "venue": "729 Manhattan Ave",
       "address": "729 Manhattan Ave, Brooklyn, NY 11222",
+      "info_url": "https://www.fresha.com/lvp/sir-edmonds-barber-shop-manhattan-avenue-A88BVq",
       "point": {
         "lat": 40.7260863,
         "lon": -73.9524199
       },
       "phone": "+19175997829",
+      "hours": {
+        "fri": "09:30-19:30",
+        "mon": "09:30-19:30",
+        "sun": "10:00-18:00",
+        "thu": "09:30-19:30",
+        "tue": "09:30-19:30",
+        "wed": "09:30-19:30"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/sir-edmonds-barber-shop-manhattan-avenue-A88BVq",
-      "hours": {
-        "mon": "09:30-19:30",
-        "tue": "09:30-19:30",
-        "wed": "09:30-19:30",
-        "thu": "09:30-19:30",
-        "fri": "09:30-19:30",
-        "sun": "10:00-18:00"
       }
     },
     {
@@ -1114,6 +1114,7 @@
       "name": "Eddo's Barber Shop",
       "venue": "66-24 Forest Ave",
       "address": "66-24 Forest Ave, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/eddos-barber-shop-since-2002-forest-avenue-A88l8Z",
       "point": {
         "lat": 40.7068296,
         "lon": -73.9032663
@@ -1133,30 +1134,29 @@
       },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/eddos-barber-shop-since-2002-forest-avenue-A88l8Z"
+      }
     },
     {
       "id": "marks-barber-shop",
       "name": "Mark's Barber Shop",
       "venue": "70-20 Fresh Pond Rd",
       "address": "70-20 Fresh Pond Rd, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/marks-barber-shop-beauty-salon-fresh-pond-road-ovvYJM",
       "point": {
         "lat": 40.7020131,
         "lon": -73.8951779
       },
       "phone": "+17184183193",
+      "hours": {
+        "fri": "09:00-18:00",
+        "mon": "09:00-20:00",
+        "sun": "09:00-18:00",
+        "thu": "09:00-20:00",
+        "tue": "09:00-20:00",
+        "wed": "09:00-20:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/marks-barber-shop-beauty-salon-fresh-pond-road-ovvYJM",
-      "hours": {
-        "mon": "09:00-20:00",
-        "tue": "09:00-20:00",
-        "wed": "09:00-20:00",
-        "thu": "09:00-20:00",
-        "fri": "09:00-18:00",
-        "sun": "09:00-18:00"
       }
     },
     {
@@ -1198,23 +1198,23 @@
       "name": "Nicks Barbershop 4",
       "venue": "6099 Putnam Ave",
       "address": "6099 Putnam Ave, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/nicks-barbershop-4-putnam-avenue-G555bo",
       "point": {
         "lat": 40.6991249,
         "lon": -73.9078997
       },
       "phone": "+17185763300",
+      "hours": {
+        "fri": "09:00-22:00",
+        "mon": "09:00-20:00",
+        "sat": "09:00-20:00",
+        "sun": "09:00-18:00",
+        "thu": "09:00-20:00",
+        "tue": "09:00-20:00",
+        "wed": "09:00-20:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/nicks-barbershop-4-putnam-avenue-G555bo",
-      "hours": {
-        "mon": "09:00-20:00",
-        "tue": "09:00-20:00",
-        "wed": "09:00-20:00",
-        "thu": "09:00-20:00",
-        "fri": "09:00-22:00",
-        "sat": "09:00-20:00",
-        "sun": "09:00-18:00"
       }
     },
     {
@@ -1252,23 +1252,23 @@
       "name": "Black Gold Barbershop",
       "venue": "502 Grandview Ave",
       "address": "502 Grandview Ave, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/black-gold-barbershop-grandview-avenue-MxLkL4",
       "point": {
         "lat": 40.7095369,
         "lon": -73.9077583
       },
       "phone": "+17184188017",
+      "hours": {
+        "fri": "10:00-20:00",
+        "mon": "10:00-20:00",
+        "sat": "10:00-20:00",
+        "sun": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/black-gold-barbershop-grandview-avenue-MxLkL4",
-      "hours": {
-        "mon": "10:00-20:00",
-        "tue": "10:00-20:00",
-        "wed": "10:00-20:00",
-        "thu": "10:00-20:00",
-        "fri": "10:00-20:00",
-        "sat": "10:00-20:00",
-        "sun": "10:00-20:00"
       }
     },
     {
@@ -1276,22 +1276,22 @@
       "name": "All Star Barbers",
       "venue": "56-15 Catalpa Ave",
       "address": "56-15 Catalpa Ave, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/all-star-barbers-catalpa-avenue-EvJ1QK",
       "point": {
         "lat": 40.7006873,
         "lon": -73.9046807
       },
       "phone": "+19292950284",
+      "hours": {
+        "fri": "10:00-20:00",
+        "mon": "10:00-18:30",
+        "sat": "10:00-17:30",
+        "thu": "10:00-18:30",
+        "tue": "10:00-18:30",
+        "wed": "10:00-18:30"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/all-star-barbers-catalpa-avenue-EvJ1QK",
-      "hours": {
-        "mon": "10:00-18:30",
-        "tue": "10:00-18:30",
-        "wed": "10:00-18:30",
-        "thu": "10:00-18:30",
-        "fri": "10:00-20:00",
-        "sat": "10:00-17:30"
       }
     },
     {
@@ -1299,6 +1299,7 @@
       "name": "Clippers Barber Shop",
       "venue": "65-18 Fresh Pond Rd",
       "address": "65-18 Fresh Pond Rd, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/clippers-barber-shop-fresh-pond-road-D78njY",
       "geocode_as": "6518 Fresh Pond Road, Ridgewood, NY 11385",
       "point": {
         "lat": 40.7094553,
@@ -1314,31 +1315,30 @@
       },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/clippers-barber-shop-fresh-pond-road-D78njY"
+      }
     },
     {
       "id": "el-figaro-barber-shop",
       "name": "El Figaro Barber Shop",
       "venue": "66-97 Forest Ave",
       "address": "66-97 Forest Ave, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/el-figaro-barber-shop-forest-avenue-BoojA3",
       "point": {
         "lat": 40.7046126,
         "lon": -73.9016796
       },
       "phone": "+13478730766",
+      "hours": {
+        "fri": "09:00-19:00",
+        "mon": "09:00-19:00",
+        "sat": "09:00-19:00",
+        "sun": "09:00-19:00",
+        "thu": "09:00-19:00",
+        "tue": "09:00-19:00",
+        "wed": "09:00-19:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/el-figaro-barber-shop-forest-avenue-BoojA3",
-      "hours": {
-        "mon": "09:00-19:00",
-        "tue": "09:00-19:00",
-        "wed": "09:00-19:00",
-        "thu": "09:00-19:00",
-        "fri": "09:00-19:00",
-        "sat": "09:00-19:00",
-        "sun": "09:00-19:00"
       }
     },
     {
@@ -1360,6 +1360,7 @@
       "name": "Onyx Barber Shop",
       "venue": "665 Seneca Ave",
       "address": "665 Seneca Ave, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/751-barbershop-seneca-avenue-PVVKRY",
       "point": {
         "lat": 40.7034528,
         "lon": -73.9084052
@@ -1367,32 +1368,31 @@
       "phone": "+13479887029",
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/751-barbershop-seneca-avenue-PVVKRY"
+      }
     },
     {
       "id": "cut-it-out-barbershop",
       "name": "Cut It Out Barbershop",
       "venue": "803 Seneca Ave",
       "address": "803 Seneca Ave, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/cut-it-out-barbershop-seneca-avenue-PVVj4V",
       "point": {
         "lat": 40.7015181,
         "lon": -73.9051369
       },
       "phone": "+19177498626",
       "walk_in": "welcome",
+      "hours": {
+        "fri": "08:00-22:00",
+        "mon": "10:00-20:00",
+        "sat": "08:00-22:00",
+        "sun": "09:00-17:00",
+        "thu": "08:00-22:00",
+        "tue": "09:00-20:00",
+        "wed": "09:00-20:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/cut-it-out-barbershop-seneca-avenue-PVVj4V",
-      "hours": {
-        "mon": "10:00-20:00",
-        "tue": "09:00-20:00",
-        "wed": "09:00-20:00",
-        "thu": "08:00-22:00",
-        "fri": "08:00-22:00",
-        "sat": "08:00-22:00",
-        "sun": "09:00-17:00"
       }
     },
     {
@@ -1400,23 +1400,23 @@
       "name": "Migue Barbershop",
       "venue": "1108 Cypress Ave",
       "address": "1108 Cypress Ave, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/migue-barbershop-cypress-avenue-8JJjDQ",
       "point": {
         "lat": 40.6959069,
         "lon": -73.8997827
       },
       "phone": "+13475675974",
+      "hours": {
+        "fri": "09:00-20:00",
+        "mon": "09:00-20:00",
+        "sat": "09:00-20:00",
+        "sun": "09:00-18:00",
+        "thu": "09:00-20:00",
+        "tue": "09:00-20:00",
+        "wed": "09:00-20:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/migue-barbershop-cypress-avenue-8JJjDQ",
-      "hours": {
-        "mon": "09:00-20:00",
-        "tue": "09:00-20:00",
-        "wed": "09:00-20:00",
-        "thu": "09:00-20:00",
-        "fri": "09:00-20:00",
-        "sat": "09:00-20:00",
-        "sun": "09:00-18:00"
       }
     },
     {
@@ -1438,21 +1438,21 @@
       "name": "Polski Barber Shop",
       "venue": "65-02 Fresh Pond Rd",
       "address": "65-02 Fresh Pond Rd, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/polski-barber-shop-fresh-pond-road-7rrnNz",
       "point": {
         "lat": 40.709502,
         "lon": -73.8991149
       },
       "phone": "+16462866683",
+      "hours": {
+        "fri": "10:00-19:00",
+        "sat": "09:00-17:00",
+        "thu": "10:00-19:00",
+        "tue": "10:00-19:00",
+        "wed": "10:00-19:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/polski-barber-shop-fresh-pond-road-7rrnNz",
-      "hours": {
-        "tue": "10:00-19:00",
-        "wed": "10:00-19:00",
-        "thu": "10:00-19:00",
-        "fri": "10:00-19:00",
-        "sat": "09:00-17:00"
       }
     },
     {
@@ -1523,24 +1523,76 @@
       "name": "The Ridgewood Barbers",
       "venue": "1809-02 Centre St",
       "address": "1809-02 Centre St, Ridgewood, NY 11385",
+      "info_url": "https://www.fresha.com/lvp/the-ridgewood-barbershop-centre-street-ridgewood-G55qxG",
       "geocode_as": "1809 Centre St, Ridgewood, NY 11385",
       "point": {
         "lat": 40.6997971,
         "lon": -73.9021569
       },
       "phone": "+17188210500",
+      "hours": {
+        "fri": "10:00-19:00",
+        "mon": "10:00-19:00",
+        "sat": "10:00-19:00",
+        "thu": "10:00-19:00",
+        "tue": "10:00-19:00",
+        "wed": "10:00-19:00"
+      },
       "booking": {
         "kind": "phone"
-      },
-      "info_url": "https://www.fresha.com/lvp/the-ridgewood-barbershop-centre-street-ridgewood-G55qxG",
-      "hours": {
-        "mon": "10:00-19:00",
-        "tue": "10:00-19:00",
-        "wed": "10:00-19:00",
-        "thu": "10:00-19:00",
-        "fri": "10:00-19:00",
-        "sat": "10:00-19:00"
       }
+    },
+    {
+      "id": "roots-radicals-salon",
+      "name": "Roots Radicals Salon",
+      "venue": "434 Graham Ave",
+      "address": "434 Graham Ave, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.7179012,
+        "lon": -73.9447264
+      },
+      "phone": "+17183895200",
+      "rating": 5,
+      "reviews": 776,
+      "rating_src": "fresha",
+      "price_min": 100,
+      "price_max": 100,
+      "booking": {
+        "kind": "fresha",
+        "id": "roots-radicals-salon-new-york-434-graham-avenue-bj9j02yt",
+        "url": "https://www.fresha.com/a/roots-radicals-salon-new-york-434-graham-avenue-bj9j02yt"
+      },
+      "type": "salon"
+    },
+    {
+      "id": "self-bushwick",
+      "name": "Self Bushwick",
+      "venue": "86 Central Ave",
+      "address": "86 Central Ave, Brooklyn, NY 11206",
+      "point": {
+        "lat": 40.7007008,
+        "lon": -73.9299957
+      },
+      "rating": 4.9,
+      "reviews": 1280,
+      "rating_src": "fresha",
+      "price_min": 120,
+      "price_max": 120,
+      "hours": {
+        "fri": "10:00-20:00",
+        "mon": "08:00-18:00",
+        "sat": "10:00-18:00",
+        "sun": "10:00-18:00",
+        "thu": "10:00-20:00",
+        "tue": "08:00-18:00",
+        "wed": "10:00-20:00"
+      },
+      "booking": {
+        "kind": "fresha",
+        "id": "self-bushwick-new-york-86-central-avenue-q4t6fiut",
+        "url": "https://www.fresha.com/a/self-bushwick-new-york-86-central-avenue-q4t6fiut"
+      },
+      "type": "salon"
     }
   ]
 }

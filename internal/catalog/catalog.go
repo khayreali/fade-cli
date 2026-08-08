@@ -29,6 +29,26 @@ const (
 	KindSquire BookingKind = "squire" // SQUIRE, barbershop-specific
 )
 
+// ShopType separates barbershops from salons that also cut men's hair. Both
+// give you a haircut, so hiding salons would withhold good options -- but a
+// $120 stylist cut and a $25 fade are not the same product, and letting them
+// look identical in a list is the sort of collapsed distinction this catalog
+// works hard to avoid.
+type ShopType string
+
+const (
+	TypeBarbershop ShopType = ""
+	TypeSalon      ShopType = "salon"
+)
+
+// Label names the type for display, empty for the barbershop default.
+func (t ShopType) Label() string {
+	if t == TypeSalon {
+		return "salon"
+	}
+	return ""
+}
+
 // WalkIn describes a shop's walk-in policy.
 type WalkIn string
 
@@ -90,6 +110,8 @@ type Shop struct {
 	PriceMin  int      `json:"price_min,omitempty"`
 	PriceMax  int      `json:"price_max,omitempty"`
 	Tags      []string `json:"tags,omitempty"`
+	// Type distinguishes a salon from a barbershop; empty means barbershop.
+	Type ShopType `json:"type,omitempty"`
 	// WalkIn says whether you can simply turn up. For a shop with no online
 	// booking this is the difference between "you can't book here" and "go
 	// now, they're open" -- which is the more useful answer more often.
@@ -238,6 +260,8 @@ type Query struct {
 	MinRating float64
 	Kinds     []BookingKind
 	Corridor  string // limit to one corridor by id
+	Type      ShopType
+	TypeSet   bool // separates "barbershops only" from "no type filter"
 	// OpenAt keeps only shops open at this instant. Zero disables it. Shops
 	// with unknown hours are excluded rather than assumed open.
 	OpenAt     time.Time
@@ -279,6 +303,9 @@ func (c *Catalog) Find(q Query) []Result {
 			continue
 		}
 		if len(q.Kinds) > 0 && !containsKind(q.Kinds, s.Booking.Kind) {
+			continue
+		}
+		if q.TypeSet && s.Type != q.Type {
 			continue
 		}
 		if !q.OpenAt.IsZero() {

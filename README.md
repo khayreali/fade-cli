@@ -153,10 +153,17 @@ credentials for. Today that means:
 Shops without credentials degrade to a deep link rather than erroring. That's
 the intended state, not a bug — the CLI is useful with zero API access.
 
-**Hairboss Barbershop** (99 Norman Ave, Greenpoint) is the best first target for
-a real integration: it hosts its calendar on Square Appointments, which is the
-one platform with an open API. It needs a `location_id:service_variation_id`
-pair, which requires the shop to authorize the app.
+**No third-party client can complete a booking here, and that is structural.**
+Square's Bookings API is seller-scoped: creating a booking at a shop requires
+that shop to OAuth-authorize this application into its own Square account. A
+customer cannot obtain those credentials by pasting a token. The same is true
+of Booksy, Fresha, Vagaro and Squire, whose APIs exist for merchants running
+their own chair.
+
+So the handoff is not a fallback — for a customer-side tool it is the product.
+The work that pays off is making the moment of handoff good: knowing whether
+the shop is open, whether you can just walk in, and landing on the booking page
+rather than a homepage.
 
 Availability queries fan out concurrently across every shop and provider, so
 checking twenty shops costs one round trip rather than twenty.
@@ -206,6 +213,11 @@ read stale data without saying so.
   against Booksy, Fresha, Squire and Vagaro; these publish nothing bookable.
   Two are walk-in only, where a phone number is the correct answer, not a
   fallback.
+- **Two salons are included, marked as such.** Roots Radicals and Self Bushwick
+  cut men's hair at \$100-120. Hiding them would withhold two of the
+  best-rated options in the corridor; merging them silently into a list of
+  \$25 fades would misrepresent what a row means. `--type salon` or
+  `--type barbershop` filters either way.
 - **Booksy models individual barbers as separate businesses.** Five barbers at
   681 Broadway are five catalog entries. `--collapse` folds them by address.
 - **Two addresses in the original seed were invented** rather than sourced, and

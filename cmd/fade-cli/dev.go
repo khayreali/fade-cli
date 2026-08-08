@@ -81,6 +81,19 @@ func (a *app) devGeocode(args []string) error {
 		return fmt.Errorf("parsing %s: %w", *file, err)
 	}
 
+	// Also keep the file as a generic document. Writing back through the typed
+	// struct would silently drop any JSON field Go does not model yet -- which
+	// it did, erasing a "type" field added to the data minutes before the Go
+	// field existed. Only the point is written, in place.
+	var doc map[string]any
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		return fmt.Errorf("parsing %s: %w", *file, err)
+	}
+	rawShops, _ := doc["shops"].([]any)
+	if len(rawShops) != len(cat.Shops) {
+		return fmt.Errorf("%s: shop count mismatch between typed and raw views", *file)
+	}
+
 	client := &http.Client{Timeout: 12 * time.Second}
 	var resolved, failed, drifted, approx int
 
@@ -140,6 +153,9 @@ func (a *app) devGeocode(args []string) error {
 		}
 		if !*dry {
 			s.Point = pt
+			if m, ok := rawShops[i].(map[string]any); ok {
+				m["point"] = map[string]any{"lat": pt.Lat, "lon": pt.Lon}
+			}
 		}
 		resolved++
 		time.Sleep(nominatimRate)
@@ -163,7 +179,7 @@ func (a *app) devGeocode(args []string) error {
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
-	if err := enc.Encode(cat); err != nil {
+	if err := enc.Encode(doc); err != nil {
 		return err
 	}
 	if err := os.WriteFile(*file, buf.Bytes(), 0o644); err != nil {

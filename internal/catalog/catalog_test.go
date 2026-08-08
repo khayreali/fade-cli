@@ -519,3 +519,44 @@ func TestInfoURLIsNeverABookingLink(t *testing.T) {
 		}
 	}
 }
+
+// A salon cut and a barbershop fade are both haircuts but not the same
+// product, so the type must be filterable and must never be guessed.
+func TestShopTypeFilter(t *testing.T) {
+	c := load(t)
+
+	salons := c.Find(Query{Type: TypeSalon, TypeSet: true})
+	if len(salons) == 0 {
+		t.Fatal("no salons in the catalog")
+	}
+	for _, r := range salons {
+		if r.Shop.Type != TypeSalon {
+			t.Errorf("%s is not a salon", r.Shop.ID)
+		}
+	}
+
+	shops := c.Find(Query{Type: TypeBarbershop, TypeSet: true})
+	for _, r := range shops {
+		if r.Shop.Type != TypeBarbershop {
+			t.Errorf("%s leaked into a barbershop-only query", r.Shop.ID)
+		}
+	}
+	if len(salons)+len(shops) != len(c.Shops) {
+		t.Errorf("%d + %d != %d: the two types should partition the catalog",
+			len(salons), len(shops), len(c.Shops))
+	}
+
+	// No filter must mean no filtering, not "barbershops only".
+	if got := len(c.Find(Query{})); got != len(c.Shops) {
+		t.Errorf("unfiltered query returned %d of %d", got, len(c.Shops))
+	}
+}
+
+func TestShopTypeLabels(t *testing.T) {
+	if TypeBarbershop.Label() != "" {
+		t.Error("the default type must render as nothing, not a tag on every row")
+	}
+	if TypeSalon.Label() == "" {
+		t.Error("a salon must be labelled")
+	}
+}

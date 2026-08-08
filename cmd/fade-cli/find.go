@@ -33,6 +33,7 @@ FLAGS
 		from      = fs.String("from", "", "only shops from this stop onward")
 		to        = fs.String("to", "", "only shops up to this stop")
 		sortBy    = fs.String("sort", "", "order: nearest (default), cheapest, rated")
+		shopType  = fs.String("type", "", "barbershop or salon; default is both")
 		collapse  = fs.Bool("collapse", false, "one row per address, not per bookable barber")
 		limit     = fs.Int("limit", 20, "max rows to show (0 for all)")
 		asJSON    = fs.Bool("json", false, "emit JSON instead of a table")
@@ -55,6 +56,15 @@ FLAGS
 	}
 	if *collapse {
 		q.CollapseBy = "venue"
+	}
+	switch *shopType {
+	case "":
+	case "barbershop":
+		q.Type, q.TypeSet = catalog.TypeBarbershop, true
+	case "salon":
+		q.Type, q.TypeSet = catalog.TypeSalon, true
+	default:
+		return fmt.Errorf("unknown --type %q -- use barbershop or salon", *shopType)
 	}
 	switch *sortBy {
 	case "", "nearest":
@@ -164,6 +174,9 @@ func printResults(results []catalog.Result, withDistance bool) {
 		}
 
 		name := r.Shop.Name
+		if l := r.Shop.Type.Label(); l != "" {
+			name += ui.Dim("  " + l)
+		}
 		if n := len(r.Alongside); n > 0 {
 			name += ui.Dim(fmt.Sprintf(" +%d", n))
 		}
