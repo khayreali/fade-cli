@@ -140,8 +140,9 @@ func (a *app) printStats() {
 	for _, c := range a.state.Cuts {
 		spent += c.Total()
 	}
-	fmt.Printf("  %d cuts, $%d total, every %s on average\n\n",
-		len(a.state.Cuts), spent, ui.Duration(a.state.Interval()))
+	interval, src := a.state.IntervalWithSource()
+	fmt.Printf("  %d cuts, $%d total, every %s %s\n\n",
+		len(a.state.Cuts), spent, ui.Duration(interval), ui.Dim("("+src.Label()+")"))
 
 	regulars := a.state.Regulars()
 	if len(regulars) == 0 {
@@ -190,6 +191,11 @@ func (a *app) due(args []string) error {
 	}
 	fmt.Println()
 
+	// A prediction built on the generic default is a guess, not a measurement.
+	if _, src := a.state.IntervalWithSource(); src == store.IntervalDefault {
+		ui.Hint("based on a %d-day default -- log a few cuts and it learns your cadence",
+			int(store.DefaultCutInterval.Hours()/24))
+	}
 	if last.ShopID != "" {
 		ui.Hint("rebook: fade-cli book %s", last.ShopID)
 	}

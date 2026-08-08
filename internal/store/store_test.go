@@ -197,3 +197,50 @@ func TestLoadSortsHandEditedCuts(t *testing.T) {
 		t.Errorf("Interval = %v, want about 21 days", got)
 	}
 }
+
+// A learned cadence and a generic default render as the same number of weeks,
+// so the source has to be reportable or the tool implies it knows your habits
+// when it is guessing.
+func TestIntervalSourceIsDistinguishable(t *testing.T) {
+	empty := &State{}
+	if d, src := empty.IntervalWithSource(); src != IntervalDefault || d != DefaultCutInterval {
+		t.Errorf("no history gave (%v, %v), want the default", d, src)
+	}
+
+	// Two cuts is not enough to measure a cadence from.
+	two := &State{}
+	two.AddCut(Cut{Date: day(2026, time.July, 1)})
+	two.AddCut(Cut{Date: day(2026, time.July, 15)})
+	if _, src := two.IntervalWithSource(); src != IntervalDefault {
+		t.Errorf("two cuts reported %v, want the default", src)
+	}
+
+	// Three makes it measurable, and the answer must be the measurement.
+	three := &State{}
+	for _, d := range []time.Time{day(2026, time.July, 1), day(2026, time.July, 15), day(2026, time.July, 29)} {
+		three.AddCut(Cut{Date: d})
+	}
+	d, src := three.IntervalWithSource()
+	if src != IntervalLearned {
+		t.Errorf("three cuts reported %v, want learned", src)
+	}
+	if d != 14*24*time.Hour {
+		t.Errorf("learned interval = %v, want 14 days", d)
+	}
+
+	cfg := &State{Profile: Profile{IntervalDays: 10}}
+	if d, src := cfg.IntervalWithSource(); src != IntervalConfigured || d != 10*24*time.Hour {
+		t.Errorf("configured gave (%v, %v)", d, src)
+	}
+}
+
+func TestIntervalSourceLabelsAreDistinct(t *testing.T) {
+	seen := map[string]bool{}
+	for _, s := range []IntervalSource{IntervalDefault, IntervalLearned, IntervalConfigured} {
+		l := s.Label()
+		if l == "" || seen[l] {
+			t.Errorf("source %v has a blank or duplicate label %q", s, l)
+		}
+		seen[l] = true
+	}
+}

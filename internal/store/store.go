@@ -148,16 +148,54 @@ func (s *State) LastCut() (Cut, bool) {
 	return s.Cuts[0], true
 }
 
+// IntervalSource says where a cadence came from. A learned interval and a
+// generic default render as the same number of weeks, so without this the tool
+// claims to know your habits when it is really just guessing.
+type IntervalSource int
+
+const (
+	IntervalDefault    IntervalSource = iota // not enough history; generic guess
+	IntervalLearned                          // median of your own gaps
+	IntervalConfigured                       // you set it explicitly
+)
+
+// Label describes the source in words, for screens that show the cadence.
+func (s IntervalSource) Label() string {
+	switch s {
+	case IntervalConfigured:
+		return "you set this"
+	case IntervalLearned:
+		return "learned from your cuts"
+	default:
+		return "default, not enough history yet"
+	}
+}
+
+// IntervalWithSource returns the cadence and where it came from.
+func (s *State) IntervalWithSource() (time.Duration, IntervalSource) {
+	if s.Profile.IntervalDays > 0 {
+		return time.Duration(s.Profile.IntervalDays) * 24 * time.Hour, IntervalConfigured
+	}
+	if d, ok := s.learnedInterval(); ok {
+		return d, IntervalLearned
+	}
+	return DefaultCutInterval, IntervalDefault
+}
+
 // Interval is how often this user actually gets cut: the median gap between
 // logged cuts once there are enough of them, otherwise the configured or
 // default interval. Median rather than mean because one six-month lapse
 // shouldn't convince the tool you're a twice-a-year person.
 func (s *State) Interval() time.Duration {
-	if s.Profile.IntervalDays > 0 {
-		return time.Duration(s.Profile.IntervalDays) * 24 * time.Hour
-	}
+	d, _ := s.IntervalWithSource()
+	return d
+}
+
+// learnedInterval is the median gap between logged cuts, when there are enough
+// of them to mean anything.
+func (s *State) learnedInterval() (time.Duration, bool) {
 	if len(s.Cuts) < 3 {
-		return DefaultCutInterval
+		return 0, false
 	}
 	gaps := make([]time.Duration, 0, len(s.Cuts)-1)
 	for i := 0; i+1 < len(s.Cuts); i++ {
@@ -166,10 +204,10 @@ func (s *State) Interval() time.Duration {
 		}
 	}
 	if len(gaps) == 0 {
-		return DefaultCutInterval
+		return 0, false
 	}
 	sort.Slice(gaps, func(i, j int) bool { return gaps[i] < gaps[j] })
-	return gaps[len(gaps)/2]
+	return gaps[len(gaps)/2], true
 }
 
 // DueIn reports time until the next cut is due; negative means overdue.
