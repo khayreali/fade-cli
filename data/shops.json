@@ -594,7 +594,8 @@
       "phone": "+15188889200",
       "booking": {
         "kind": "phone"
-      }
+      },
+      "walk_in": "only"
     },
     {
       "id": "filthy-rich-williamsburg",
@@ -728,7 +729,18 @@
       },
       "phone": "+13472946019",
       "booking": {
-        "kind": "phone"
+        "kind": "fresha",
+        "id": "rada-flow-barbershop-myrtle-avenue-zn5wLn",
+        "url": "https://www.fresha.com/lvp/rada-flow-barbershop-myrtle-avenue-zn5wLn"
+      },
+      "hours": {
+        "mon": "09:00-22:00",
+        "tue": "09:00-22:00",
+        "wed": "09:00-22:00",
+        "thu": "09:00-22:00",
+        "fri": "09:00-22:00",
+        "sat": "09:00-22:00",
+        "sun": "09:00-22:00"
       }
     },
     {
@@ -1037,8 +1049,11 @@
         "wed": "10:00-19:30"
       },
       "booking": {
-        "kind": "phone"
-      }
+        "kind": "fresha",
+        "id": "eddos-barber-shop-since-2002-forest-avenue-A88l8Z",
+        "url": "https://www.fresha.com/lvp/eddos-barber-shop-since-2002-forest-avenue-A88l8Z"
+      },
+      "walk_in": "welcome"
     },
     {
       "id": "marks-barber-shop",
@@ -1247,8 +1262,11 @@
       },
       "phone": "+19177498626",
       "booking": {
-        "kind": "phone"
-      }
+        "kind": "fresha",
+        "id": "cut-it-out-barbershop-seneca-avenue-PVVj4V",
+        "url": "https://www.fresha.com/lvp/cut-it-out-barbershop-seneca-avenue-PVVj4V"
+      },
+      "walk_in": "welcome"
     },
     {
       "id": "migue-barbershop",
