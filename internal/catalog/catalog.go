@@ -29,6 +29,30 @@ const (
 	KindSquire BookingKind = "squire" // SQUIRE, barbershop-specific
 )
 
+// WalkIn describes a shop's walk-in policy.
+type WalkIn string
+
+const (
+	WalkInUnknown WalkIn = ""        // nobody has checked
+	WalkInWelcome WalkIn = "welcome" // takes walk-ins, appointments too
+	WalkInOnly    WalkIn = "only"    // no appointments at all
+	WalkInNo      WalkIn = "no"      // appointment required
+)
+
+// Label renders the policy for a shop screen, empty when unknown.
+func (w WalkIn) Label() string {
+	switch w {
+	case WalkInWelcome:
+		return "walk-ins welcome"
+	case WalkInOnly:
+		return "walk-in only"
+	case WalkInNo:
+		return "appointment needed"
+	default:
+		return ""
+	}
+}
+
 // Booking describes how to reach a shop's scheduling system.
 type Booking struct {
 	Kind BookingKind `json:"kind"`
@@ -62,6 +86,10 @@ type Shop struct {
 	PriceMin  int      `json:"price_min,omitempty"`
 	PriceMax  int      `json:"price_max,omitempty"`
 	Tags      []string `json:"tags,omitempty"`
+	// WalkIn says whether you can simply turn up. For a shop with no online
+	// booking this is the difference between "you can't book here" and "go
+	// now, they're open" -- which is the more useful answer more often.
+	WalkIn WalkIn `json:"walk_in,omitempty"`
 	// Hours is nil when nobody has looked them up, which is distinct from
 	// closed -- see the Hours doc comment.
 	Hours   Hours   `json:"hours,omitempty"`

@@ -470,3 +470,29 @@ func TestVenueMapsToOneAddress(t *testing.T) {
 		seen[key] = strings.ToLower(s.Address)
 	}
 }
+
+func TestWalkInLabels(t *testing.T) {
+	if WalkInUnknown.Label() != "" {
+		t.Error("an unchecked walk-in policy must render as nothing, not a claim")
+	}
+	seen := map[string]bool{}
+	for _, w := range []WalkIn{WalkInWelcome, WalkInOnly, WalkInNo} {
+		l := w.Label()
+		if l == "" || seen[l] {
+			t.Errorf("%q has a blank or duplicate label", w)
+		}
+		seen[l] = true
+	}
+}
+
+// Only values the UI understands may appear in the seed.
+func TestSeededWalkInValuesAreValid(t *testing.T) {
+	c := load(t)
+	for _, s := range c.Shops {
+		switch s.WalkIn {
+		case WalkInUnknown, WalkInWelcome, WalkInOnly, WalkInNo:
+		default:
+			t.Errorf("%s has unknown walk_in %q", s.ID, s.WalkIn)
+		}
+	}
+}

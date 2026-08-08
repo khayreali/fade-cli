@@ -62,6 +62,17 @@ FLAGS
 	}
 	fmt.Printf("  %s\n\n", bookingStatus(shop, now))
 
+	// For a walk-in shop that's open, turning up is the answer -- saying only
+	// "call them" turns a shop you could be sitting in within ten minutes into
+	// a phone call you have to make first.
+	if l := shop.WalkIn.Label(); l != "" {
+		if st, _ := shop.Hours.OpenAt(now); st == catalog.StatusOpen {
+			fmt.Printf("  %s\n\n", ui.Green("open now — "+l+", no appointment needed"))
+		} else {
+			fmt.Printf("  %s\n\n", ui.Cyan(l))
+		}
+	}
+
 	// Calling a shop that shut two hours ago is the most common way this
 	// command wastes someone's time, so say so before they commit to it.
 	if action.Type == provider.ActionCall {

@@ -797,6 +797,7 @@
         "lat": 40.7301033,
         "lon": -73.957422
       },
+      "walk_in": "welcome",
       "booking": {
         "kind": "vagaro",
         "url": "https://thelandofbarbers.com/"
@@ -816,6 +817,7 @@
       "rating_src": "google",
       "price_min": 35,
       "price_max": 35,
+      "walk_in": "welcome",
       "booking": {
         "kind": "phone"
       }
@@ -844,6 +846,7 @@
         "lon": -73.9513557
       },
       "phone": "+19174008552",
+      "walk_in": "welcome",
       "hours": {
         "fri": "10:00-20:00",
         "mon": "10:00-20:00",
@@ -910,6 +913,7 @@
       "rating_src": "google",
       "price_min": 20,
       "price_max": 30,
+      "walk_in": "welcome",
       "hours": {
         "fri": "09:30-19:00",
         "mon": "09:30-19:00",
@@ -946,24 +950,25 @@
         "lat": 40.7139461,
         "lon": -73.9561983
       },
+      "phone": "+17182189100",
       "rating": 4.6,
       "rating_src": "google",
       "price_min": 55,
       "price_max": 55,
+      "walk_in": "welcome",
       "hours": {
-        "mon": "12:00-20:00",
-        "tue": "12:00-20:00",
-        "wed": "12:00-20:00",
-        "thu": "12:00-20:00",
         "fri": "12:00-20:00",
+        "mon": "12:00-20:00",
         "sat": "10:00-18:00",
-        "sun": "10:00-18:00"
+        "sun": "10:00-18:00",
+        "thu": "12:00-20:00",
+        "tue": "12:00-20:00",
+        "wed": "12:00-20:00"
       },
       "booking": {
         "kind": "squire",
         "url": "https://getsquire.com/discover/barbershop/persons-of-interest-williamsburg-brooklyn"
-      },
-      "phone": "+17182189100"
+      }
     },
     {
       "id": "eddos-barber-shop",
@@ -1215,6 +1220,54 @@
       "phone": "+16462866683",
       "booking": {
         "kind": "phone"
+      }
+    },
+    {
+      "id": "cotter-barber-graham",
+      "name": "Cotter Barber (Graham Av)",
+      "venue": "321 Graham Ave",
+      "address": "321 Graham Ave, Brooklyn, NY 11211",
+      "point": {
+        "lat": 40.713896,
+        "lon": -73.9444437
+      },
+      "phone": "+13479874562",
+      "walk_in": "welcome",
+      "booking": {
+        "kind": "link",
+        "url": "https://youreontime-booking.com/cotterbarber"
+      }
+    },
+    {
+      "id": "cotter-barber-manhattan",
+      "name": "Cotter Barber (Manhattan Av)",
+      "venue": "563 Manhattan Ave",
+      "address": "563 Manhattan Ave, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7223344,
+        "lon": -73.950184
+      },
+      "phone": "+13479874562",
+      "walk_in": "welcome",
+      "booking": {
+        "kind": "link",
+        "url": "https://booking.mangomint.com/692863"
+      }
+    },
+    {
+      "id": "kinship-barbershop",
+      "name": "Kinship Barbershop",
+      "venue": "151A Nassau Ave",
+      "address": "151A Nassau Ave, Brooklyn, NY 11222",
+      "geocode_as": "151 Nassau Ave, Brooklyn, NY 11222",
+      "point": {
+        "lat": 40.7250567,
+        "lon": -73.9472179
+      },
+      "phone": "+19296759723",
+      "booking": {
+        "kind": "link",
+        "url": "https://www.kinshipcuts.com/book-now"
       }
     }
   ]

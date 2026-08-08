@@ -514,6 +514,9 @@ func shopFacts(a *app, shop catalog.Shop, r catalog.Result, from string) string 
 		facts = append(facts, priceCell(shop))
 	}
 	facts = append(facts, hoursFact(shop, time.Now())...)
+	if l := shop.WalkIn.Label(); l != "" {
+		facts = append(facts, ui.Cyan(l))
+	}
 	facts = append(facts, ui.Dim(bookingPhrase(shop)))
 	if v := a.visitsTo(shop.ID); v > 0 {
 		facts = append(facts, ui.Green("been here "+plural(v, "time")))

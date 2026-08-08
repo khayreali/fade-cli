@@ -51,6 +51,10 @@ what's nearby. Arrow keys move, enter selects.
 price or no rating always sort last — a missing value never wins a ranking by
 looking like a zero.
 
+Shops that take walk-ins say so, and when one is open the shop screen leads
+with that rather than a phone number — for half the catalog "just turn up" is
+the real answer, not "you can't book here".
+
 Shops with known hours are marked ● open / ○ closed, and `o` narrows to what's
 open right now. Hours are evaluated in New York time regardless of your
 machine's clock.
