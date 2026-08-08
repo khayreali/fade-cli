@@ -125,6 +125,11 @@ Every shop is bookable on day one. How depends on what the shop uses:
 | `link`   | no         | the shop's own site              |
 | `vagaro` | no         | deep link to the venue           |
 | `squire` | no         | deep link to the venue           |
+
+Fresha publishes two kinds of page. `/a/` is a partner venue with a booking
+flow. `/lvp/` is a directory listing it generates for shops that are *not*
+partners — it says so on the page and offers only "Call to book". Only `/a/`
+counts as bookable, and a test enforces it.
 | `phone`  | no         | `fade-cli book` dials them       |
 
 ### Live availability
@@ -226,6 +231,14 @@ not in the seed are added as new shops.
 Shop data was compiled from public Booksy, Fresha and Vagaro listings plus shop
 websites, and geocoded via OpenStreetMap Nominatim. Ratings and prices are
 point-in-time snapshots — verify before relying on them.
+
+Two addresses in the original seed were inferred rather than sourced, because a
+search named a shop without giving its street. Both geocoded cleanly to
+plausible Brooklyn locations near the right stop, so every automated check
+passed them — coordinates resolved, precision was exact, drift was zero. A
+confidently wrong value is invisible to consistency checks, since it is
+internally consistent. Both were caught only by comparing against an outside
+source, and both are corrected.
 
 Every rating carries a `rating_src` (`booksy`, `fresha`, `google`, `web`) and
 the shop screen shows it. Booksy, Fresha and Google score different populations

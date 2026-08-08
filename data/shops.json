@@ -642,8 +642,18 @@
         "lon": -73.9590706
       },
       "booking": {
-        "kind": "link",
-        "url": "https://fellowbarber.com/pages/williamsburg"
+        "kind": "phone"
+      },
+      "phone": "+13477271184",
+      "walk_in": "only",
+      "hours": {
+        "mon": "09:00-20:00",
+        "tue": "09:00-20:00",
+        "wed": "09:00-20:00",
+        "thu": "09:00-20:00",
+        "fri": "09:00-20:00",
+        "sat": "09:00-20:00",
+        "sun": "10:00-20:00"
       }
     },
     {
