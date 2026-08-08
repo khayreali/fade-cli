@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -13,6 +14,7 @@ import (
 	"strconv"
 	"time"
 
+	"fadecli/data"
 	"fadecli/internal/catalog"
 	"fadecli/internal/geo"
 	"fadecli/internal/ui"
@@ -205,6 +207,7 @@ func (a *app) devCheck(args []string) error {
 	var (
 		noCoords  []string
 		noPrice   []string
+		noHours   []string
 		noContact []string
 		byKind    = map[catalog.BookingKind]int{}
 	)
@@ -216,6 +219,9 @@ func (a *app) devCheck(args []string) error {
 		}
 		if s.PriceMin == 0 && s.PriceMax == 0 {
 			noPrice = append(noPrice, s.ID)
+		}
+		if !s.Hours.Known() {
+			noHours = append(noHours, s.ID)
 		}
 		if s.Phone == "" && s.Booking.URL == "" {
 			noContact = append(noContact, s.ID)
@@ -240,19 +246,46 @@ func (a *app) devCheck(args []string) error {
 	t.Render(os.Stdout)
 	fmt.Println()
 
+	total := len(a.cat.Shops)
 	report := func(label string, ids []string) {
 		if len(ids) == 0 {
 			fmt.Printf("  %s %s\n", ui.Green("ok  "), label)
 			return
 		}
-		fmt.Printf("  %s %s %s\n", ui.Yellow("gap "), label, ui.Dim(fmt.Sprintf("(%d)", len(ids))))
-		for _, id := range ids {
+		fmt.Printf("  %s %-14s %s\n", ui.Yellow("gap "), label,
+			ui.Dim(fmt.Sprintf("%d of %d missing", len(ids), total)))
+		// Listing sixty ids buries the summary; a sample is enough to start on.
+		for i, id := range ids {
+			if i == 6 {
+				fmt.Printf("       %s\n", ui.Dim(fmt.Sprintf("... and %d more", len(ids)-i)))
+				break
+			}
 			fmt.Printf("       %s\n", ui.Dim(id))
 		}
 	}
 	report("coordinates", noCoords)
 	report("price range", noPrice)
+	report("opening hours", noHours)
 	report("phone or link", noContact)
+
+	a.reportStaleSeed()
 	fmt.Println()
 	return nil
+}
+
+// reportStaleSeed warns when data/shops.json has been edited since this binary
+// was built. The catalog is embedded at compile time, so every command reads
+// the seed as it was at `make build` -- editing the JSON and then running
+// `dev check` otherwise reports on data that is silently out of date.
+func (a *app) reportStaleSeed() {
+	onDisk, err := os.ReadFile("data/shops.json")
+	if err != nil {
+		return // not in the repo root; nothing to compare against
+	}
+	if sha256.Sum256(onDisk) == sha256.Sum256(data.SeedJSON) {
+		return
+	}
+	fmt.Printf("\n  %s data/shops.json differs from the embedded catalog\n",
+		ui.Yellow("stale"))
+	fmt.Printf("        %s\n", ui.Dim("run `make build` to embed your edits"))
 }

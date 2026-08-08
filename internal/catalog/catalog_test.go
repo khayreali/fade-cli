@@ -405,3 +405,14 @@ func TestSortCheapestBreaksTiesByDistance(t *testing.T) {
 		}
 	}
 }
+
+// A row you cannot act on is worse than no row: every shop must offer some
+// route to booking, whether a link or a phone number.
+func TestEveryShopIsReachable(t *testing.T) {
+	c := load(t)
+	for _, s := range c.Shops {
+		if s.Phone == "" && s.Booking.URL == "" && s.Booking.ID == "" {
+			t.Errorf("%s has no phone, link or provider id -- it cannot be booked", s.ID)
+		}
+	}
+}

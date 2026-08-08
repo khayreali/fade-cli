@@ -164,7 +164,10 @@ checking twenty shops costs one round trip rather than twenty.
    different stop. Takes about a second per shop (OSM's rate limit).
 6. Rebuild to embed the new data.
 
-`fade-cli dev check` is the practical guide to what to research next.
+`fade-cli dev check` is the practical guide to what to research next. It also
+warns when `data/shops.json` has been edited since the binary was built — the
+catalog is embedded at compile time, so every other command would otherwise
+read stale data without saying so.
 
 ## Known data gaps
 
