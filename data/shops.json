@@ -806,7 +806,16 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/trios-for-hair-troutman-street-NooMy7"
+      "info_url": "https://www.fresha.com/lvp/trios-for-hair-troutman-street-NooMy7",
+      "hours": {
+        "mon": "11:00-19:00",
+        "tue": "11:00-19:00",
+        "wed": "11:00-19:00",
+        "thu": "11:00-19:00",
+        "fri": "11:00-19:00",
+        "sat": "11:00-19:00",
+        "sun": "11:00-18:00"
+      }
     },
     {
       "id": "topline-1",
@@ -974,7 +983,15 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/fade-2-famous-greenpoint-avenue-YKqbV3"
+      "info_url": "https://www.fresha.com/lvp/fade-2-famous-greenpoint-avenue-YKqbV3",
+      "hours": {
+        "mon": "10:00-19:00",
+        "tue": "10:00-19:00",
+        "wed": "10:00-19:00",
+        "thu": "10:00-19:00",
+        "fri": "10:00-19:00",
+        "sat": "10:00-19:00"
+      }
     },
     {
       "id": "equilibrium-barbershop",
@@ -1018,7 +1035,15 @@
       "booking": {
         "kind": "phone"
       },
-      "info_url": "https://www.fresha.com/lvp/sir-edmonds-barber-shop-manhattan-avenue-A88BVq"
+      "info_url": "https://www.fresha.com/lvp/sir-edmonds-barber-shop-manhattan-avenue-A88BVq",
+      "hours": {
+        "mon": "09:30-19:30",
+        "tue": "09:30-19:30",
+        "wed": "09:30-19:30",
+        "thu": "09:30-19:30",
+        "fri": "09:30-19:30",
+        "sun": "10:00-18:00"
+      }
     },
     {
       "id": "persons-of-interest-williamsburg",
