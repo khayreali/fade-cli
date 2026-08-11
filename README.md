@@ -1,11 +1,39 @@
-# fade cli
+<div align="center">
 
-Book a haircut from the command line.
+<img src="assets/hero.jpg" alt="fade — book a haircut from your terminal" width="100%">
 
-Covers three corridors — the **L from Bedford Ave to Halsey St** (Williamsburg,
-East Williamsburg, Bushwick), the **G through Greenpoint**, and the **M through
-Ridgewood** — with 74 seeded shops across Booksy, Fresha, Square, Squire, Vagaro,
-and direct booking.
+<br>
+<br>
+
+[![Go 1.25+](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)](go.mod)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-macOS%20·%20Linux-64748b)]()
+[![Made in Brooklyn](https://img.shields.io/badge/made%20in-Brooklyn-ff6319)]()**Find, compare and book Brooklyn barbershops without leaving your terminal.**
+
+</div>
+
+---**fade** covers three subway corridors — the**L** from Bedford Av to Halsey St
+(Williamsburg, East Williamsburg, Bushwick), the**G** through Greenpoint, and
+the**M** through Ridgewood — 74 shops across Booksy, Fresha, Square, Squire,
+Vagaro and plain phone lines. The catalog is compiled into the binary, so it
+works offline and starts in single-digit milliseconds.
+
+## Highlights
+
+- **Walk-time search** anchored to real subway stops — "what's within a
+  20-minute walk of Graham Av", with a radius that widens on its own where the
+  map is sparse
+- **Open now**, evaluated on the shop's clock (DST-correct), with hours
+  sourced per shop — a shop nobody researched shows *unknown*, never a false
+  "closed"
+- **Every booking link opened and verified by hand.** Directory pages that
+  only say "call to book" are never presented as bookable — a test enforces it
+- **Manual connectors** for the 27 shops with no booking platform: a
+  validated, prefilled call-or-text request, tracked until the shop answers
+- **A cut log** that learns your real cadence (median, outlier-resistant)
+  and tells you when you're due
+- ⌨**A real TUI** — arrow keys, adaptive columns, sort by nearest / cheapest /
+  best-rated — that degrades cleanly to flags and `--json` for scripts
 
 ## Install
 
@@ -141,21 +169,19 @@ which is never presented as a way to book.
 `fade-cli slots` shows real open times for any shop whose provider this install has
 credentials for. Today that means:
 
-- **Square** — the one genuinely open path. Square documents a
+-**Square** — the one genuinely open path. Square documents a
   [Bookings API](https://developer.squareup.com/docs/bookings-api/what-it-does)
   and a shop can OAuth-authorize your app. Set `FADE_SQUARE_TOKEN`, and give the
   shop a `booking.id` of `"<location_id>:<service_variation_id>"` — Square won't
   quote open time without knowing which service you want.
-- **Booksy** — their public API issues an `X-API-Key` per business; there is no
+-**Booksy** — their public API issues an `X-API-Key` per business; there is no
   open developer program. Set `FADE_BOOKSY_API_KEY` for shops that have granted
   you access.
-- **Fresha** and **Vagaro** — no third-party availability API exists for
+-**Fresha** and**Vagaro** — no third-party availability API exists for
   either; their integration programs are merchant-facing. Handoff only.
 
 Shops without credentials degrade to a deep link rather than erroring. That's
-the intended state, not a bug — the CLI is useful with zero API access.
-
-**No third-party client can complete a booking here, and that is structural.**
+the intended state, not a bug — the CLI is useful with zero API access.**No third-party client can complete a booking here, and that is structural.**
 Square's Bookings API is seller-scoped: creating a booking at a shop requires
 that shop to OAuth-authorize this application into its own Square account. A
 customer cannot obtain those credentials by pasting a token. The same is true
@@ -228,28 +254,28 @@ read stale data without saying so.
 
 ## Known data gaps
 
-- **Opening hours cover 36 of 71 shops.** `o` filters to open-now and browse
+-**Opening hours cover 36 of 71 shops.** `o` filters to open-now and browse
   marks each shop ●/○, but only where hours are on file. A shop nobody has
   researched shows no marker at all — never a false "closed". Fresha's venue
   and directory pages carry a full week and were the main source; Booksy
   renders only today's behind a JS toggle, so its 28 shops mostly lack hours.
-- **Prices cover 35 of 71, ratings 30.** Booksy and Fresha partner pages
+-**Prices cover 35 of 71, ratings 30.** Booksy and Fresha partner pages
   publish price ranges; directory listings and walk-in shops generally don't.
-- **Walk-in policy is recorded for 11 shops only**, always from a source that
+-**Walk-in policy is recorded for 11 shops only**, always from a source that
   states it. It is never inferred from a shop being a barbershop, because a
   wrong "just turn up" sends someone on a pointless walk.
-- **Twenty-seven shops still book by phone.** Each was individually checked
+-**Twenty-seven shops still book by phone.** Each was individually checked
   against Booksy, Fresha, Squire and Vagaro; these publish nothing bookable.
   Two are walk-in only, where a phone number is the correct answer, not a
   fallback.
-- **Two salons are included, marked as such.** Roots Radicals and Self Bushwick
+-**Two salons are included, marked as such.** Roots Radicals and Self Bushwick
   cut men's hair at \$100-120. Hiding them would withhold two of the
   best-rated options in the corridor; merging them silently into a list of
   \$25 fades would misrepresent what a row means. `--type salon` or
   `--type barbershop` filters either way.
-- **Booksy models individual barbers as separate businesses.** Five barbers at
+-**Booksy models individual barbers as separate businesses.** Five barbers at
   681 Broadway are five catalog entries. `--collapse` folds them by address.
-- **Two addresses in the original seed were invented** rather than sourced, and
+-**Two addresses in the original seed were invented** rather than sourced, and
   both survived every automated check because a confidently wrong value is
   internally consistent. Both are corrected; see Data sources.
 
@@ -263,7 +289,7 @@ go test ./...        # unit tests only
 User state lives in `~/.config/fade/state.json`. Set `FADE_HOME` to relocate it.
 Local shop corrections go in `~/.config/fade/shops.local.json` and override the
 embedded seed by `id`, so you can fix a price without waiting on a release. An
-entry **replaces** the seed shop outright rather than merging field by field —
+entry**replaces** the seed shop outright rather than merging field by field —
 copy across anything you want to keep, or the rating and hours go with it. Ids
 not in the seed are added as new shops.
 
