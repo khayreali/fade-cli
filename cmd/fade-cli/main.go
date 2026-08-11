@@ -71,6 +71,8 @@ func main() {
 		runErr = a.book(args)
 	case "again":
 		runErr = a.againCmd(args)
+	case "appts", "appointments":
+		runErr = a.appts(args)
 	case "log", "l":
 		runErr = a.log(args)
 	case "due":
@@ -151,6 +153,7 @@ USAGE
 
 COMMANDS
   again     rebook wherever you went last
+  appts     booking requests made through the manual connectors
   find      search shops by distance, price, rating
   slots     check open appointment times
   book      book, or hand off to the shop's booking system
@@ -167,6 +170,7 @@ EXAMPLES
   fade-cli find --to montrose --collapse
   fade-cli slots cabello --day tomorrow
   fade-cli book "power of barbers"
+  fade-cli book eddo --at "fri 3pm"       request a time by call or text
   fade-cli log add --shop cabello --price 55 --tip 10
 
 Run 'fade-cli <command> -h' for flags.

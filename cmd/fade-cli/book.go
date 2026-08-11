@@ -27,8 +27,10 @@ FLAGS
 		fs.PrintDefaults()
 	}
 	var (
-		yes   = fs.Bool("y", false, "skip the confirmation prompt")
-		print = fs.Bool("print", false, "print the target instead of opening it")
+		yes     = fs.Bool("y", false, "skip the confirmation prompt")
+		print   = fs.Bool("print", false, "print the target instead of opening it")
+		at      = fs.String("at", "", "request a time, like \"fri 3pm\" -- runs the manual connector")
+		service = fs.String("service", "", "what to book (default haircut)")
 	)
 	if err := parse(fs, args); err != nil {
 		return nil
@@ -43,6 +45,11 @@ FLAGS
 	shop, err := a.mustResolve(name)
 	if err != nil {
 		return err
+	}
+	// A requested time means the manual connector: prepare the ask, pick a
+	// channel, record the appointment.
+	if *at != "" {
+		return a.manualBook(shop, *at, *service, *yes, *print)
 	}
 	action := a.reg.For(shop).Handoff(shop)
 	if action.Type == provider.ActionNone {

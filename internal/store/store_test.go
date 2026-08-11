@@ -244,3 +244,29 @@ func TestIntervalSourceLabelsAreDistinct(t *testing.T) {
 		seen[l] = true
 	}
 }
+
+// Even gap counts take the true median (average of the middle pair). The old
+// upper-middle pick meant the minimum-history case always chose the LARGER of
+// two gaps, biasing every prediction long.
+func TestIntervalEvenGapCountAveragesTheMiddlePair(t *testing.T) {
+	s := &State{}
+	// Gaps of 14 and 22 days -> median 18.
+	for _, d := range []time.Time{day(2026, time.June, 1), day(2026, time.June, 15), day(2026, time.July, 7)} {
+		s.AddCut(Cut{Date: d})
+	}
+	if got, want := s.Interval(), 18*24*time.Hour; got != want {
+		t.Errorf("Interval = %v, want %v", got, want)
+	}
+}
+
+// Three cuts where two share a day leave one gap, and one gap is not a
+// cadence -- the guard must count gaps, not cuts.
+func TestIntervalSameDayCutsDoNotFakeACadence(t *testing.T) {
+	s := &State{}
+	for _, d := range []time.Time{day(2026, time.June, 1), day(2026, time.June, 1), day(2026, time.June, 29)} {
+		s.AddCut(Cut{Date: d})
+	}
+	if _, src := s.IntervalWithSource(); src != IntervalDefault {
+		t.Errorf("single surviving gap reported %v, want the default", src)
+	}
+}

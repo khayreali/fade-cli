@@ -439,6 +439,10 @@ func (a *app) shopScreen(raw *ui.Raw, r catalog.Result, from string) error {
 			{"Log a cut here", ui.Dim("record what you paid")},
 		}
 		kinds := []string{"book", "times", "log"}
+		if shop.Booking.Kind == catalog.KindPhone && shop.Phone != "" {
+			actions = append(actions, []string{"Request a time", ui.Dim("prepared call or text")})
+			kinds = append(kinds, "request")
+		}
 		if len(chairs) > 1 {
 			actions = append(actions, []string{
 				"Switch barber",
@@ -476,6 +480,25 @@ func (a *app) shopScreen(raw *ui.Raw, r catalog.Result, from string) error {
 			}
 		case "times":
 			a.timesInteractive(raw, shop)
+		case "request":
+			var reqErr error
+			raw.Suspend(func() {
+				fmt.Println()
+				in, ok := ui.Line("when? (like \"fri 3pm\") ")
+				if !ok || strings.TrimSpace(in) == "" {
+					return
+				}
+				if reqErr = a.manualBook(shop, in, "", false, false); reqErr != nil {
+					ui.Warn("%v", reqErr)
+					reqErr = nil
+					pause()
+				} else {
+					pause()
+				}
+			})
+			if reqErr != nil {
+				return reqErr
+			}
 		case "log":
 			if err := a.logInteractive(raw, shop); err != nil {
 				return err

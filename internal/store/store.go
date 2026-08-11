@@ -62,8 +62,9 @@ func (c Cut) Total() int { return c.Price + c.Tip }
 
 // State is everything persisted for a user.
 type State struct {
-	Profile Profile `json:"profile"`
-	Cuts    []Cut   `json:"cuts"`
+	Profile      Profile       `json:"profile"`
+	Cuts         []Cut         `json:"cuts"`
+	Appointments []Appointment `json:"appointments,omitempty"`
 
 	dir string
 }
@@ -105,6 +106,10 @@ func Load() (*State, error) {
 	// the natural way to type them -- would otherwise get the wrong "last cut",
 	// the wrong due date, and `again` rebooking the wrong shop.
 	s.sortCuts()
+	// NextAppointment assumes soonest-first for the same reason.
+	sort.SliceStable(s.Appointments, func(i, j int) bool {
+		return s.Appointments[i].When.Before(s.Appointments[j].When)
+	})
 	return s, nil
 }
 
@@ -128,7 +133,22 @@ func (s *State) Save() error {
 	}
 	final := filepath.Join(s.dir, "state.json")
 	tmp := final + ".tmp"
-	if err := os.WriteFile(tmp, append(b, '\n'), 0o600); err != nil {
+	// Sync before rename: rename alone is atomic against a process crash, but
+	// after a power loss the new name can point at un-flushed (empty) data --
+	// losing the entire history the atomicity was meant to protect.
+	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(append(b, '\n')); err != nil {
+		f.Close()
+		return err
+	}
+	if err := f.Sync(); err != nil {
+		f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
 		return err
 	}
 	return os.Rename(tmp, final)
@@ -194,20 +214,26 @@ func (s *State) Interval() time.Duration {
 // learnedInterval is the median gap between logged cuts, when there are enough
 // of them to mean anything.
 func (s *State) learnedInterval() (time.Duration, bool) {
-	if len(s.Cuts) < 3 {
-		return 0, false
-	}
-	gaps := make([]time.Duration, 0, len(s.Cuts)-1)
+	gaps := make([]time.Duration, 0, len(s.Cuts))
 	for i := 0; i+1 < len(s.Cuts); i++ {
 		if g := s.Cuts[i].Date.Sub(s.Cuts[i+1].Date); g > 0 {
 			gaps = append(gaps, g)
 		}
 	}
-	if len(gaps) == 0 {
+	// Gate on surviving gaps, not raw cut count: three cuts where two share a
+	// day yield one gap, and one gap is an anecdote, not a cadence.
+	if len(gaps) < 2 {
 		return 0, false
 	}
 	sort.Slice(gaps, func(i, j int) bool { return gaps[i] < gaps[j] })
-	return gaps[len(gaps)/2], true
+	// True median: for an even count, average the middle pair. Taking the
+	// upper-middle biased the cadence long at exactly the minimum history,
+	// where it always returned the larger of the two gaps.
+	n := len(gaps)
+	if n%2 == 1 {
+		return gaps[n/2], true
+	}
+	return (gaps[n/2-1] + gaps[n/2]) / 2, true
 }
 
 // DueIn reports time until the next cut is due; negative means overdue.

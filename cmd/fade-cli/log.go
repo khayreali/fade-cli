@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"fadecli/internal/catalog"
 	"fadecli/internal/store"
 	"fadecli/internal/ui"
 )
@@ -169,9 +170,23 @@ func (a *app) due(args []string) error {
 	}
 
 	now := time.Now()
+	showAppt := func() {
+		if ap, ok := a.state.NextAppointment(now); ok {
+			verb := "requested"
+			if ap.Status == store.ApptConfirmed {
+				verb = "booked"
+			}
+			fmt.Printf("  %s %s at %s %s\n", ui.Cyan(verb),
+				catalog.InShopTime(ap.When).Format("Mon Jan 2 3:04pm"),
+				ap.ShopName, ui.Dim("("+ap.ID+")"))
+		}
+	}
+
 	d, ok := a.state.DueIn(now)
 	if !ok {
-		fmt.Println(ui.Dim("No cut history yet, so there's nothing to predict."))
+		fmt.Println()
+		showAppt()
+		fmt.Println(ui.Dim("  No cut history yet, so there's nothing to predict."))
 		ui.Hint("fade-cli log add --shop <shop> --price 45")
 		return nil
 	}
@@ -190,6 +205,8 @@ func (a *app) due(args []string) error {
 			ui.Dim(fmt.Sprintf("last cut %s", ui.RelDay(last.Date, now))))
 	}
 	fmt.Println()
+
+	showAppt()
 
 	// A prediction built on the generic default is a guess, not a measurement.
 	if _, src := a.state.IntervalWithSource(); src == store.IntervalDefault {

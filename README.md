@@ -4,8 +4,8 @@ Book a haircut from the command line.
 
 Covers three corridors — the **L from Bedford Ave to Halsey St** (Williamsburg,
 East Williamsburg, Bushwick), the **G through Greenpoint**, and the **M through
-Ridgewood** — with 66 seeded shops across Booksy, Fresha, Square, Vagaro, and
-direct booking.
+Ridgewood** — with 74 seeded shops across Booksy, Fresha, Square, Squire, Vagaro,
+and direct booking.
 
 ## Install
 
@@ -107,6 +107,8 @@ fade-cli find --sort cheapest           # or: rated, nearest (default)
 fade-cli find --to montrose --collapse  # one row per address
 fade-cli slots --near graham --day fri  # sweep every shop in range at once
 fade-cli book "power of barbers"
+fade-cli book eddo --at "fri 3pm"       # manual connector: prepared call/text
+fade-cli appts                          # track those requests
 fade-cli log add --shop cabello --price 55 --tip 10 --rating 5
 fade-cli due                            # when you're next due
 fade-cli log --stats                    # where you go, what you spend
@@ -125,6 +127,7 @@ Every shop is bookable on day one. How depends on what the shop uses:
 | `link`   | no         | the shop's own site              |
 | `vagaro` | no         | deep link to the venue           |
 | `squire` | no         | deep link to the venue           |
+| `phone`  | no         | the manual connector (below)     |
 
 Fresha publishes two kinds of page. `/a/` is a partner venue with a booking
 flow. `/lvp/` is a directory listing it generates for shops that are *not*
@@ -132,7 +135,6 @@ partners — it says so on the page and offers only "Call to book". Only `/a/`
 counts as bookable, and a test enforces it. The directory pages are still
 useful for hours and services, so they are kept on the shop as `info_url`,
 which is never presented as a way to book.
-| `phone`  | no         | `fade-cli book` dials them       |
 
 ### Live availability
 
@@ -164,6 +166,33 @@ So the handoff is not a fallback — for a customer-side tool it is the product.
 The work that pays off is making the moment of handoff good: knowing whether
 the shop is open, whether you can just walk in, and landing on the booking page
 rather than a homepage.
+
+### Manual connectors
+
+Twenty-seven shops have no booking platform at all. The manual connector takes
+those as close to booked as software honestly can:
+
+```sh
+fade-cli book eddo --at "fri 3pm"
+```
+
+It validates the time against the shop's real hours — a request for a closed
+Saturday is refused with the actual schedule — composes the request ("Hi! I'd
+like to book a haircut at Eddo's Barber Shop on Friday Aug 14 around 3pm. My
+name is …"), and offers the channels that make sense right now: call first
+when they're open, a prefilled text first when they're closed, walking in when
+that is the shop's whole model. The message lands on your clipboard either
+way, and the request is tracked:
+
+```sh
+fade-cli appts               # requested and confirmed appointments
+fade-cli appts confirm <id>  # when the shop says yes
+fade-cli appts cancel <id>
+```
+
+A texted request is recorded as *requested*, not booked — the tool never
+claims a chair the shop hasn't promised. `due` shows your next appointment,
+and every time it renders is the shop's clock, not your laptop's.
 
 Availability queries fan out concurrently across every shop and provider, so
 checking twenty shops costs one round trip rather than twenty.
