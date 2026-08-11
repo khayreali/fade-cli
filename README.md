@@ -282,7 +282,7 @@ go test ./...        # unit tests only
 User state lives in `~/.config/fade/state.json`. Set `FADE_HOME` to relocate it.
 Local shop corrections go in `~/.config/fade/shops.local.json` and override the
 embedded seed by `id`, so you can fix a price without waiting on a release. An
-entry**replaces** the seed shop outright rather than merging field by field —
+entry **replaces** the seed shop outright rather than merging field by field —
 copy across anything you want to keep, or the rating and hours go with it. Ids
 not in the seed are added as new shops.
 
