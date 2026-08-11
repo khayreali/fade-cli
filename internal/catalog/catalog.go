@@ -158,8 +158,10 @@ type Catalog struct {
 }
 
 // Load returns the embedded seed merged with the user's local catalog, if one
-// exists. Local entries win on id collision, so a user can correct a price or
-// a phone number without waiting on an upstream release.
+// exists. A local entry REPLACES the seed shop with the same id outright --
+// field-by-field merging is not attempted, so a local record must be complete
+// or the fields it omits are lost. (The README says the same; this comment
+// once promised field-level correction the code never did.)
 func Load(localPath string) (*Catalog, error) {
 	var c Catalog
 	if err := json.Unmarshal(data.SeedJSON, &c); err != nil {
@@ -225,6 +227,20 @@ func (c *Catalog) Resolve(q string) (Shop, []Shop, error) {
 	needle := strings.ToLower(strings.TrimSpace(q))
 	if needle == "" {
 		return Shop{}, nil, fmt.Errorf("no shop given")
+	}
+
+	// An exact full-name match outranks prefix matching: without this tier, a
+	// shop whose name is a prefix of another's ("Fade" vs "Fade Factory") is
+	// permanently unreachable by its own name -- every query for it reports
+	// ambiguity.
+	var exact []Shop
+	for _, s := range c.Shops {
+		if strings.ToLower(s.Name) == needle {
+			exact = append(exact, s)
+		}
+	}
+	if len(exact) == 1 {
+		return exact[0], nil, nil
 	}
 
 	var prefix, contains []Shop
@@ -401,8 +417,11 @@ func collapseByVenue(in []Result) []Result {
 			continue
 		}
 		if better(r.Shop, out[i].Shop) {
-			out[i].Alongside = append(out[i].Alongside, out[i].Shop)
-			out[i].Shop = r.Shop
+			// Replace the whole Result, not just the Shop: swapping only the
+			// Shop left the loser's Miles/WalkMin/Stop on the winner's row, so
+			// the collapsed row sorted and displayed the wrong walk time.
+			r.Alongside = append(out[i].Alongside, out[i].Shop)
+			out[i] = r
 		} else {
 			out[i].Alongside = append(out[i].Alongside, r.Shop)
 		}

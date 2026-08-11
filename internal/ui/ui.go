@@ -237,7 +237,9 @@ func Duration(d time.Duration) string {
 func daysBetween(from, to time.Time) int {
 	f := time.Date(from.Year(), from.Month(), from.Day(), 0, 0, 0, 0, from.Location())
 	t := time.Date(to.Year(), to.Month(), to.Day(), 0, 0, 0, 0, to.Location())
-	return int(t.Sub(f).Hours() / 24)
+	// Round, don't truncate: DST days are 23 or 25 hours, and truncation
+	// shifts every label ("tomorrow", "6d ago") by one across the transition.
+	return int(t.Sub(f).Round(24*time.Hour) / (24 * time.Hour))
 }
 
 // Errf prints a user-facing error to stderr.

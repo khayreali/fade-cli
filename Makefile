@@ -7,7 +7,12 @@ PREFIX ?= $(HOME)/.local
 
 .PHONY: build test race fmt vet check install uninstall geocode clean
 
+# -s -w strips symbol tables and DWARF (measured: 9.7 MB -> 6.7 MB), -trimpath
+# drops absolute build paths. Use `make debug` for a symbolized binary.
 build:
+	go build -trimpath -ldflags '-s -w' -o $(BIN) $(PKG)
+
+debug:
 	go build -o $(BIN) $(PKG)
 
 test:

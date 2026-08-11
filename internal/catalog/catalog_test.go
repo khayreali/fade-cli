@@ -560,3 +560,35 @@ func TestShopTypeLabels(t *testing.T) {
 		t.Error("a salon must be labelled")
 	}
 }
+
+// The collapsed row must carry the winner's own distance fields: swapping only
+// the Shop left the loser's walk time on the winner's row, which both sorted
+// and displayed wrongly.
+func TestCollapseCarriesTheWinnersDistance(t *testing.T) {
+	c := load(t)
+	graham, _ := geo.StopByID("graham")
+	collapsed := c.Find(Query{Origin: &graham.Point, Text: "cutmaster", CollapseBy: "venue"})
+	if len(collapsed) != 1 {
+		t.Skip("cutmaster venue no longer collapses to one row")
+	}
+	r := collapsed[0]
+	wantMiles := geo.MilesBetween(graham.Point, r.Shop.Point)
+	if r.Miles != wantMiles {
+		t.Errorf("row Miles %.4f but winner's own distance is %.4f", r.Miles, wantMiles)
+	}
+}
+
+func TestResolveExactNameBeatsPrefixAmbiguity(t *testing.T) {
+	c := load(t)
+	c.merge([]Shop{
+		{ID: "zz-fade", Name: "Fade", Address: "1 Test St, Brooklyn, NY", Booking: Booking{Kind: KindPhone}, Phone: "+15550000001"},
+		{ID: "zz-fade-factory", Name: "Fade Factory", Address: "2 Test St, Brooklyn, NY", Booking: Booking{Kind: KindPhone}, Phone: "+15550000002"},
+	})
+	got, _, err := c.Resolve("fade")
+	if err != nil {
+		t.Fatalf("exact name drowned in prefix ambiguity: %v", err)
+	}
+	if got.ID != "zz-fade" {
+		t.Errorf("resolved %s, want the exact-name match", got.ID)
+	}
+}

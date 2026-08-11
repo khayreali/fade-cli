@@ -90,24 +90,33 @@ func stop(id, name, line, corridor string, order int, lat, lon float64) Stop {
 	return Stop{ID: id, Name: name, Line: line, Corridor: corridor, Order: order, Point: Point{lat, lon}}
 }
 
-// AllStops returns every stop across every corridor.
-func AllStops() []Stop {
-	var out []Stop
+// Corridors are static, so the flattened stop list and the id index are built
+// once. Before this, AllStops allocated a fresh slice per call and Find called
+// it for every shop -- ~200 KB of garbage per browse redraw for data that
+// never changes.
+var (
+	allStops []Stop
+	stopByID = map[string]Stop{}
+)
+
+func init() {
 	for _, c := range Corridors {
-		out = append(out, c.Stops...)
+		allStops = append(allStops, c.Stops...)
+		for _, s := range c.Stops {
+			stopByID[s.ID] = s
+		}
 	}
-	return out
 }
+
+// AllStops returns every stop across every corridor. The slice is shared:
+// callers must not modify it.
+func AllStops() []Stop { return allStops }
 
 // StopByID looks up a stop by its short id ("bedford"), which is what users
 // type. Ids are unique across corridors.
 func StopByID(id string) (Stop, bool) {
-	for _, s := range AllStops() {
-		if s.ID == id {
-			return s, true
-		}
-	}
-	return Stop{}, false
+	s, ok := stopByID[id]
+	return s, ok
 }
 
 // CorridorByID finds a corridor.
@@ -166,9 +175,12 @@ func WalkMinutes(a, b Point) int {
 
 // MilesForWalkMinutes inverts WalkMinutes: the crow-flies radius that
 // corresponds to a given walking time, for turning "within 20 minutes" into
-// the distance filter the catalog understands.
+// the distance filter the catalog understands. The half-minute is the rounding
+// slack: WalkMinutes rounds to the nearest minute, so a shop *displaying*
+// "20 min" can be up to 20.49 unrounded -- a radius cut at exactly 20 would
+// exclude shops the list itself labels as 20 minutes away.
 func MilesForWalkMinutes(minutes int) float64 {
-	return float64(minutes) / 60 * walkMph / gridFactor
+	return (float64(minutes) + 0.5) / 60 * walkMph / gridFactor
 }
 
 // NearestStop returns the closest stop in any corridor.

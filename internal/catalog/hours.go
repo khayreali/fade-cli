@@ -109,25 +109,36 @@ func (h Hours) OpenAt(t time.Time) (Status, time.Time) {
 		return StatusUnknown, time.Time{}
 	}
 	local := t.In(shopTZ)
-	midnight := time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, shopTZ)
-	mins := int(local.Sub(midnight).Minutes())
+	// Wall-clock minutes, NOT elapsed-since-midnight: on a DST transition day
+	// the two diverge by an hour, and a shop's "10:00-19:00" means the clock
+	// on its wall, which springs forward with everyone else's.
+	mins := local.Hour()*60 + local.Minute()
 
 	// Yesterday's overnight trading can still cover this morning.
 	for _, s := range h.spansOn(prevDay(local.Weekday())) {
 		if s.end > 24*60 && mins < s.end-24*60 {
-			return StatusOpen, midnight.Add(time.Duration(s.end-24*60) * time.Minute)
+			return StatusOpen, clockOn(local, 0, s.end-24*60)
 		}
 	}
 	for _, s := range h.spansOn(local.Weekday()) {
 		if mins >= s.start && mins < s.end {
-			return StatusOpen, midnight.Add(time.Duration(s.end) * time.Minute)
+			return StatusOpen, clockOn(local, 0, s.end)
 		}
 	}
-	return StatusClosed, h.nextOpen(midnight, mins, local.Weekday())
+	return StatusClosed, h.nextOpen(local, mins)
+}
+
+// clockOn builds the instant reading m minutes on the wall clock, dayOffset
+// days after t's day, in shop time. m may exceed 24h (overnight close);
+// time.Date normalises the overflow, and building from components rather than
+// midnight.Add keeps DST days honest.
+func clockOn(t time.Time, dayOffset, m int) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day()+dayOffset, m/60, m%60, 0, 0, shopTZ)
 }
 
 // nextOpen scans forward a week for the next opening time.
-func (h Hours) nextOpen(midnight time.Time, mins int, today time.Weekday) time.Time {
+func (h Hours) nextOpen(local time.Time, mins int) time.Time {
+	today := local.Weekday()
 	for offset := 0; offset < 8; offset++ {
 		day := (int(today) + offset) % 7
 		spans := h.spansOn(time.Weekday(day))
@@ -136,7 +147,7 @@ func (h Hours) nextOpen(midnight time.Time, mins int, today time.Weekday) time.T
 			if offset == 0 && s.start <= mins {
 				continue // already passed today
 			}
-			return midnight.AddDate(0, 0, offset).Add(time.Duration(s.start) * time.Minute)
+			return clockOn(local, offset, s.start)
 		}
 	}
 	return time.Time{}
@@ -179,6 +190,11 @@ func SameShopDay(a, b time.Time) bool {
 	x, y := a.In(shopTZ), b.In(shopTZ)
 	return x.Year() == y.Year() && x.YearDay() == y.YearDay()
 }
+
+// InShopTime converts an instant to the shops' wall clock, for anything that
+// renders a time a shop will read -- a texted "around 3pm" must mean the
+// shop's 3pm no matter what the sender's laptop is set to.
+func InShopTime(t time.Time) time.Time { return t.In(shopTZ) }
 
 // clockLabel renders minutes-from-midnight as a compact 12-hour time.
 func clockLabel(m int) string {
@@ -230,5 +246,7 @@ func (h Hours) StatusLabel(t time.Time) string {
 func daysApart(from, to time.Time) int {
 	f := time.Date(from.Year(), from.Month(), from.Day(), 0, 0, 0, 0, shopTZ)
 	t := time.Date(to.Year(), to.Month(), to.Day(), 0, 0, 0, 0, shopTZ)
-	return int(t.Sub(f).Hours() / 24)
+	// Round, don't truncate: across a DST transition adjacent midnights are 23
+	// or 25 hours apart, and truncation turns "tomorrow" into "today".
+	return int(t.Sub(f).Round(24*time.Hour) / (24 * time.Hour))
 }

@@ -238,3 +238,40 @@ func TestSeededHoursParse(t *testing.T) {
 		t.Error("no seeded shop has hours")
 	}
 }
+
+// 2026-03-08 is the US spring-forward date: 2am becomes 3am, the day is 23
+// hours long. Hours mean the clock on the shop's wall, so 3:30pm on that day
+// must read as open for a 15:00-19:00 shop. The old elapsed-minutes math saw
+// 14:30 and said closed.
+func TestOpenAtOnSpringForwardDay(t *testing.T) {
+	h := Hours{"sun": "15:00-19:00"}
+	at := nyc(2026, time.March, 8, 15, 30)
+	st, until := h.OpenAt(at)
+	if st != StatusOpen {
+		t.Fatalf("3:30pm on spring-forward Sunday reported %v, want open", st)
+	}
+	if until.Hour() != 19 || until.Minute() != 0 {
+		t.Errorf("closes at %v, want 7pm wall clock", until)
+	}
+
+	// And the complement: elapsed math would call 7:30pm (elapsed 18:30) open.
+	if st, _ := h.OpenAt(nyc(2026, time.March, 8, 19, 30)); st != StatusClosed {
+		t.Error("7:30pm reported open on the spring-forward day")
+	}
+}
+
+func TestNextOpenAcrossSpringForward(t *testing.T) {
+	// Closed Saturday evening; opens 10am Sunday -- the spring-forward day.
+	h := Hours{"sun": "10:00-18:00"}
+	st, next := h.OpenAt(nyc(2026, time.March, 7, 20, 0))
+	if st != StatusClosed {
+		t.Fatal("Saturday 8pm should be closed")
+	}
+	if next.Hour() != 10 || next.Weekday() != time.Sunday {
+		t.Errorf("next open = %v, want Sunday 10am wall clock", next)
+	}
+	// daysApart across the 23-hour day: still "tomorrow", not "today".
+	if d := daysApart(nyc(2026, time.March, 7, 20, 0), next); d != 1 {
+		t.Errorf("daysApart across spring-forward = %d, want 1", d)
+	}
+}
