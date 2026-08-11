@@ -8,13 +8,21 @@
 [![Go 1.25+](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)](go.mod)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20·%20Linux-64748b)]()
-[![Made in Brooklyn](https://img.shields.io/badge/made%20in-Brooklyn-ff6319)]()**Find, compare and book Brooklyn barbershops without leaving your terminal.**
+[![Made in Brooklyn](https://img.shields.io/badge/made%20in-Brooklyn-ff6319)]()
+
+**Find, compare and book Brooklyn barbershops without leaving your terminal.**
+
+<br>
+
+<img src="assets/terminal.png" alt="fade browsing shops near Graham Av: walk times, prices, ratings, open-now dots" width="94%">
 
 </div>
 
----**fade** covers three subway corridors — the**L** from Bedford Av to Halsey St
-(Williamsburg, East Williamsburg, Bushwick), the**G** through Greenpoint, and
-the**M** through Ridgewood — 74 shops across Booksy, Fresha, Square, Squire,
+---
+
+**fade** covers three subway corridors — the **L** from Bedford Av to Halsey St
+(Williamsburg, East Williamsburg, Bushwick), the **G** through Greenpoint, and
+the **M** through Ridgewood — 74 shops across Booksy, Fresha, Square, Squire,
 Vagaro and plain phone lines. The catalog is compiled into the binary, so it
 works offline and starts in single-digit milliseconds.
 
@@ -32,7 +40,7 @@ works offline and starts in single-digit milliseconds.
   validated, prefilled call-or-text request, tracked until the shop answers
 - **A cut log** that learns your real cadence (median, outlier-resistant)
   and tells you when you're due
-- ⌨**A real TUI** — arrow keys, adaptive columns, sort by nearest / cheapest /
+- **A real TUI** — arrow keys, adaptive columns, sort by nearest / cheapest /
   best-rated — that degrades cleanly to flags and `--json` for scripts
 
 ## Install
@@ -55,25 +63,8 @@ $ fade-cli
 ```
 
 First run asks one question — which L stop you'd walk from — then shows you
-what's nearby. Arrow keys move, enter selects.
-
-```
-  ▌ Near Graham Av
-    Williamsburg → Halsey St · 17 shops within a 20 min walk
-
-     Monteman Barber                     5 min        ?  —
-     Groomers and Pomade                 6 min        ?  —
-     Cabello Brooklyn                    7 min        ?  ★ 5.0 (325)
-  ▸  SHEAR 483                           9 min   $55-60  ★ 5.0 (56)
-     Power Of Barbers                   11 min   $40-65  ★ 5.0 (89)
-     Gentlemen's Barbershop             14 min  $80-145  ★ 4.9 (757)
-     Uraga Barber Shop                  14 min   $50-95  ★ 5.0 (129)
-     Jack Of All Fadez  +1              15 min   $30-50  ★ 5.0 (178)
-
-    1–12 of 33
-
-  ↑↓ move   ⏎ select   f price   a show all   o open now   s sort   c stop   h history   q quit
-```
+what's nearby: the screen at the top of this page. Arrow keys move, enter
+selects.
 
 `s` cycles the ordering between nearest, cheapest and best-rated. Shops with no
 price or no rating always sort last — a missing value never wins a ranking by
@@ -169,19 +160,21 @@ which is never presented as a way to book.
 `fade-cli slots` shows real open times for any shop whose provider this install has
 credentials for. Today that means:
 
--**Square** — the one genuinely open path. Square documents a
+- **Square** — the one genuinely open path. Square documents a
   [Bookings API](https://developer.squareup.com/docs/bookings-api/what-it-does)
   and a shop can OAuth-authorize your app. Set `FADE_SQUARE_TOKEN`, and give the
   shop a `booking.id` of `"<location_id>:<service_variation_id>"` — Square won't
   quote open time without knowing which service you want.
--**Booksy** — their public API issues an `X-API-Key` per business; there is no
+- **Booksy** — their public API issues an `X-API-Key` per business; there is no
   open developer program. Set `FADE_BOOKSY_API_KEY` for shops that have granted
   you access.
--**Fresha** and**Vagaro** — no third-party availability API exists for
+- **Fresha** and **Vagaro** — no third-party availability API exists for
   either; their integration programs are merchant-facing. Handoff only.
 
 Shops without credentials degrade to a deep link rather than erroring. That's
-the intended state, not a bug — the CLI is useful with zero API access.**No third-party client can complete a booking here, and that is structural.**
+the intended state, not a bug — the CLI is useful with zero API access.
+
+**No third-party client can complete a booking here, and that is structural.**
 Square's Bookings API is seller-scoped: creating a booking at a shop requires
 that shop to OAuth-authorize this application into its own Square account. A
 customer cannot obtain those credentials by pasting a token. The same is true
@@ -254,28 +247,28 @@ read stale data without saying so.
 
 ## Known data gaps
 
--**Opening hours cover 36 of 71 shops.** `o` filters to open-now and browse
+- **Opening hours cover 36 of 71 shops.** `o` filters to open-now and browse
   marks each shop ●/○, but only where hours are on file. A shop nobody has
   researched shows no marker at all — never a false "closed". Fresha's venue
   and directory pages carry a full week and were the main source; Booksy
   renders only today's behind a JS toggle, so its 28 shops mostly lack hours.
--**Prices cover 35 of 71, ratings 30.** Booksy and Fresha partner pages
+- **Prices cover 35 of 71, ratings 30.** Booksy and Fresha partner pages
   publish price ranges; directory listings and walk-in shops generally don't.
--**Walk-in policy is recorded for 11 shops only**, always from a source that
+- **Walk-in policy is recorded for 11 shops only**, always from a source that
   states it. It is never inferred from a shop being a barbershop, because a
   wrong "just turn up" sends someone on a pointless walk.
--**Twenty-seven shops still book by phone.** Each was individually checked
+- **Twenty-seven shops still book by phone.** Each was individually checked
   against Booksy, Fresha, Squire and Vagaro; these publish nothing bookable.
   Two are walk-in only, where a phone number is the correct answer, not a
   fallback.
--**Two salons are included, marked as such.** Roots Radicals and Self Bushwick
+- **Two salons are included, marked as such.** Roots Radicals and Self Bushwick
   cut men's hair at \$100-120. Hiding them would withhold two of the
   best-rated options in the corridor; merging them silently into a list of
   \$25 fades would misrepresent what a row means. `--type salon` or
   `--type barbershop` filters either way.
--**Booksy models individual barbers as separate businesses.** Five barbers at
+- **Booksy models individual barbers as separate businesses.** Five barbers at
   681 Broadway are five catalog entries. `--collapse` folds them by address.
--**Two addresses in the original seed were invented** rather than sourced, and
+- **Two addresses in the original seed were invented** rather than sourced, and
   both survived every automated check because a confidently wrong value is
   internally consistent. Both are corrected; see Data sources.
 
