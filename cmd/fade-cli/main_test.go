@@ -146,7 +146,7 @@ func TestBrowseTableDropsUninformativeColumns(t *testing.T) {
 	rows, right := browseTable([]catalog.Result{
 		result("A", 2, true, 0, 0, 0),
 		result("B", 4, true, 0, 0, 0),
-	}, testNow)
+	}, testNow, nil)
 	if got := len(rows[0]); got != 2 {
 		t.Errorf("got %d columns, want 2 (name + walk): %q", got, rows[0])
 	}
@@ -162,7 +162,7 @@ func TestBrowseTableKeepsColumnsWithAnyData(t *testing.T) {
 	rows, _ := browseTable([]catalog.Result{
 		result("A", 2, true, 0, 0, 0),
 		result("B", 4, true, 0, 0, 5.0),
-	}, testNow)
+	}, testNow, nil)
 	if got := len(rows[0]); got != 3 {
 		t.Errorf("got %d columns, want 3 (name + walk + rating): %q", got, rows[0])
 	}
@@ -170,7 +170,7 @@ func TestBrowseTableKeepsColumnsWithAnyData(t *testing.T) {
 
 func TestBrowseTableAllColumns(t *testing.T) {
 	ui.SetColor(false)
-	rows, right := browseTable([]catalog.Result{result("A", 2, true, 40, 65, 4.9)}, testNow)
+	rows, right := browseTable([]catalog.Result{result("A", 2, true, 40, 65, 4.9)}, testNow, nil)
 	if got := len(rows[0]); got != 4 {
 		t.Errorf("got %d columns, want 4: %q", got, rows[0])
 	}
@@ -181,7 +181,7 @@ func TestBrowseTableAllColumns(t *testing.T) {
 
 func TestBrowseTableWithoutOriginDropsWalk(t *testing.T) {
 	ui.SetColor(false)
-	rows, _ := browseTable([]catalog.Result{result("A", 0, false, 40, 65, 4.9)}, testNow)
+	rows, _ := browseTable([]catalog.Result{result("A", 0, false, 40, 65, 4.9)}, testNow, nil)
 	for _, cell := range rows[0] {
 		if strings.HasSuffix(cell, " min") {
 			t.Errorf("walk column survived with no origin: %q", rows[0])

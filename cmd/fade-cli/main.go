@@ -81,6 +81,8 @@ func main() {
 		runErr = a.me(args)
 	case "stops":
 		runErr = a.stops(args)
+	case "themes":
+		runErr = a.themes(args)
 	case "dev":
 		runErr = a.dev(args)
 	default:
@@ -104,7 +106,36 @@ func newApp() (*app, error) {
 	if err != nil {
 		return nil, err
 	}
+	// A theme the profile names but this build lacks falls back silently;
+	// a color preference is not worth refusing to start over.
+	ui.UseTheme(st.Profile.Theme)
 	return &app{cat: cat, state: st, reg: provider.NewRegistry(os.Getenv)}, nil
+}
+
+// themes previews every built-in theme in its own colors, so picking one is
+// a look rather than a guess.
+func (a *app) themes(args []string) error {
+	fmt.Println()
+	active := ui.Current().Name
+	for _, t := range ui.Themes() {
+		ui.UseTheme(t.Name)
+		mark := "  "
+		if t.Name == active {
+			mark = ui.Accent("> ")
+		}
+		// The name in plain bold, not the theme's own title color: paper's
+		// near-black title would vanish on the dark terminal it is being
+		// previewed in.
+		fmt.Printf("%s%s %s\n", mark, ui.Bold(fmt.Sprintf("%-8s", t.Name)), ui.Subtle(t.Desc))
+		fmt.Printf("           %s %s %s %s %s\n",
+			ui.Accent("accent"), ui.Good("open"), ui.Warning("closed"), ui.Bad("overdue"),
+			ui.Selected(" selected "))
+		fmt.Printf("           %s\n", ui.Meter(70, 24))
+	}
+	ui.UseTheme(active)
+	fmt.Println()
+	ui.Hint("fade-cli me --set-theme <name>")
+	return nil
 }
 
 // parse accepts flags before or after positional arguments. Go's flag package
@@ -161,6 +192,7 @@ COMMANDS
   due       when you're next due for a cut
   me        view or set your profile
   stops     list the stops in the service area
+  themes    preview the color themes
   dev       maintenance tasks (geocode, check)
 
 EXAMPLES

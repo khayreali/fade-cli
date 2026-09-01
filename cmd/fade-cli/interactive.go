@@ -77,12 +77,12 @@ func (a *app) pickHome(raw *ui.Raw, firstRun bool) error {
 	}
 
 	list := &ui.List{
-		Title:    "fade cli",
-		Subtitle: subtitle,
-		Hint:     "Where do you walk from?",
-		Rows:     rows,
-		Right:    map[int]bool{2: true},
-		Height:   len(stops),
+		Title:      "Where do you walk from?",
+		Subtitle:   subtitle,
+		Rows:       rows,
+		Right:      map[int]bool{2: true},
+		Height:     len(stops),
+		Filterable: true,
 	}
 	if !firstRun {
 		list.Hints = []ui.KeyHint{{Key: ui.EscKey, Label: "back"}}
@@ -118,6 +118,7 @@ func (a *app) browse(raw *ui.Raw) error {
 	showAll, openNow := false, false
 	sortBy := catalog.SortNearest
 	notice := "" // explains a filter that had to be dropped to show anything
+	focus := ""  // shop id to put the cursor on after the list is rebuilt
 
 	for {
 		origin, label, err := a.resolveOrigin("")
@@ -162,41 +163,61 @@ func (a *app) browse(raw *ui.Raw) error {
 			}
 		}
 
-		rows, right := browseTable(results, time.Now())
+		results = pinSaved(results, a.state.Profile)
+		if focus != "" {
+			// Pinning reorders the list; keep the cursor on the shop that
+			// was just saved rather than on whatever slid into its slot.
+			for i, r := range results {
+				if r.Shop.ID == focus {
+					sel = i
+				}
+			}
+			focus = ""
+		}
+		rows, right := browseTable(results, time.Now(), a.state.Profile.IsSaved)
 		allLabel := "show all"
 		if showAll {
 			allLabel = "nearby only"
 		}
 
-		hint := ""
-		if notice != "" {
-			hint = ui.Yellow("! " + notice)
-			notice = ""
-		}
-
 		list := &ui.List{
-			Title:    "Near " + label,
-			Subtitle: subtitle,
-			Hint:     hint,
-			Rows:     rows,
-			Right:    right,
-			Height:   min(12, len(results)),
+			Title:      "Near " + label,
+			Subtitle:   subtitle,
+			Note:       notice,
+			Rows:       rows,
+			Right:      right,
+			Filterable: true,
 			Hints: []ui.KeyHint{
 				{Key: "f", Label: "price"},
 				{Key: "a", Label: allLabel},
 				{Key: "o", Label: openLabel(openNow)},
 				{Key: "s", Label: "sort"},
+				{Key: "*", Label: "save"},
 				{Key: "c", Label: "stop"},
 				{Key: "h", Label: "history"},
 				{Key: "q", Label: "quit"},
 			},
 		}
+		notice = ""
 
 		got := list.Run(raw, sel)
 		sel = got.Index
 		switch {
 		case !got.OK, got.Cmd == "q":
 			return nil
+		case got.Cmd == "*":
+			// The list returns the cursor row only on a selection, so a
+			// save pins whatever was highlighted when the key was pressed.
+			shop := results[list.Cursor()].Shop
+			if a.state.Profile.ToggleSaved(shop.ID) {
+				notice = "saved " + shop.Name
+			} else {
+				notice = "unsaved " + shop.Name
+			}
+			if err := a.state.Save(); err != nil {
+				return err
+			}
+			focus = shop.ID
 		case got.Cmd == "c":
 			if err := a.pickHome(raw, false); err != nil {
 				return err
@@ -292,10 +313,31 @@ func relax(openNow *bool, maxPrice *int, showAll *bool) (string, bool) {
 	}
 }
 
+// pinSaved moves saved shops to the top of the list, keeping the sort order
+// within each group. Pinning rather than a separate screen: the point of
+// saving a shop is to stop scrolling for it.
+func pinSaved(results []catalog.Result, p store.Profile) []catalog.Result {
+	if len(p.Saved) == 0 {
+		return results
+	}
+	out := make([]catalog.Result, 0, len(results))
+	for _, r := range results {
+		if p.IsSaved(r.Shop.ID) {
+			out = append(out, r)
+		}
+	}
+	for _, r := range results {
+		if !p.IsSaved(r.Shop.ID) {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
 // browseTable builds the browse rows, dropping any column that carries no
 // information for this result set. Greenpoint is entirely call-only shops with
 // no published price or rating, and a column of "—" is just noise.
-func browseTable(results []catalog.Result, now time.Time) ([][]string, map[int]bool) {
+func browseTable(results []catalog.Result, now time.Time, saved func(string) bool) ([][]string, map[int]bool) {
 	n := len(results)
 	// The open/closed dot only earns its two columns when something in view
 	// actually has hours on file.
@@ -314,6 +356,9 @@ func browseTable(results []catalog.Result, now time.Time) ([][]string, map[int]b
 	var anyWalk, anyPrice, anyRating bool
 	for i, r := range results {
 		name[i] = openDot(r.Shop, now, anyHours) + r.Shop.Name
+		if saved != nil && saved(r.Shop.ID) {
+			name[i] = openDot(r.Shop, now, anyHours) + ui.Accent(ui.Sym().Pin+" ") + r.Shop.Name
+		}
 		if l := r.Shop.Type.Label(); l != "" {
 			name[i] += ui.Dim("  " + l)
 		}
@@ -369,11 +414,12 @@ func openDot(s catalog.Shop, now time.Time, show bool) string {
 	if !show {
 		return ""
 	}
+	g := ui.Sym()
 	switch st, _ := s.Hours.OpenAt(now); st {
 	case catalog.StatusOpen:
-		return ui.Green("● ")
+		return ui.Good(g.Dot + " ")
 	case catalog.StatusClosed:
-		return ui.Dim("○ ")
+		return ui.Subtle(g.Ring + " ")
 	default:
 		return "  "
 	}
@@ -429,6 +475,7 @@ func ratingBadge(s catalog.Shop) string {
 func (a *app) shopScreen(raw *ui.Raw, r catalog.Result, from string) error {
 	chairs := append([]catalog.Shop{r.Shop}, r.Alongside...)
 	cur, sel := 0, 0
+	note := ""
 
 	for {
 		shop := chairs[cur]
@@ -453,19 +500,39 @@ func (a *app) shopScreen(raw *ui.Raw, r catalog.Result, from string) error {
 		actions = append(actions, []string{ui.Dim("Back"), ""})
 		kinds = append(kinds, "back")
 
+		saveLabel := "save"
+		if a.state.Profile.IsSaved(shop.ID) {
+			saveLabel = "unsave"
+		}
 		list := &ui.List{
 			Title:    shop.Name,
 			Subtitle: shopSubtitle(shop, r, from),
-			Hint:     shopFacts(a, shop, r, from),
+			Hint:     a.shopPanels(shop, r, from),
+			Note:     note,
 			Rows:     actions,
 			Height:   len(actions),
-			Hints:    []ui.KeyHint{{Key: ui.EscKey, Label: "back"}, {Key: "q", Label: "quit"}},
+			Hints: []ui.KeyHint{
+				{Key: "*", Label: saveLabel},
+				{Key: ui.EscKey, Label: "back"},
+				{Key: "q", Label: "quit"},
+			},
 		}
+		note = ""
 
 		got := list.Run(raw, sel)
 		switch {
 		case !got.OK, got.Cmd == "q":
 			return errAborted
+		case got.Cmd == "*":
+			if a.state.Profile.ToggleSaved(shop.ID) {
+				note = "saved -- pinned to the top of browse"
+			} else {
+				note = "unsaved"
+			}
+			if err := a.state.Save(); err != nil {
+				return err
+			}
+			continue
 		case got.Cmd != "":
 			return nil
 		}
@@ -527,30 +594,128 @@ func shopSubtitle(shop catalog.Shop, r catalog.Result, from string) string {
 	return strings.Join(parts, " · ")
 }
 
-func shopFacts(a *app, shop catalog.Shop, r catalog.Result, from string) string {
-	facts := []string{}
+// shopPanels lays the detail screen out as titled panels -- what the place
+// is, when it's open, how you book -- side by side when the terminal is wide
+// enough and stacked when it isn't.
+func (a *app) shopPanels(shop catalog.Shop, r catalog.Result, from string) string {
+	cols, _ := ui.Size()
+	now := time.Now()
+
+	// Details
+	var details []string
 	if shop.Rating > 0 {
-		facts = append(facts, ratingBadge(shop)+ratingSource(shop))
+		details = append(details, ratingBadge(shop)+ratingSource(shop))
+	}
+	if shop.PriceMin > 0 || shop.PriceMax > 0 {
+		line := priceCell(shop)
+		if pct, ok := a.pricePercentile(shop); ok {
+			line += "  " + ui.Meter(pct, 12)
+			details = append(details, line, ui.Subtle(fmt.Sprintf("pricier than %d%% of shops", pct)))
+		} else {
+			details = append(details, line)
+		}
 	}
 	// Only worth naming the shop's own stop when it isn't where you started.
 	if r.Stop.Name != "" && r.Stop.Name != from {
-		facts = append(facts, ui.Dim("by "+r.Stop.Name))
+		details = append(details, ui.Subtle("by "+r.Stop.Name))
 	}
-	if shop.PriceMin > 0 || shop.PriceMax > 0 {
-		facts = append(facts, priceCell(shop))
-	}
-	facts = append(facts, hoursFact(shop, time.Now())...)
 	if l := shop.Type.Label(); l != "" {
-		facts = append(facts, ui.Dim(l))
+		details = append(details, ui.Subtle(l))
 	}
 	if l := shop.WalkIn.Label(); l != "" {
-		facts = append(facts, ui.Cyan(l))
+		details = append(details, ui.Accent(l))
 	}
-	facts = append(facts, ui.Dim(bookingPhrase(shop)))
 	if v := a.visitsTo(shop.ID); v > 0 {
-		facts = append(facts, ui.Green("been here "+plural(v, "time")))
+		details = append(details, ui.Good("been here "+plural(v, "time")))
 	}
-	return strings.Join(facts, ui.Dim("   "))
+	if len(details) == 0 {
+		details = append(details, ui.Subtle("nothing published yet"))
+	}
+
+	// Hours: the whole week, today marked, so "closes at 7" has context.
+	// A short terminal gets today only -- the panels must never push the
+	// actions and key hints off the bottom of the screen.
+	_, rows := ui.Size()
+	stacked := cols < 96
+	compact := stacked && rows < 40
+	var hours []string
+	if shop.Hours.Known() {
+		if f := hoursFact(shop, now); len(f) > 0 {
+			hours = append(hours, f[0])
+		}
+		days := 7
+		if compact {
+			days = 1
+		}
+		for i := 0; i < days; i++ {
+			day := now.AddDate(0, 0, i)
+			label, trades := shop.Hours.OnDay(day)
+			if !trades {
+				label = "closed"
+			}
+			name := day.Format("Mon")
+			if i == 0 {
+				hours = append(hours, ui.Title(name)+"  "+label)
+			} else {
+				hours = append(hours, ui.Subtle(name)+"  "+ui.Subtle(label))
+			}
+		}
+	} else {
+		hours = append(hours, ui.Subtle("no hours on file"))
+	}
+
+	// Book
+	book := []string{bookingPhrase(shop), ui.Subtle(bookingAction(shop))}
+	if shop.Phone != "" && shop.Booking.Kind != catalog.KindPhone {
+		book = append(book, ui.Subtle("or call "+provider.PrettyPhone(shop.Phone)))
+	}
+	if a.state.Profile.IsSaved(shop.ID) {
+		book = append(book, ui.Accent(ui.Sym().Pin+" saved"))
+	}
+
+	width := cols - 4
+	gap := 2
+	if !stacked {
+		width = (cols - 4 - 2*gap) / 3
+	} else {
+		width = min(width, 64)
+	}
+	panels := [][]string{
+		ui.Box("Details", details, width),
+		ui.Box("Hours", hours, width),
+		ui.Box("Book", book, width),
+	}
+	if compact {
+		// The Book panel repeats what the first action row says; in a short
+		// stacked layout it is the first thing to fold into the Details box.
+		panels = [][]string{
+			ui.Box("Details", append(details, book...), width),
+			ui.Box("Hours", hours, width),
+		}
+	}
+	return strings.Join(ui.Beside(cols-4, gap, panels...), "\n")
+}
+
+// pricePercentile says how the shop's cheapest cut ranks against every priced
+// shop in the catalog: 0 is the cheapest around, 100 the priciest.
+func (a *app) pricePercentile(shop catalog.Shop) (int, bool) {
+	if shop.PriceMin == 0 {
+		return 0, false
+	}
+	below, priced := 0, 0
+	for _, s := range a.cat.Shops {
+		if s.PriceMin == 0 {
+			continue
+		}
+		priced++
+		if s.PriceMin < shop.PriceMin {
+			below++
+		}
+	}
+	if priced < 2 {
+		return 0, false
+	}
+	return below * 100 / (priced - 1), true
 }
 
 // hoursFact renders the open/closed line, plus today's hours when they add
@@ -735,13 +900,13 @@ func (a *app) historyScreen(raw *ui.Raw, origin *geo.Point, from string) error {
 	}
 
 	list := &ui.List{
-		Title:    "Your cuts",
-		Subtitle: subtitle,
-		Hint:     ui.Dim("select one to go back to that shop"),
-		Rows:     rows,
-		Right:    map[int]bool{2: true},
-		Height:   min(12, len(rows)),
-		Hints:    []ui.KeyHint{{Key: ui.EscKey, Label: "back"}},
+		Title:      "Your cuts",
+		Subtitle:   subtitle,
+		Hint:       ui.Subtle("select one to go back to that shop"),
+		Rows:       rows,
+		Right:      map[int]bool{2: true},
+		Filterable: true,
+		Hints:      []ui.KeyHint{{Key: ui.EscKey, Label: "back"}},
 	}
 
 	got := list.Run(raw, 0)

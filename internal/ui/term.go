@@ -45,6 +45,11 @@ type Raw struct {
 	r     *bufio.Reader
 	sigs  chan os.Signal
 	once  sync.Once
+
+	// Set up lazily by Keys/Resized for screens that select on both.
+	watch   sync.Once
+	keys    chan Key
+	resized chan struct{}
 }
 
 // EnterRaw switches to raw mode. It returns ok=false when stdin isn't a
@@ -109,8 +114,17 @@ func (t *Raw) Suspend(fn func()) {
 }
 
 // ReadKey blocks for a single keypress, decoding the ANSI escape sequences
-// that terminals use for arrows and navigation keys.
+// that terminals use for arrows and navigation keys. Once a reader goroutine
+// owns stdin (see Keys), it is the only thing allowed to read, so ReadKey
+// takes from its channel instead.
 func (t *Raw) ReadKey() Key {
+	if t.keys != nil {
+		return <-t.keys
+	}
+	return t.readKey()
+}
+
+func (t *Raw) readKey() Key {
 	b, err := t.r.ReadByte()
 	if err != nil {
 		return Key{Type: KeyInterrupt}
@@ -199,9 +213,60 @@ func (t *Raw) readEscape() Key {
 
 // Width returns the terminal width, defaulting to 80 when it can't be read.
 func Width() int {
-	w, _, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil || w <= 0 {
-		return 80
-	}
+	w, _ := Size()
 	return w
+}
+
+// Size returns the terminal's columns and rows, with an 80x24 fallback so
+// layout code never divides by zero on a pipe.
+func Size() (cols, rows int) {
+	w, h, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil || w <= 0 || h <= 0 {
+		return 80, 24
+	}
+	return w, h
+}
+
+// Resized reports terminal size changes. A screen that selects on this
+// alongside its key channel can redraw at the new size instead of waiting
+// for the next keypress to notice it.
+func (t *Raw) Resized() <-chan struct{} {
+	t.startWatching()
+	return t.resized
+}
+
+// Keys delivers keypresses on a channel, for screens that need to select
+// between input and resize events. Once started, the reader goroutine owns
+// stdin for the life of the Raw session; ReadKey keeps working through it.
+func (t *Raw) Keys() <-chan Key {
+	t.startWatching()
+	return t.keys
+}
+
+func (t *Raw) startWatching() {
+	t.watch.Do(func() {
+		t.keys = make(chan Key, 8)
+		t.resized = make(chan struct{}, 1)
+
+		winch := make(chan os.Signal, 1)
+		signal.Notify(winch, syscall.SIGWINCH)
+		go func() {
+			for range winch {
+				// Coalesce a burst of resize signals into one pending redraw.
+				select {
+				case t.resized <- struct{}{}:
+				default:
+				}
+			}
+		}()
+		go func() {
+			for {
+				k := t.readKey()
+				t.keys <- k
+				if k.Type == KeyInterrupt {
+					return
+				}
+			}
+		}()
+	})
 }

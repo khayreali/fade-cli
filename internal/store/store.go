@@ -30,6 +30,32 @@ type Profile struct {
 	MaxPrice  int        `json:"max_price,omitempty"`
 	// IntervalDays overrides the learned cut cadence.
 	IntervalDays int `json:"interval_days,omitempty"`
+	// Theme names a built-in color theme; empty means the default.
+	Theme string `json:"theme,omitempty"`
+	// Saved pins shops to the top of browse, by id.
+	Saved []string `json:"saved,omitempty"`
+}
+
+// IsSaved reports whether a shop is pinned.
+func (p Profile) IsSaved(shopID string) bool {
+	for _, id := range p.Saved {
+		if id == shopID {
+			return true
+		}
+	}
+	return false
+}
+
+// ToggleSaved pins or unpins a shop, returning the new state.
+func (p *Profile) ToggleSaved(shopID string) bool {
+	for i, id := range p.Saved {
+		if id == shopID {
+			p.Saved = append(p.Saved[:i], p.Saved[i+1:]...)
+			return false
+		}
+	}
+	p.Saved = append(p.Saved, shopID)
+	return true
 }
 
 // Origin resolves the profile to a coordinate to measure from, preferring an

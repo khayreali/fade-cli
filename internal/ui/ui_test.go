@@ -113,21 +113,3 @@ func TestStarsHandlesUnrated(t *testing.T) {
 		t.Errorf("Stars(4.9,757) = %q", got)
 	}
 }
-
-func stripANSI(s string) string {
-	var b strings.Builder
-	inEscape := false
-	for _, r := range s {
-		switch {
-		case inEscape:
-			if r == 'm' {
-				inEscape = false
-			}
-		case r == '\033':
-			inEscape = true
-		default:
-			b.WriteRune(r)
-		}
-	}
-	return b.String()
-}

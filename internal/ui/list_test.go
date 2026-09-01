@@ -184,14 +184,121 @@ func TestDrawUsesCarriageReturns(t *testing.T) {
 	}
 }
 
-func TestHighlightSurvivesInnerResets(t *testing.T) {
-	SetColor(true)
-	t.Cleanup(func() { SetColor(false) })
+func TestSelectedSurvivesInnerResets(t *testing.T) {
+	SetDepth(DepthTrue)
+	t.Cleanup(func() { SetDepth(DepthNone) })
 
-	// A colored cell ends with a reset; without re-arming, the highlight bar
-	// would stop partway across the row.
-	got := Highlight("plain" + Green("green") + "tail")
-	if strings.Count(got, reverse) < 2 {
-		t.Errorf("highlight not re-armed after inner reset: %q", got)
+	// A colored cell ends with a reset; without re-arming, the selection
+	// wash would stop partway across the row.
+	bg := Current().Selected.Bg.Bg()
+	got := Selected("plain" + Green("green") + "tail")
+	if strings.Count(got, bg) < 2 {
+		t.Errorf("selection not re-armed after inner reset: %q", got)
+	}
+}
+
+func TestSlashFiltersAndEnterOpensLoneMatch(t *testing.T) {
+	l := &List{Title: "t", Filterable: true, Out: io.Discard, Rows: [][]string{
+		{"Cabello Brooklyn"}, {"Power Of Barbers"}, {"SHEAR 483"},
+	}}
+	seq := []Key{{Type: KeyRune, Rune: '/'}}
+	for _, r := range "pwr" { // letters in order, not a substring
+		seq = append(seq, Key{Type: KeyRune, Rune: r})
+	}
+	seq = append(seq, Key{Type: KeyEnter})
+	got := l.Run(&keys{seq: seq}, 0)
+	if !got.OK || got.Index != 1 {
+		t.Errorf("got %+v, want Power Of Barbers (index 1) opened directly", got)
+	}
+}
+
+func TestFilterKeepsOriginalIndexes(t *testing.T) {
+	l := &List{Title: "t", Filterable: true, Out: io.Discard, Rows: [][]string{
+		{"alpha"}, {"beta"}, {"gamma"}, {"delta"},
+	}}
+	// "a" matches every row; confirm the filter, then move to the third
+	// survivor and select it. Index must be the row's position in Rows.
+	seq := []Key{{Type: KeyRune, Rune: '/'}, {Type: KeyRune, Rune: 't'}, {Type: KeyEnter}}
+	seq = append(seq, Key{Type: KeyDown}, Key{Type: KeyEnter})
+	got := l.Run(&keys{seq: seq}, 0)
+	// "t": beta, delta survive; down once lands on delta = Rows[3].
+	if !got.OK || got.Index != 3 {
+		t.Errorf("got %+v, want index 3 (delta)", got)
+	}
+}
+
+func TestHintKeysAreLettersWhileFiltering(t *testing.T) {
+	l := &List{Title: "t", Filterable: true, Out: io.Discard, Rows: rows(5),
+		Hints: []KeyHint{{Key: "q", Label: "quit"}}}
+	// Typing q into the search must not quit.
+	seq := []Key{{Type: KeyRune, Rune: '/'}, {Type: KeyRune, Rune: 'q'}, {Type: KeyEsc},
+		{Type: KeyEnter}}
+	got := l.Run(&keys{seq: seq}, 0)
+	if !got.OK || got.Cmd != "" || got.Index != 0 {
+		t.Errorf("got %+v, want a plain selection after clearing the filter", got)
+	}
+}
+
+func TestEscClearsFilterBeforeGoingBack(t *testing.T) {
+	l := &List{Title: "t", Filterable: true, Out: io.Discard,
+		Rows:  [][]string{{"alpha"}, {"beta"}, {"gamma"}},
+		Hints: []KeyHint{{Key: EscKey, Label: "back"}}}
+	// "a" keeps all three rows, so enter confirms the filter rather than
+	// opening a lone match.
+	seq := []Key{{Type: KeyRune, Rune: '/'}, {Type: KeyRune, Rune: 'a'}, {Type: KeyEnter},
+		{Type: KeyEsc}, {Type: KeyEsc}}
+	got := l.Run(&keys{seq: seq}, 0)
+	if !got.OK || got.Cmd != EscKey {
+		t.Errorf("got %+v, want back only on the second esc", got)
+	}
+	if l.query != "" {
+		t.Errorf("query still %q after esc", l.query)
+	}
+}
+
+func TestHelpOverlayIsDismissedByAnyKey(t *testing.T) {
+	l := newList(5)
+	seq := []Key{{Type: KeyRune, Rune: '?'}, {Type: KeyDown}, {Type: KeyEnter}}
+	// The down press only closes help; enter then selects row 0.
+	if got := l.Run(&keys{seq: seq}, 0); !got.OK || got.Index != 0 {
+		t.Errorf("got %+v, want index 0", got)
+	}
+}
+
+func TestVimTopAndBottom(t *testing.T) {
+	got := run(newList(9), Key{Type: KeyRune, Rune: 'G'}, Key{Type: KeyEnter})
+	if got.Index != 8 {
+		t.Errorf("G gave %d, want 8", got.Index)
+	}
+	got = run(newList(9), Key{Type: KeyRune, Rune: 'G'}, Key{Type: KeyRune, Rune: 'g'}, Key{Type: KeyEnter})
+	if got.Index != 0 {
+		t.Errorf("g gave %d, want 0", got.Index)
+	}
+}
+
+func TestHeightFitsTheTerminal(t *testing.T) {
+	l := newList(40)
+	l.Height = 0
+	l.Subtitle = "s"
+	l.sizeFn = func() (int, int) { return 80, 20 }
+	// 20 rows minus 7 lines of chrome (with a subtitle) leaves 13.
+	if h := l.height(); h != 13 {
+		t.Errorf("height = %d, want 13", h)
+	}
+	l.Height = 30
+	if h := l.height(); h != 13 {
+		t.Errorf("explicit height should still be capped to fit, got %d", h)
+	}
+}
+
+func TestMatchPositions(t *testing.T) {
+	if p := matchPositions("power of barbers", "pwr"); len(p) != 3 || p[0] != 0 || p[1] != 2 || p[2] != 4 {
+		t.Errorf("subsequence positions = %v", p)
+	}
+	if p := matchPositions("cabello", "bell"); len(p) != 4 || p[0] != 2 {
+		t.Errorf("substring positions = %v", p)
+	}
+	if p := matchPositions("cabello", "xyz"); p != nil {
+		t.Errorf("miss gave %v", p)
 	}
 }

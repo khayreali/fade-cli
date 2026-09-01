@@ -30,16 +30,9 @@ func detectColor() bool {
 func SetColor(on bool) { enabled = on }
 
 const (
-	reset      = "\033[0m"
-	bold       = "\033[1m"
-	dim        = "\033[2m"
-	reverse    = "\033[7m"
-	red        = "\033[31m"
-	green      = "\033[32m"
-	yellow     = "\033[33m"
-	blue       = "\033[34m"
-	cyan       = "\033[36m"
-	brightCyan = "\033[96m"
+	reset     = "\033[0m"
+	bold      = "\033[1m"
+	underline = "\033[4m"
 )
 
 func paint(code, s string) string {
@@ -49,24 +42,20 @@ func paint(code, s string) string {
 	return code + s + reset
 }
 
-func Accent(s string) string { return paint(brightCyan, s) }
-func Bold(s string) string   { return paint(bold, s) }
-func Dim(s string) string    { return paint(dim, s) }
-func Red(s string) string    { return paint(red, s) }
-func Green(s string) string  { return paint(green, s) }
-func Yellow(s string) string { return paint(yellow, s) }
-func Blue(s string) string   { return paint(blue, s) }
-func Cyan(s string) string   { return paint(cyan, s) }
+func Bold(s string) string      { return paint(bold, s) }
+func Underline(s string) string { return paint(underline, s) }
 
-// Highlight reverses foreground and background to mark the focused row. Inner
-// resets are re-armed with the reverse code, otherwise the first colored cell
-// in a row would end the highlight halfway across.
-func Highlight(s string) string {
-	if !enabled {
-		return "[" + s + "]"
-	}
-	return reverse + strings.ReplaceAll(s, reset, reset+reverse) + reset
-}
+// The classic names stay as aliases onto theme roles, so a call site that
+// says "green" gets whatever the active theme means by good news.
+func Dim(s string) string    { return Subtle(s) }
+func Red(s string) string    { return Bad(s) }
+func Green(s string) string  { return Good(s) }
+func Yellow(s string) string { return Warning(s) }
+func Blue(s string) string   { return Accent(s) }
+func Cyan(s string) string   { return Accent(s) }
+
+// Highlight marks the focused row in the theme's selection colors.
+func Highlight(s string) string { return Selected(s) }
 
 // Table renders aligned columns. Widths are measured on the visible text, not
 // the byte length, so color codes and non-ASCII names don't break alignment.

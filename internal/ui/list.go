@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"unicode"
 )
 
 // KeyHint is one command shown in a list's footer.
@@ -13,8 +14,18 @@ type KeyHint struct {
 	Label string
 }
 
-// List is a keyboard-navigable menu. Arrows move, enter selects, and any
-// registered hint key returns as a command.
+// listState gates which keys mean what, the way glow crosses a view state
+// with a filter state: while typing a search, "q" is a letter, not quit.
+type listState int
+
+const (
+	listReady listState = iota
+	listFiltering
+	listHelp
+)
+
+// List is a keyboard-navigable menu. Arrows move, enter selects, any
+// registered hint key returns as a command, "/" filters and "?" explains.
 //
 // Everything it prints uses \r\n: raw mode turns off the terminal's
 // newline-to-carriage-return translation, so a bare \n would stair-step the
@@ -26,14 +37,32 @@ type List struct {
 	Rows     [][]string   // pre-colored cells
 	Right    map[int]bool // column indexes to right-align
 	Hints    []KeyHint
-	Height   int       // visible rows; 0 means a sensible default
+	Height   int       // visible rows; 0 fits the terminal
 	Out      io.Writer // defaults to stdout; tests point it at io.Discard
+	// Note is a one-shot message for the status bar -- "saved", "nothing
+	// open right now" -- cleared by the next keypress.
+	Note string
+	// Filterable turns on "/" search across the visible text of each row.
+	Filterable bool
 
-	sel, top int
+	state  listState
+	query  string
+	view   []int // indexes into Rows that survive the filter
+	sel    int   // position within view
+	top    int
+	sizeFn func() (int, int)
 }
 
 // KeyReader supplies keypresses. *Raw is the real one; tests script a slice.
 type KeyReader interface{ ReadKey() Key }
+
+// eventSource is what *Raw also satisfies: input as a channel alongside a
+// resize signal, so the list can redraw when the window changes rather than
+// when the user next touches a key.
+type eventSource interface {
+	Keys() <-chan Key
+	Resized() <-chan struct{}
+}
 
 // EscKey is the hint key for "go back", registered by screens that have a
 // parent. It is matched by Esc, Left, and Backspace.
@@ -52,55 +81,151 @@ func (l *List) Run(t KeyReader, start int) Selection {
 	if len(l.Rows) == 0 {
 		return Selection{OK: false}
 	}
-	l.sel = clamp(start, 0, len(l.Rows)-1)
+	l.state, l.query = listReady, ""
+	l.refilter()
+	l.sel = clamp(start, 0, len(l.view)-1)
 
 	hideCursor()
 	defer showCursor()
 
+	src, live := t.(eventSource)
 	for {
 		l.draw()
 
-		k := t.ReadKey()
-		switch k.Type {
-		case KeyInterrupt:
-			return Selection{OK: false}
-		case KeyEnter, KeyRight:
-			return Selection{Index: l.sel, OK: true}
-		case KeyUp:
-			l.move(-1)
-		case KeyDown:
-			l.move(1)
-		case KeyPageUp:
-			l.move(-l.height())
-		case KeyPageDown:
-			l.move(l.height())
-		case KeyHome:
-			l.sel = 0
-		case KeyEnd:
-			l.sel = len(l.Rows) - 1
-		case KeyEsc, KeyLeft, KeyBackspace:
-			if cmd, ok := l.hintFor(EscKey); ok {
-				return Selection{Cmd: cmd, OK: true}
+		var k Key
+		if live {
+			select {
+			case k = <-src.Keys():
+			case <-src.Resized():
+				continue
 			}
-		case KeyRune:
-			switch {
-			case k.Rune == 'k':
-				l.move(-1)
-			case k.Rune == 'j':
-				l.move(1)
-			case k.Rune >= '1' && k.Rune <= '9':
-				// Digits jump the cursor without selecting, so typing "1"
-				// on the way to "10" doesn't fire the wrong row.
-				if n := int(k.Rune - '1'); n < len(l.Rows) {
-					l.sel = n
-				}
-			default:
-				if cmd, ok := l.hintFor(string(k.Rune)); ok {
-					return Selection{Cmd: cmd, OK: true}
-				}
+		} else {
+			k = t.ReadKey()
+		}
+		l.Note = ""
+
+		if k.Type == KeyInterrupt {
+			return Selection{OK: false}
+		}
+		var sel Selection
+		var done bool
+		switch l.state {
+		case listHelp:
+			l.state = listReady
+		case listFiltering:
+			sel, done = l.keyFiltering(k)
+		default:
+			sel, done = l.keyReady(k)
+		}
+		if done {
+			return sel
+		}
+	}
+}
+
+func (l *List) keyReady(k Key) (Selection, bool) {
+	switch k.Type {
+	case KeyEnter, KeyRight:
+		return l.choose()
+	case KeyUp:
+		l.move(-1)
+	case KeyDown:
+		l.move(1)
+	case KeyPageUp:
+		l.move(-l.height())
+	case KeyPageDown:
+		l.move(l.height())
+	case KeyHome:
+		l.sel = 0
+	case KeyEnd:
+		l.sel = len(l.view) - 1
+	case KeyEsc, KeyLeft, KeyBackspace:
+		if l.query != "" {
+			// A confirmed filter is the first thing esc peels away.
+			l.query = ""
+			l.refilter()
+			return Selection{}, false
+		}
+		if cmd, ok := l.hintFor(EscKey); ok {
+			return Selection{Cmd: cmd, OK: true}, true
+		}
+	case KeyRune:
+		switch {
+		case k.Rune == 'k':
+			l.move(-1)
+		case k.Rune == 'j':
+			l.move(1)
+		case k.Rune == 'g':
+			l.sel = 0
+		case k.Rune == 'G':
+			l.sel = len(l.view) - 1
+		case k.Rune == '/' && l.Filterable:
+			l.state = listFiltering
+		case k.Rune == '?':
+			l.state = listHelp
+		case k.Rune >= '1' && k.Rune <= '9':
+			// Digits jump the cursor without selecting, so typing "1" on
+			// the way to "10" doesn't fire the wrong row.
+			if n := int(k.Rune - '1'); n < len(l.view) {
+				l.sel = n
+			}
+		default:
+			if cmd, ok := l.hintFor(string(k.Rune)); ok {
+				return Selection{Cmd: cmd, OK: true}, true
 			}
 		}
 	}
+	return Selection{}, false
+}
+
+// keyFiltering: letters build the query, arrows still move, enter confirms
+// (and opens a lone match outright, as glow does), esc abandons.
+func (l *List) keyFiltering(k Key) (Selection, bool) {
+	switch k.Type {
+	case KeyEsc:
+		l.query = ""
+		l.state = listReady
+		l.refilter()
+	case KeyEnter:
+		l.state = listReady
+		if len(l.view) == 1 {
+			return l.choose()
+		}
+	case KeyBackspace:
+		if l.query == "" {
+			l.state = listReady
+			return Selection{}, false
+		}
+		r := []rune(l.query)
+		l.query = string(r[:len(r)-1])
+		l.refilter()
+	case KeyUp:
+		l.move(-1)
+	case KeyDown:
+		l.move(1)
+	case KeyRune:
+		if unicode.IsPrint(k.Rune) {
+			l.query += string(k.Rune)
+			l.refilter()
+		}
+	}
+	return Selection{}, false
+}
+
+// Cursor is the row under the highlight, as an index into Rows, for commands
+// that act on it without selecting it -- saving a shop, for one.
+func (l *List) Cursor() int {
+	if len(l.view) == 0 || l.sel >= len(l.view) {
+		return 0
+	}
+	return l.view[l.sel]
+}
+
+func (l *List) choose() (Selection, bool) {
+	if len(l.view) == 0 {
+		return Selection{}, false
+	}
+	return Selection{Index: l.view[l.sel], OK: true}, true
 }
 
 func (l *List) hintFor(k string) (string, bool) {
@@ -113,69 +238,294 @@ func (l *List) hintFor(k string) (string, bool) {
 }
 
 func (l *List) move(d int) {
-	l.sel = clamp(l.sel+d, 0, len(l.Rows)-1)
+	l.sel = clamp(l.sel+d, 0, max(0, len(l.view)-1))
+}
+
+// refilter rebuilds the visible set for the current query, keeping the
+// cursor on the same row when it survives.
+func (l *List) refilter() {
+	keep := -1
+	if l.sel < len(l.view) {
+		keep = l.view[l.sel]
+	}
+	l.view = l.view[:0]
+	for i, r := range l.Rows {
+		if l.query == "" || matches(rowText(r), l.query) {
+			l.view = append(l.view, i)
+		}
+	}
+	l.sel = 0
+	for i, idx := range l.view {
+		if idx == keep {
+			l.sel = i
+		}
+	}
+	l.top = 0
+}
+
+func rowText(cells []string) string {
+	parts := make([]string, len(cells))
+	for i, c := range cells {
+		parts[i] = stripANSI(c)
+	}
+	return strings.Join(parts, " ")
+}
+
+// matches is a forgiving search: a substring first, else the query's letters
+// in order ("pwr" finds Power Of Barbers). Case-insensitive.
+func matches(text, query string) bool {
+	text, query = strings.ToLower(text), strings.ToLower(query)
+	if strings.Contains(text, query) {
+		return true
+	}
+	return matchPositions(text, query) != nil
+}
+
+// matchPositions returns the visible-rune indexes the query lands on, or nil.
+func matchPositions(text, query string) []int {
+	text, query = strings.ToLower(text), strings.ToLower(query)
+	if query == "" {
+		return nil
+	}
+	if i := strings.Index(text, query); i >= 0 {
+		start := len([]rune(text[:i]))
+		out := make([]int, 0, len([]rune(query)))
+		for j := range []rune(query) {
+			out = append(out, start+j)
+		}
+		return out
+	}
+	var out []int
+	q := []rune(query)
+	qi := 0
+	for ti, r := range []rune(text) {
+		if qi < len(q) && r == q[qi] {
+			out = append(out, ti)
+			qi++
+		}
+	}
+	if qi < len(q) {
+		return nil
+	}
+	return out
 }
 
 // height is how many rows fit, leaving room for the header and footer.
 func (l *List) height() int {
-	if l.Height > 0 {
-		return l.Height
+	cols, rows := l.size()
+	chrome := 5 // top blank, title, blank, blank, status
+	chrome += len(l.footerLines(cols))
+	if l.Subtitle != "" {
+		chrome++
 	}
-	return 12
+	if l.Hint != "" {
+		chrome += 2
+	}
+	if l.Hint != "" {
+		// A multi-line hint (the shop screen's panels) costs its line count.
+		chrome += strings.Count(l.Hint, "\n")
+	}
+	fit := max(3, rows-chrome)
+	if l.Height > 0 {
+		return min(l.Height, fit)
+	}
+	return min(fit, 14)
+}
+
+func (l *List) size() (int, int) {
+	if l.sizeFn != nil {
+		return l.sizeFn()
+	}
+	return Size()
 }
 
 // scroll keeps the selection inside the visible window.
 func (l *List) scroll() (top, bottom int) {
-	h := min(l.height(), len(l.Rows))
+	h := min(l.height(), len(l.view))
 	if l.sel < l.top {
 		l.top = l.sel
 	}
 	if l.sel >= l.top+h {
 		l.top = l.sel - h + 1
 	}
-	l.top = clamp(l.top, 0, max(0, len(l.Rows)-h))
+	l.top = clamp(l.top, 0, max(0, len(l.view)-h))
 	return l.top, l.top + h
 }
 
 func (l *List) draw() {
+	g := Sym()
+	cols, _ := l.size()
 	var b strings.Builder
-	b.WriteString("\033[H\033[2J") // home + clear
+	// Synchronized output: the terminal holds the frame until the closing
+	// sequence, so a redraw never shows half a screen.
+	b.WriteString("\033[?2026h\033[H\033[2J")
 
 	b.WriteString("\r\n")
-	b.WriteString("  " + Accent("▌") + " " + Bold(l.Title) + "\r\n")
+	b.WriteString("  " + Title(l.Title) + "\r\n")
 	if l.Subtitle != "" {
-		b.WriteString("    " + Dim(l.Subtitle) + "\r\n")
+		b.WriteString("  " + Subtle(l.Subtitle) + "\r\n")
 	}
 	b.WriteString("\r\n")
 	if l.Hint != "" {
-		b.WriteString("  " + l.Hint + "\r\n\r\n")
+		for _, line := range strings.Split(l.Hint, "\n") {
+			b.WriteString("  " + line + "\r\n")
+		}
+		b.WriteString("\r\n")
 	}
 
-	widths := colWidths(l.Rows)
-	top, bottom := l.scroll()
-
-	// Every row renders to the same width so the highlight is a clean bar
-	// rather than a ragged edge that tracks each row's content length.
-	full := 0
-	for i := top; i < bottom; i++ {
-		full = max(full, visibleWidth(l.renderRow(l.Rows[i], widths)))
-	}
-	for i := top; i < bottom; i++ {
-		line := l.renderRow(l.Rows[i], widths)
-		line += strings.Repeat(" ", max(0, full-visibleWidth(line)))
-		if i == l.sel {
-			b.WriteString("  " + Accent("▸") + " " + Highlight(" "+line+" ") + "\r\n")
-		} else {
-			b.WriteString("     " + line + "\r\n")
+	if l.state == listHelp {
+		for _, line := range l.helpLines(cols) {
+			b.WriteString("  " + line + "\r\n")
+		}
+	} else if len(l.view) == 0 {
+		b.WriteString("    " + Subtle("Nothing found.") + "\r\n")
+		for i := 1; i < l.height(); i++ {
+			b.WriteString("\r\n")
+		}
+	} else {
+		widths := colWidths(l.Rows)
+		top, bottom := l.scroll()
+		positions := map[int][]int{}
+		if l.query != "" {
+			for i := top; i < bottom; i++ {
+				positions[i] = matchPositions(rowText(l.Rows[l.view[i]]), l.query)
+			}
+		}
+		// Every row renders to the same width so the selection is a clean
+		// bar rather than a ragged edge that tracks each row's content.
+		full := 0
+		for i := top; i < bottom; i++ {
+			full = max(full, visibleWidth(l.renderRow(l.Rows[l.view[i]], widths)))
+		}
+		full = min(full, cols-6)
+		for i := top; i < bottom; i++ {
+			line := truncate(l.renderRow(l.Rows[l.view[i]], widths), full)
+			if p := positions[i]; len(p) > 0 {
+				line = underlineAt(line, p)
+			}
+			line += strings.Repeat(" ", max(0, full-visibleWidth(line)))
+			if i == l.sel {
+				b.WriteString("  " + Accent(g.Gutter) + Selected(" "+line+" ") + "\r\n")
+			} else {
+				b.WriteString("    " + line + "\r\n")
+			}
+		}
+		for i := bottom - top; i < l.height(); i++ {
+			b.WriteString("\r\n")
 		}
 	}
 
-	if len(l.Rows) > bottom-top {
-		b.WriteString("\r\n    " + Dim(fmt.Sprintf("%d–%d of %d", top+1, bottom, len(l.Rows))) + "\r\n")
+	b.WriteString("\r\n  " + l.statusBar(cols) + "\r\n")
+	for _, line := range l.footerLines(cols) {
+		b.WriteString("  " + line + "\r\n")
+	}
+	b.WriteString("\033[?2026l")
+	io.WriteString(l.out(), b.String())
+}
+
+// statusBar is glow's pager bar: wordmark pill, then what the screen is
+// doing, then where you are in it.
+func (l *List) statusBar(cols int) string {
+	left := LogoPill("fade")
+	switch {
+	case l.state == listFiltering:
+		left += " " + Accent("Find: ") + l.query + Accent("_")
+	case l.state == listHelp:
+		left += " " + Subtle("keys")
+	case l.Note != "":
+		left += " " + Warning(l.Note)
+	case l.query != "":
+		left += " " + Subtle(fmt.Sprintf("%d matching %q", len(l.view), l.query))
 	}
 
-	b.WriteString("\r\n  " + l.footer() + "\r\n")
-	io.WriteString(l.out(), b.String())
+	right := ""
+	if len(l.view) > 0 && l.state != listHelp {
+		top, bottom := l.scroll()
+		right = Subtle(fmt.Sprintf("%d–%d of %d", top+1, bottom, len(l.view)))
+		if len(l.view) > bottom-top {
+			right += Subtle(fmt.Sprintf("  %3d%%", bottom*100/len(l.view)))
+		}
+	}
+	gap := cols - 4 - visibleWidth(left) - visibleWidth(right)
+	return left + strings.Repeat(" ", max(1, gap)) + right
+}
+
+// footerLines is the key strip, wrapped onto as many lines as the width
+// needs. The arrow hints are the first to go when space is tight: a narrow
+// terminal should lose "move" before it loses a real command.
+func (l *List) footerLines(cols int) []string {
+	g := Sym()
+	var parts []string
+	if l.state == listFiltering {
+		parts = []string{
+			Subtle("type to narrow"), Accent(g.Enter) + Subtle(" keep"), Accent("esc") + Subtle(" clear"),
+		}
+	} else {
+		if l.Filterable {
+			parts = append(parts, Accent("/")+Subtle(" find"))
+		}
+		for _, h := range l.Hints {
+			if h.Key == "" {
+				parts = append(parts, Subtle(h.Label))
+				continue
+			}
+			parts = append(parts, Accent(keyLabel(h.Key))+Subtle(" "+h.Label))
+		}
+		parts = append(parts, Accent("?")+Subtle(" keys"))
+		basics := []string{Accent(g.Up+g.Down) + Subtle(" move"), Accent(g.Enter) + Subtle(" select")}
+		if visibleWidth(strings.Join(append(basics, parts...), "   ")) <= cols-4 {
+			parts = append(basics, parts...)
+		}
+	}
+
+	sep := Subtle("   ")
+	var lines []string
+	var cur []string
+	width := 0
+	for _, p := range parts {
+		w := visibleWidth(p)
+		if len(cur) > 0 && width+3+w > cols-4 {
+			lines = append(lines, strings.Join(cur, sep))
+			cur, width = nil, 0
+		}
+		if len(cur) > 0 {
+			width += 3
+		}
+		cur = append(cur, p)
+		width += w
+	}
+	if len(cur) > 0 {
+		lines = append(lines, strings.Join(cur, sep))
+	}
+	return lines
+}
+
+// helpLines is the full key reference, laid out btop-style in a titled box.
+func (l *List) helpLines(cols int) []string {
+	g := Sym()
+	type entry struct{ key, desc string }
+	rows := []entry{
+		{g.Up + g.Down + ", j/k", "move"},
+		{"g / G", "top / bottom"},
+		{"pgup / pgdn", "page"},
+		{"1-9", "jump to a row"},
+		{g.Enter + " / " + g.Right, "select"},
+	}
+	if l.Filterable {
+		rows = append(rows, entry{"/", "find (letters in order match)"})
+	}
+	for _, h := range l.Hints {
+		if h.Key != "" {
+			rows = append(rows, entry{keyLabel(h.Key), h.Label})
+		}
+	}
+	rows = append(rows, entry{"?", "this list"}, entry{"ctrl-c", "leave"})
+
+	lines := []string{Subtle(fmt.Sprintf("%-16s%s", "Key", "Description"))}
+	for _, r := range rows {
+		lines = append(lines, Accent(fmt.Sprintf("%-16s", r.key))+r.desc)
+	}
+	return Box("Keys", lines, min(cols-4, 60))
 }
 
 func (l *List) out() io.Writer {
@@ -201,16 +551,38 @@ func (l *List) renderRow(cells []string, widths []int) string {
 	return strings.Join(parts, "  ")
 }
 
-func (l *List) footer() string {
-	parts := []string{Accent("↑↓") + Dim(" move"), Accent("⏎") + Dim(" select")}
-	for _, h := range l.Hints {
-		if h.Key == "" {
-			parts = append(parts, Dim(h.Label))
-			continue
-		}
-		parts = append(parts, Accent(keyLabel(h.Key))+Dim(" "+h.Label))
+// underlineAt underlines the visible runes at the given indexes, stepping
+// over escape sequences so the row's own colors survive.
+func underlineAt(s string, positions []int) string {
+	if !enabled {
+		return s
 	}
-	return strings.Join(parts, Dim("   "))
+	want := map[int]bool{}
+	for _, p := range positions {
+		want[p] = true
+	}
+	var b strings.Builder
+	n, inEscape := 0, false
+	for _, r := range s {
+		switch {
+		case inEscape:
+			b.WriteRune(r)
+			if r == 'm' {
+				inEscape = false
+			}
+		case r == '\033':
+			inEscape = true
+			b.WriteRune(r)
+		default:
+			if want[n] {
+				b.WriteString(underline + string(r) + "\033[24m")
+			} else {
+				b.WriteRune(r)
+			}
+			n++
+		}
+	}
+	return b.String()
 }
 
 // keyLabel spells out keys that have no printable form.

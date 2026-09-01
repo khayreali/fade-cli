@@ -36,12 +36,13 @@ works offline and starts in single-digit milliseconds.
   "closed"
 - **Every booking link opened and verified by hand.** Directory pages that
   only say "call to book" are never presented as bookable — a test enforces it
-- **Manual connectors** for the 27 shops with no booking platform: a
+- **Manual connectors** for the thirty shops with no booking platform: a
   validated, prefilled call-or-text request, tracked until the shop answers
 - **A cut log** that learns your real cadence (median, outlier-resistant)
   and tells you when you're due
-- **A real TUI** — arrow keys, adaptive columns, sort by nearest / cheapest /
-  best-rated — that degrades cleanly to flags and `--json` for scripts
+- **A real TUI** — `/` to find, `?` for keys, `*` to pin a shop, sort by
+  nearest / cheapest / best-rated, panels that reflow to the terminal, six
+  color themes — and it degrades cleanly to flags and `--json` for scripts
 
 ## Install
 
@@ -64,7 +65,11 @@ $ fade-cli
 
 First run asks one question — which L stop you'd walk from — then shows you
 what's nearby: the screen at the top of this page. Arrow keys move, enter
-selects.
+selects, `/` finds (letters in order match, so `pwr` reaches Power Of
+Barbers), and `?` lists every key on any screen.
+
+`*` saves a shop. Saved shops are marked ◆ and stay pinned to the top of the
+list — the point of saving one is to stop scrolling for it.
 
 `s` cycles the ordering between nearest, cheapest and best-rated. Shops with no
 price or no rating always sort last — a missing value never wins a ranking by
@@ -83,23 +88,12 @@ own where the map is sparse — and `a` switches to the whole directory. Columns
 with nothing in them are dropped, so a neighborhood of call-only shops doesn't
 render a column of dashes.
 
-Selecting a shop gets you the detail screen — walk time, rating, price, how
-they book, and whether you've been before:
+Selecting a shop gets you the detail screen: what the place is, the whole
+week's hours with today marked, how they book, and a bar placing the price
+against every other shop in the catalog. The panels sit side by side in a
+wide terminal and stack in a narrow one.
 
-```
-  ▌ Jack Of All Fadez
-    222 Johnson Ave, Brooklyn, NY 11206 · 15 min walk from Montrose Av
-
-  ★ 5.0 (178)   $30-50   books on Booksy
-
-  ▸  Book it         opens in your browser
-     See open times  today
-     Log a cut here  record what you paid
-     Switch barber   2 at this address
-     Back
-
-  ↑↓ move   ⏎ select   esc back   q quit
-```
+<img src="assets/shop.png" alt="the shop screen: Details, Hours and Book panels above the actions list" width="100%">
 
 ### Controls
 
@@ -107,13 +101,30 @@ they book, and whether you've been before:
 | --- | --- |
 | `↑` `↓` or `k` `j` | move |
 | `⏎` or `→` | select |
-| `esc`, `←`, or backspace | back |
+| `/` | find — type to narrow, enter keeps the filter, esc clears it |
+| `*` | save or unsave the shop under the cursor |
+| `?` | every key for the current screen |
+| `esc`, `←`, or backspace | back (clears a filter first) |
 | `1`–`9` | jump the cursor to that row (enter still confirms) |
-| `home` `end` `pgup` `pgdn` | jump to ends, page |
+| `g` `G` `home` `end` `pgup` `pgdn` | jump to ends, page |
 | `ctrl-C` | quit, restoring your terminal |
 
 Digits move the cursor rather than selecting outright, so typing `1` on the way
-to `10` can't fire the wrong shop.
+to `10` can't fire the wrong shop. While a search is open, letters go to the
+search — `q` is a letter there, not quit.
+
+### Themes
+
+```sh
+fade-cli themes                 # preview them in their own colors
+fade-cli me --set-theme nord
+```
+
+Six built in: `fade` (the default, charcoal and teal), `nord`, `dracula`,
+`gruvbox`, `paper` for light terminals, and `mono`. A theme is a set of named
+roles — accent, subtle, open, closed, overdue, selection, a low-to-high
+gradient for meters — rendered at whatever depth the terminal has: truecolor,
+256 colors, or the basic sixteen. `NO_COLOR` is honored.
 
 ## Once you know what you want
 

@@ -28,6 +28,7 @@ FLAGS
 		setEmail    = fs.String("set-email", "", "your email, for bookings")
 		setMax      = fs.Int("set-max-price", 0, "default price ceiling for find")
 		setInterval = fs.Int("set-interval", 0, "days between cuts (0 = learn it from history)")
+		setTheme    = fs.String("set-theme", "", "color theme (see `fade-cli themes`)")
 	)
 	if err := parse(fs, args); err != nil {
 		return nil
@@ -68,6 +69,12 @@ FLAGS
 	if set["set-interval"] {
 		a.state.Profile.IntervalDays = *setInterval
 	}
+	if set["set-theme"] {
+		if *setTheme != "" && !ui.UseTheme(*setTheme) {
+			return fmt.Errorf("no theme called %q -- run `fade-cli themes` to see them", *setTheme)
+		}
+		a.state.Profile.Theme = *setTheme
+	}
 
 	if changed {
 		if err := a.state.Save(); err != nil {
@@ -91,6 +98,10 @@ FLAGS
 	interval, src := a.state.IntervalWithSource()
 	t.Row(ui.Dim("cut every"), ui.Duration(interval)+"  "+ui.Dim("("+src.Label()+")"))
 	t.Row(ui.Dim("cuts logged"), fmt.Sprint(len(a.state.Cuts)))
+	t.Row(ui.Dim("theme"), ui.Current().Name)
+	if n := len(p.Saved); n > 0 {
+		t.Row(ui.Dim("saved shops"), fmt.Sprint(n))
+	}
 	t.Render(os.Stdout)
 	fmt.Println()
 
