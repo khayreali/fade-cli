@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"fadecli/internal/geo"
@@ -22,7 +23,7 @@ FLAGS
 		fs.PrintDefaults()
 	}
 	var (
-		setHome     = fs.String("set-home", "", "home stop id (see `fade-cli stops`)")
+		setHome     = fs.String("set-home", "", "home stop id (see `fade-cli stops`), or none to be asked again")
 		setName     = fs.String("set-name", "", "your name, for bookings")
 		setPhone    = fs.String("set-phone", "", "your phone, for bookings")
 		setEmail    = fs.String("set-email", "", "your email, for bookings")
@@ -43,12 +44,21 @@ FLAGS
 	changed := len(set) > 0
 
 	if set["set-home"] {
-		stop, ok := geo.StopByID(*setHome)
-		if !ok {
-			return fmt.Errorf("unknown stop %q -- run `fade-cli stops` to see them", *setHome)
+		switch strings.ToLower(*setHome) {
+		case "", "none", "clear", "reset":
+			// Forgetting the stop puts the browser back on its first-run
+			// question, which is the only honest way to fix a stop that was
+			// set by accident: the tool must never guess where you live.
+			a.state.Profile.HomeStop = ""
+			a.state.Profile.HomePoint = nil
+		default:
+			stop, ok := geo.StopByID(*setHome)
+			if !ok {
+				return fmt.Errorf("unknown stop %q -- run `fade-cli stops` to see them", *setHome)
+			}
+			a.state.Profile.HomeStop = stop.ID
+			a.state.Profile.HomePoint = nil // an explicit stop supersedes an old point
 		}
-		a.state.Profile.HomeStop = stop.ID
-		a.state.Profile.HomePoint = nil // an explicit stop supersedes an old point
 	}
 	for _, f := range []struct {
 		name string
@@ -113,7 +123,7 @@ FLAGS
 		}
 	}
 	if p.HomeStop == "" {
-		ui.Hint("set a home stop for walk times: fade-cli me --set-home graham")
+		ui.Hint("no home stop -- the next `fade-cli` will ask where you walk from")
 	}
 	return nil
 }

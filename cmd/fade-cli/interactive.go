@@ -193,7 +193,7 @@ func (a *app) browse(raw *ui.Raw) error {
 				{Key: "o", Label: openLabel(openNow)},
 				{Key: "s", Label: "sort"},
 				{Key: "*", Label: "save"},
-				{Key: "c", Label: "stop"},
+				{Key: "c", Label: "change stop"},
 				{Key: "h", Label: "history"},
 				{Key: "q", Label: "quit"},
 			},
