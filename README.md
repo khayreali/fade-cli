@@ -251,7 +251,7 @@ read stale data without saying so.
   marks each shop ●/○, but only where hours are on file. A shop nobody has
   researched shows no marker at all — never a false "closed". Hours are mined
   from each shop's own Booksy or Fresha page, whose structured data carries
-  the full week; the 16 without publish no hours anywhere fetchable.
+  the full week; the 16 still blank publish no hours anywhere fetchable.
 - **Prices cover 37 of 72, ratings 31.** Booksy and Fresha partner pages
   publish price ranges; directory listings and walk-in shops generally don't.
 - **Walk-in policy is recorded for 11 shops only**, always from a source that
