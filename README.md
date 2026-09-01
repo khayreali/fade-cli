@@ -22,7 +22,7 @@
 
 **fade** covers three subway corridors — the **L** from Bedford Av to Halsey St
 (Williamsburg, East Williamsburg, Bushwick), the **G** through Greenpoint, and
-the **M** through Ridgewood — 74 shops across Booksy, Fresha, Square, Squire,
+the **M** through Ridgewood — 72 shops across Booksy, Fresha, Square, Squire,
 Vagaro and plain phone lines. The catalog is compiled into the binary, so it
 works offline and starts in single-digit milliseconds.
 
@@ -188,7 +188,7 @@ rather than a homepage.
 
 ### Manual connectors
 
-Twenty-seven shops have no booking platform at all. The manual connector takes
+Thirty shops have no booking platform at all. The manual connector takes
 those as close to booked as software honestly can:
 
 ```sh
@@ -247,17 +247,17 @@ read stale data without saying so.
 
 ## Known data gaps
 
-- **Opening hours cover 36 of 71 shops.** `o` filters to open-now and browse
+- **Opening hours cover 56 of 72 shops.** `o` filters to open-now and browse
   marks each shop ●/○, but only where hours are on file. A shop nobody has
-  researched shows no marker at all — never a false "closed". Fresha's venue
-  and directory pages carry a full week and were the main source; Booksy
-  renders only today's behind a JS toggle, so its 28 shops mostly lack hours.
-- **Prices cover 35 of 71, ratings 30.** Booksy and Fresha partner pages
+  researched shows no marker at all — never a false "closed". Hours are mined
+  from each shop's own Booksy or Fresha page, whose structured data carries
+  the full week; the 16 without publish no hours anywhere fetchable.
+- **Prices cover 37 of 72, ratings 31.** Booksy and Fresha partner pages
   publish price ranges; directory listings and walk-in shops generally don't.
 - **Walk-in policy is recorded for 11 shops only**, always from a source that
   states it. It is never inferred from a shop being a barbershop, because a
   wrong "just turn up" sends someone on a pointless walk.
-- **Twenty-seven shops still book by phone.** Each was individually checked
+- **Thirty shops still book by phone.** Each was individually checked
   against Booksy, Fresha, Squire and Vagaro; these publish nothing bookable.
   Two are walk-in only, where a phone number is the correct answer, not a
   fallback.

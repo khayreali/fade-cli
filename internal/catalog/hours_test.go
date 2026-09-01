@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -229,8 +230,12 @@ func TestSeededHoursParse(t *testing.T) {
 			if raw == "" {
 				continue
 			}
-			if _, ok := parseSpan(raw); !ok {
-				t.Errorf("%s has unparseable hours for %s: %q", s.ID, day, raw)
+			// Split-shift days hold comma-separated spans, exactly as
+			// spansOn reads them; every part must parse.
+			for _, part := range strings.Split(raw, ",") {
+				if _, ok := parseSpan(part); !ok {
+					t.Errorf("%s has unparseable hours for %s: %q", s.ID, day, raw)
+				}
 			}
 		}
 	}

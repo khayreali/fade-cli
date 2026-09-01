@@ -81,6 +81,11 @@
         "kind": "booksy",
         "id": "285375",
         "url": "https://booksy.com/en-us/285375_jack-of-all-fadez_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "11:00-19:00",
+        "thu": "11:00-18:00",
+        "wed": "11:00-18:00"
       }
     },
     {
@@ -101,6 +106,14 @@
         "kind": "booksy",
         "id": "1123000",
         "url": "https://booksy.com/en-us/1123000_jean-lopez-the-great-commission-barbershop_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "08:30-20:00",
+        "mon": "10:00-20:00",
+        "sat": "08:30-20:00",
+        "sun": "10:00-17:00",
+        "thu": "10:00-20:00",
+        "wed": "10:00-19:00"
       }
     },
     {
@@ -121,6 +134,15 @@
         "kind": "booksy",
         "id": "1218312",
         "url": "https://booksy.com/en-us/1218312_richard-wladimir-the-great-commission-barber-shop_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "09:00-19:00",
+        "mon": "09:00-19:00",
+        "sat": "09:00-19:00",
+        "sun": "09:00-19:00",
+        "thu": "09:00-19:00",
+        "tue": "09:00-19:00",
+        "wed": "09:00-19:00"
       }
     },
     {
@@ -199,6 +221,15 @@
         "kind": "booksy",
         "id": "1343107",
         "url": "https://booksy.com/en-us/1343107_power-of-barbers_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "11:00-12:30,13:30-20:00",
+        "mon": "11:00-20:00",
+        "sat": "11:00-12:30,13:30-20:00",
+        "sun": "11:00-17:15",
+        "thu": "11:00-20:00",
+        "tue": "11:00-20:00",
+        "wed": "11:00-20:00"
       }
     },
     {
@@ -219,6 +250,13 @@
         "kind": "booksy",
         "id": "1684218",
         "url": "https://booksy.com/en-us/1684218_franklin-ptel-barber-fancy-barber-shop_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "09:40-19:30",
+        "sat": "09:30-19:30",
+        "thu": "10:00-19:30",
+        "tue": "10:00-19:30",
+        "wed": "10:00-19:30"
       }
     },
     {
@@ -239,6 +277,14 @@
         "kind": "booksy",
         "id": "951035",
         "url": "https://booksy.com/en-us/951035_el-blue-barber_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "09:00-12:00,12:25-20:00",
+        "sat": "09:00-12:00,12:05-20:30",
+        "sun": "09:00-12:00,12:05-17:00",
+        "thu": "09:00-12:00,12:25-20:00",
+        "tue": "09:00-12:00,12:25-20:00",
+        "wed": "09:00-12:00,12:25-20:00"
       }
     },
     {
@@ -259,6 +305,14 @@
         "kind": "booksy",
         "id": "407333",
         "url": "https://booksy.com/en-us/407333_cutmaster-by-serkiyo_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "09:00-21:00",
+        "sat": "09:00-20:30",
+        "sun": "10:00-15:10",
+        "thu": "09:30-20:00",
+        "tue": "09:30-19:00",
+        "wed": "09:30-19:00"
       }
     },
     {
@@ -279,6 +333,14 @@
         "kind": "booksy",
         "id": "468305",
         "url": "https://booksy.com/en-us/468305_malvin-at-cut-master_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "10:00-13:00,14:00-21:30",
+        "mon": "12:00-16:00",
+        "sat": "10:00-13:00,14:00-18:00",
+        "thu": "10:00-13:00,14:00-21:30",
+        "tue": "10:00-16:30",
+        "wed": "10:00-18:00"
       }
     },
     {
@@ -299,6 +361,14 @@
         "kind": "booksy",
         "id": "840783",
         "url": "https://booksy.com/en-us/840783_maiki-barber-at-cutmaster_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "10:00-12:15,13:00-20:00",
+        "mon": "12:00-17:00",
+        "sat": "10:00-12:15,13:00-20:00",
+        "thu": "10:00-20:00",
+        "tue": "11:00-19:00",
+        "wed": "11:00-19:00"
       }
     },
     {
@@ -319,6 +389,15 @@
         "kind": "booksy",
         "id": "765734",
         "url": "https://booksy.com/en-us/765734_tivibbs_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "09:00-20:00",
+        "mon": "10:00-19:00",
+        "sat": "09:00-20:00",
+        "sun": "12:00-18:00",
+        "thu": "10:00-19:00",
+        "tue": "10:00-19:00",
+        "wed": "10:00-19:00"
       }
     },
     {
@@ -339,6 +418,14 @@
         "kind": "booksy",
         "id": "624602",
         "url": "https://booksy.com/en-us/624602_jordan-cutmaster_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "10:00-20:00",
+        "sat": "10:00-20:00",
+        "sun": "12:00-16:00",
+        "thu": "11:00-19:00",
+        "tue": "11:00-19:00",
+        "wed": "11:00-19:00"
       }
     },
     {
@@ -359,6 +446,15 @@
         "kind": "booksy",
         "id": "1628079",
         "url": "https://booksy.com/en-us/1628079_sammy-barber_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "10:00-20:30",
+        "mon": "10:30-20:30",
+        "sat": "11:30-19:30",
+        "sun": "13:00-17:00",
+        "thu": "10:00-20:30",
+        "tue": "11:30-20:30",
+        "wed": "10:30-20:30"
       }
     },
     {
@@ -379,6 +475,15 @@
         "kind": "booksy",
         "id": "1483416",
         "url": "https://booksy.com/en-us/1483416_eraylin_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "09:30-21:30",
+        "mon": "09:30-20:30",
+        "sat": "09:30-21:30",
+        "sun": "09:30-20:30",
+        "thu": "09:30-21:00",
+        "tue": "09:30-20:30",
+        "wed": "09:30-20:30"
       }
     },
     {
@@ -399,6 +504,14 @@
         "kind": "booksy",
         "id": "1120978",
         "url": "https://booksy.com/en-us/1120978_ronny-fade_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "09:00-20:00",
+        "mon": "09:00-20:00",
+        "sat": "09:00-20:00",
+        "sun": "09:00-17:00",
+        "thu": "09:00-20:00",
+        "wed": "09:00-20:00"
       }
     },
     {
@@ -419,26 +532,11 @@
         "kind": "booksy",
         "id": "1057289",
         "url": "https://booksy.com/en-us/1057289_blanco-mens-concept_barber-shop_29902_brooklyn"
-      }
-    },
-    {
-      "id": "sharp-blade",
-      "name": "Sharp Blade",
-      "venue": "354 Broadway",
-      "address": "354 Broadway, Brooklyn, NY 11211",
-      "point": {
-        "lat": 40.7075164,
-        "lon": -73.9558325
       },
-      "rating": 5,
-      "reviews": 23,
-      "rating_src": "booksy",
-      "price_min": 30,
-      "price_max": 85,
-      "booking": {
-        "kind": "booksy",
-        "id": "469168",
-        "url": "https://booksy.com/en-us/469168_sharp-blade_barber-shop_29902_brooklyn"
+      "hours": {
+        "sat": "16:00-18:30",
+        "thu": "09:30-17:00",
+        "wed": "09:30-17:00"
       }
     },
     {
@@ -556,9 +654,7 @@
       },
       "phone": "+19174780571",
       "booking": {
-        "kind": "booksy",
-        "id": "130895",
-        "url": "https://booksy.com/en-us/130895_groomers-pomade-barbershop_barber-shop_29902_brooklyn"
+        "kind": "phone"
       }
     },
     {
@@ -580,6 +676,14 @@
         "kind": "booksy",
         "id": "676216",
         "url": "https://booksy.com/en-us/676216_kent-avenue-barber-shop_barber-shop_29902_brooklyn"
+      },
+      "hours": {
+        "fri": "10:00-17:00",
+        "mon": "10:00-19:00",
+        "sun": "10:00-18:00",
+        "thu": "10:00-19:00",
+        "tue": "10:00-19:00",
+        "wed": "10:00-19:00"
       }
     },
     {
@@ -753,7 +857,6 @@
       "name": "Rada Flow Barbershop",
       "venue": "1544 Myrtle Ave",
       "address": "1544 Myrtle Ave, Brooklyn, NY 11237",
-      "info_url": "https://www.fresha.com/lvp/rada-flow-barbershop-myrtle-avenue-zn5wLn",
       "point": {
         "lat": 40.6993711,
         "lon": -73.9118894
@@ -1001,7 +1104,9 @@
         "kind": "booksy",
         "id": "624360",
         "url": "https://booksy.com/en-us/624360_barber-doc-co_barber-shop_29902_brooklyn"
-      }
+      },
+      "price_min": 50,
+      "price_max": 80
     },
     {
       "id": "fade-2-famous",
@@ -1175,6 +1280,14 @@
         "kind": "booksy",
         "id": "1107825",
         "url": "https://booksy.com/en-us/1107825_rigobertos-barbershop_barber-shop_30067_new-york-city"
+      },
+      "hours": {
+        "fri": "09:00-20:00",
+        "mon": "09:00-20:00",
+        "sat": "09:00-20:00",
+        "sun": "10:00-16:00",
+        "thu": "09:00-20:00",
+        "wed": "09:00-20:00"
       }
     },
     {
@@ -1188,9 +1301,7 @@
       },
       "phone": "+13475990650",
       "booking": {
-        "kind": "booksy",
-        "id": "1137706",
-        "url": "https://booksy.com/en-us/1137706_willys-barbershop-corp_barber-shop_30067_new-york-city"
+        "kind": "phone"
       }
     },
     {
@@ -1368,6 +1479,15 @@
       "phone": "+13479887029",
       "booking": {
         "kind": "phone"
+      },
+      "hours": {
+        "fri": "10:00-22:00",
+        "mon": "10:00-22:00",
+        "sat": "10:00-22:00",
+        "sun": "09:00-17:00",
+        "thu": "10:00-21:00",
+        "tue": "10:00-21:00",
+        "wed": "09:00-22:00"
       }
     },
     {
@@ -1501,6 +1621,13 @@
       "booking": {
         "kind": "link",
         "url": "https://www.kinshipcuts.com/book-now"
+      },
+      "hours": {
+        "tue": "10:00-19:00",
+        "wed": "10:00-19:00",
+        "thu": "10:00-19:00",
+        "fri": "10:00-19:00",
+        "sat": "10:00-18:00"
       }
     },
     {
