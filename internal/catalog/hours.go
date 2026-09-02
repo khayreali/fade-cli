@@ -196,6 +196,11 @@ func SameShopDay(a, b time.Time) bool {
 // shop's 3pm no matter what the sender's laptop is set to.
 func InShopTime(t time.Time) time.Time { return t.In(shopTZ) }
 
+// ShopLocation is the timezone every shop is in. A time the user types
+// ("fri 3pm") means the shop's wall clock, so callers build it in this
+// location rather than the machine's.
+func ShopLocation() *time.Location { return shopTZ }
+
 // clockLabel renders minutes-from-midnight as a compact 12-hour time.
 func clockLabel(m int) string {
 	m %= 24 * 60

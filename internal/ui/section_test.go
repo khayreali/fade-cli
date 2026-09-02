@@ -72,3 +72,23 @@ func TestPositionCountsShops(t *testing.T) {
 		t.Errorf("selectable rows = %d, want 3", n)
 	}
 }
+
+// PageUp near the top of a grouped list must reach the first shop, not stall
+// because the paged target lands on the row-0 heading.
+func TestPageUpReachesTopShopPastAHeading(t *testing.T) {
+	l := sectioned() // [head0, alpha1, beta2, head3, gamma4]
+	l.Height = 3
+	// Cursor on beta (row 2); PageUp = move(-3) clamps the target to row 0,
+	// the heading. It must settle onto the top shop (row 1), not stall on
+	// beta the way the old edge guard did.
+	got := run(l, Key{Type: KeyDown}, Key{Type: KeyPageUp}, Key{Type: KeyEnter})
+	if got.Index == 2 {
+		t.Error("PageUp stalled on beta")
+	}
+	if l.Sections[got.Index] {
+		t.Errorf("PageUp landed on heading row %d", got.Index)
+	}
+	if got.Index != 1 {
+		t.Errorf("PageUp landed on row %d, want the top shop (1)", got.Index)
+	}
+}

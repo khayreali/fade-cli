@@ -82,12 +82,21 @@ FLAGS
 		q.MaxPrice = a.state.Profile.MaxPrice
 	}
 
+	// A typo'd bound must error, not silently fall back to no filter and
+	// return the whole catalog -- which looks identical to a real result.
+	for _, bound := range []struct{ flag, id string }{{"--from", *from}, {"--to", *to}} {
+		if bound.id != "" {
+			if _, ok := geo.StopByID(bound.id); !ok {
+				return fmt.Errorf("unknown stop %q for %s -- run `fade-cli stops` to see them", bound.id, bound.flag)
+			}
+		}
+	}
 	// Order only compares within a corridor, so a range spanning two of them
 	// is meaningless -- say so rather than silently returning one corridor.
 	if *from != "" && *to != "" {
-		f, fok := geo.StopByID(*from)
-		t, tok := geo.StopByID(*to)
-		if fok && tok && f.Corridor != t.Corridor {
+		f, _ := geo.StopByID(*from)
+		t, _ := geo.StopByID(*to)
+		if f.Corridor != t.Corridor {
 			return fmt.Errorf("%s and %s are on different corridors -- a range needs both on one", f.Name, t.Name)
 		}
 	}

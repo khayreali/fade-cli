@@ -181,8 +181,12 @@ func rankChannels(shop catalog.Shop, message string, now time.Time) []ChannelOpt
 // prefilled. Spaces are percent-encoded by hand: QueryEscape's '+' renders
 // literally in message bodies on macOS.
 func SMSLink(phone, body string) string {
+	// "%" comes first so a literal percent in the body becomes "%25" rather
+	// than colliding with the "%20"/"%0A" escapes inserted here. NewReplacer
+	// makes one non-overlapping pass, so the escapes it inserts are not
+	// re-scanned -- only the body's own "%" is caught.
 	esc := strings.NewReplacer(
-		" ", "%20", "\n", "%0A", "&", "%26", "?", "%3F", "#", "%23", "'", "%27", "+", "%2B", ",", "%2C",
+		"%", "%25", " ", "%20", "\n", "%0A", "&", "%26", "?", "%3F", "#", "%23", "'", "%27", "+", "%2B", ",", "%2C",
 	).Replace(body)
 	return "sms:" + phone + "&body=" + esc
 }

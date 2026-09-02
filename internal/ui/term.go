@@ -307,15 +307,25 @@ func QueryBackground(timeout time.Duration) (Color, bool) {
 	}
 	defer term.Restore(fd, state)
 
-	// os.Stdin is opened blocking, which rules out read deadlines; a second
-	// File over the same descriptor in non-blocking mode gets them. It is
-	// never closed -- that would close fd 0 -- and the descriptor goes back
-	// to blocking afterwards so the bufio key reader behaves as before.
+	// os.Stdin is opened blocking, which rules out read deadlines. Reading
+	// through a *dup* of fd 0 gets a pollable file we can put a deadline on
+	// and close ourselves -- crucially NOT os.NewFile(fd, ...) on fd 0
+	// directly, because os.NewFile installs a finalizer that closes its
+	// descriptor when the *os.File is garbage-collected, which on fd 0
+	// silently kills stdin for the rest of the run. O_NONBLOCK lives on the
+	// shared open file description, so toggling it on fd 0 covers the dup;
+	// the descriptor goes back to blocking afterwards so the bufio key
+	// reader behaves as before.
 	if err := syscall.SetNonblock(fd, true); err != nil {
 		return Color{}, false
 	}
 	defer syscall.SetNonblock(fd, false)
-	f := os.NewFile(uintptr(fd), "stdin")
+	dup, err := syscall.Dup(fd)
+	if err != nil {
+		return Color{}, false
+	}
+	f := os.NewFile(uintptr(dup), "osc-query")
+	defer f.Close()
 	if err := f.SetReadDeadline(time.Now().Add(timeout)); err != nil {
 		return Color{}, false
 	}

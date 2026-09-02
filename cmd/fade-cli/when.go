@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"fadecli/internal/catalog"
 )
 
 // parseWhen reads a day-plus-time the way people type them: "fri 3pm",
@@ -11,6 +13,10 @@ import (
 // part reuses parseDay's forward-looking rules, so "fri" on a Friday means
 // next Friday.
 func parseWhen(s string, now time.Time) (time.Time, error) {
+	// Everything is anchored to the shop's timezone: "fri 3pm" means Friday
+	// 3pm at the barbershop, and "today"/"tomorrow" mean the shop's calendar
+	// day, whatever clock the user's machine keeps.
+	now = now.In(catalog.ShopLocation())
 	fields := strings.Fields(strings.ToLower(strings.TrimSpace(s)))
 	switch len(fields) {
 	case 0:
@@ -19,8 +25,7 @@ func parseWhen(s string, now time.Time) (time.Time, error) {
 		// Either a bare time ("3pm" -> today) or a bare day (an error: a
 		// booking request needs a time of day).
 		if hh, mm, ok := parseClock(fields[0]); ok {
-			day := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-			return day.Add(time.Duration(hh)*time.Hour + time.Duration(mm)*time.Minute), nil
+			return clockOn(now, hh, mm), nil
 		}
 		if _, err := parseDay(fields[0], now); err == nil {
 			return time.Time{}, fmt.Errorf("%q needs a time of day too, like %q", s, s+" 3pm")
@@ -35,10 +40,17 @@ func parseWhen(s string, now time.Time) (time.Time, error) {
 		if !ok {
 			return time.Time{}, fmt.Errorf("can't read %q as a time -- try 3pm, 3:30pm or 15:00", fields[1])
 		}
-		return day.Add(time.Duration(hh)*time.Hour + time.Duration(mm)*time.Minute), nil
+		return clockOn(day, hh, mm), nil
 	default:
 		return time.Time{}, fmt.Errorf("can't read %q -- try \"fri 3pm\" or \"2026-08-14 15:00\"", s)
 	}
+}
+
+// clockOn puts a wall-clock time on a day using time.Date, which resolves DST
+// correctly. Adding a duration to midnight does not: on a spring-forward day
+// midnight+15h lands at 4pm, not 3pm, because it counts the skipped hour.
+func clockOn(day time.Time, hh, mm int) time.Time {
+	return time.Date(day.Year(), day.Month(), day.Day(), hh, mm, 0, 0, day.Location())
 }
 
 // parseClock accepts 3pm, 3:30pm, 10am, 15:00, 9:05. A bare number with no

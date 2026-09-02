@@ -302,12 +302,15 @@ func (l *List) move(d int) {
 	if d < 0 {
 		dir = -1
 	}
-	// A single step that lands on a heading keeps going in the same
-	// direction; at the edge it stays put rather than bouncing back.
+	// Landing on a heading, step past it to the nearest selectable row in
+	// the direction of travel (settle turns back at an edge). A single step
+	// that would only reach a heading naturally resolves to where the cursor
+	// already is, so this needs no special case for arrows vs paging -- the
+	// earlier version's edge guard made PageUp inert near a top heading.
 	if l.isSection(target) {
 		next := l.settle(target, dir)
-		if l.isSection(next) || (dir > 0 && next < target) || (dir < 0 && next > target) {
-			return
+		if l.isSection(next) {
+			return // nothing selectable to land on
 		}
 		target = next
 	}
@@ -466,12 +469,6 @@ func (l *List) draw() {
 	} else {
 		widths := l.colWidths()
 		top, bottom := l.scroll()
-		positions := map[int][]int{}
-		if l.query != "" {
-			for i := top; i < bottom; i++ {
-				positions[i] = matchPositions(rowText(l.Rows[l.view[i]]), l.query)
-			}
-		}
 		// Every row renders to the same width so the selection is a clean
 		// bar rather than a ragged edge that tracks each row's content.
 		full := 0
@@ -486,9 +483,15 @@ func (l *List) draw() {
 				b.WriteString("  " + l.renderSection(l.Rows[l.view[i]], full+2) + "\r\n")
 				continue
 			}
-			line := truncate(l.renderRow(l.Rows[l.view[i]], widths), full)
-			if p := positions[i]; len(p) > 0 {
-				line = underlineAt(line, p)
+			rendered := l.renderRow(l.Rows[l.view[i]], widths)
+			line := truncate(rendered, full)
+			// Match positions are computed on the rendered, padded row -- not
+			// on rowText's single-space join -- so the underline lands on the
+			// matched runes in every column, not shifted by the padding.
+			if l.query != "" {
+				if p := matchPositions(stripANSI(rendered), l.query); len(p) > 0 {
+					line = underlineAt(line, p)
+				}
 			}
 			line += strings.Repeat(" ", max(0, full-visibleWidth(line)))
 			if i == l.sel {

@@ -133,6 +133,24 @@ func TestCollapseByVenueKeepsTheBestRated(t *testing.T) {
 	}
 }
 
+// Under --sort cheapest, the collapsed venue row must be the cheapest barber
+// at the address, so "cheapest first" surfaces and ranks the real low price
+// instead of the best-rated barber's price.
+func TestCollapseCheapestKeepsTheCheapestBarber(t *testing.T) {
+	c := load(t)
+	collapsed := c.Find(Query{Text: "cutmaster", CollapseBy: "venue", Sort: SortCheapest})
+	if len(collapsed) != 1 {
+		t.Fatalf("collapsed to %d rows, want 1", len(collapsed))
+	}
+	winner := collapsed[0].Shop
+	for _, other := range collapsed[0].Alongside {
+		if other.PriceMin > 0 && (winner.PriceMin == 0 || other.PriceMin < winner.PriceMin) {
+			t.Errorf("cheapest-sort kept %s ($%d) but %s is cheaper ($%d)",
+				winner.ID, winner.PriceMin, other.ID, other.PriceMin)
+		}
+	}
+}
+
 func TestResolveExactBeatsSubstring(t *testing.T) {
 	c := load(t)
 	// "cutmaster-maiki" is an exact id and also a substring of nothing else.

@@ -47,7 +47,6 @@ func (a *app) interactive() error {
 func (a *app) neighborhoods(raw *ui.Raw) error {
 	sel := 0
 	for {
-		counts := a.shopCountsByStop()
 		var rows [][]string
 		var open []func() error
 		if n := len(a.state.Profile.Saved); n > 0 {
@@ -55,9 +54,12 @@ func (a *app) neighborhoods(raw *ui.Raw) error {
 			open = append(open, func() error { return a.savedList(raw) })
 		}
 		for _, nb := range geo.Neighborhoods {
+			// Count what the list will actually show: venue-collapsed rows,
+			// the same shopsByStop the detail screen uses. Counting raw shops
+			// here made the index promise "16 shops" and the list show 10.
 			n := 0
-			for _, id := range nb.Stops {
-				n += counts[id]
+			for _, g := range a.shopsByStop(nb, 0, false) {
+				n += len(g.shops)
 			}
 			shops := ui.Subtle("none yet")
 			if n > 0 {
@@ -94,17 +96,6 @@ func (a *app) neighborhoods(raw *ui.Raw) error {
 			return err
 		}
 	}
-}
-
-// shopCountsByStop tallies the catalog per stop, for the index rows.
-func (a *app) shopCountsByStop() map[string]int {
-	counts := map[string]int{}
-	for _, s := range a.cat.Shops {
-		if stop, ok := s.NearestStop(); ok {
-			counts[stop.ID]++
-		}
-	}
-	return counts
 }
 
 // neighborhoodList is the shop list: grouped by stop, outbound, and within a

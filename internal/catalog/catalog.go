@@ -361,7 +361,7 @@ func (c *Catalog) Find(q Query) []Result {
 	}
 
 	if q.CollapseBy == "venue" {
-		out = collapseByVenue(out)
+		out = collapseByVenue(out, q.Sort)
 	}
 	sortResults(out, q.Sort, q.Origin != nil)
 	return out
@@ -400,9 +400,12 @@ func (c *Catalog) stopRange(q Query) (corridorID string, lo, hi int) {
 	return cor.ID, lo, hi
 }
 
-// collapseByVenue keeps the best-rated bookable entity per address and files
-// the rest under Alongside, so five Cutmaster barbers read as one shop.
-func collapseByVenue(in []Result) []Result {
+// collapseByVenue keeps one bookable entity per address and files the rest
+// under Alongside, so five Cutmaster barbers read as one shop. The kept
+// barber matches the sort: cheapest-first keeps the cheapest cut at the
+// address (otherwise "cheapest first" would rank a venue by its priciest
+// barber and hide the cheap one), everything else keeps the best-rated.
+func collapseByVenue(in []Result, by SortBy) []Result {
 	byVenue := map[string]int{}
 	var out []Result
 	for _, r := range in {
@@ -416,7 +419,7 @@ func collapseByVenue(in []Result) []Result {
 			out = append(out, r)
 			continue
 		}
-		if better(r.Shop, out[i].Shop) {
+		if preferred(r.Shop, out[i].Shop, by) {
 			// Replace the whole Result, not just the Shop: swapping only the
 			// Shop left the loser's Miles/WalkMin/Stop on the winner's row, so
 			// the collapsed row sorted and displayed the wrong walk time.
@@ -427,6 +430,21 @@ func collapseByVenue(in []Result) []Result {
 		}
 	}
 	return out
+}
+
+// preferred reports whether a should represent its venue over b, under the
+// active sort. Under cheapest, that is the lower starting price (a published
+// price always beats an unpriced barber); otherwise the better-rated.
+func preferred(a, b Shop, by SortBy) bool {
+	if by == SortCheapest {
+		if (a.PriceMin == 0) != (b.PriceMin == 0) {
+			return b.PriceMin == 0 // a is priced, b is not
+		}
+		if a.PriceMin != b.PriceMin && a.PriceMin != 0 {
+			return a.PriceMin < b.PriceMin
+		}
+	}
+	return better(a, b)
 }
 
 func better(a, b Shop) bool {

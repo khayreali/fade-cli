@@ -108,3 +108,28 @@ func TestSMSLinkEncoding(t *testing.T) {
 		}
 	}
 }
+
+// A literal percent in the body must become %25, not sit next to the %20
+// escapes and form an invalid %%20 that Messages renders as garbage.
+func TestSMSLinkEscapesPercent(t *testing.T) {
+	got := SMSLink("+17185551234", "50% off today")
+	body := strings.TrimPrefix(got, "sms:+17185551234&body=")
+	if strings.Contains(body, "%%") || strings.Contains(body, "50% ") {
+		t.Errorf("literal %% not escaped: %q", body)
+	}
+	if !strings.Contains(body, "50%25") {
+		t.Errorf("expected 50%%25 in %q", body)
+	}
+	// Every % must begin a valid two-hex-digit escape.
+	for i := 0; i < len(body); i++ {
+		if body[i] == '%' {
+			if i+2 >= len(body) || !isHex(body[i+1]) || !isHex(body[i+2]) {
+				t.Errorf("malformed escape at %d in %q", i, body)
+			}
+		}
+	}
+}
+
+func isHex(b byte) bool {
+	return (b >= '0' && b <= '9') || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F')
+}
