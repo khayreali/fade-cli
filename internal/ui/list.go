@@ -217,10 +217,13 @@ func (l *List) keyFiltering(k Key) (Selection, bool) {
 }
 
 // Cursor is the row under the highlight, as an index into Rows, for commands
-// that act on it without selecting it -- saving a shop, for one.
+// that act on it without selecting it -- saving a shop, for one. It returns
+// -1 when there is no selectable row under the cursor (an empty or
+// filtered-to-nothing view, or a section heading), so a caller never mistakes
+// "nothing here" for row 0.
 func (l *List) Cursor() int {
-	if len(l.view) == 0 || l.sel >= len(l.view) {
-		return 0
+	if l.sel < 0 || l.sel >= len(l.view) || l.isSection(l.sel) {
+		return -1
 	}
 	return l.view[l.sel]
 }
@@ -483,13 +486,13 @@ func (l *List) draw() {
 				b.WriteString("  " + l.renderSection(l.Rows[l.view[i]], full+2) + "\r\n")
 				continue
 			}
-			rendered := l.renderRow(l.Rows[l.view[i]], widths)
-			line := truncate(rendered, full)
-			// Match positions are computed on the rendered, padded row -- not
-			// on rowText's single-space join -- so the underline lands on the
-			// matched runes in every column, not shifted by the padding.
+			line := truncate(l.renderRow(l.Rows[l.view[i]], widths), full)
+			// Match positions are measured on the truncated line that is
+			// actually drawn -- padded like the render, so columns after the
+			// first aren't shifted, and clipped at the cut so a match past the
+			// ellipsis isn't underlined onto the ellipsis glyph.
 			if l.query != "" {
-				if p := matchPositions(stripANSI(rendered), l.query); len(p) > 0 {
+				if p := matchPositions(stripANSI(line), l.query); len(p) > 0 {
 					line = underlineAt(line, p)
 				}
 			}

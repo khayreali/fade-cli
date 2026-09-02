@@ -191,7 +191,12 @@ func (a *app) neighborhoodList(raw *ui.Raw, nb geo.Neighborhood) error {
 			openNow = !openNow
 			sel = 0
 		case got.Cmd == "*":
-			shop := results[resultAt[list.Cursor()]].Shop
+			cur := list.Cursor()
+			if cur < 0 || resultAt[cur] < 0 {
+				notice = "nothing to save"
+				break
+			}
+			shop := results[resultAt[cur]].Shop
 			if a.state.Profile.ToggleSaved(shop.ID) {
 				notice = "saved " + shop.Name
 			} else {
@@ -337,13 +342,18 @@ func (a *app) savedList(raw *ui.Raw) error {
 		case got.Cmd == ui.EscKey:
 			return nil
 		case got.Cmd == "*":
-			shop := results[list.Cursor()].Shop
+			cur := list.Cursor()
+			if cur < 0 {
+				notice = "nothing to unsave"
+				break
+			}
+			shop := results[cur].Shop
 			a.state.Profile.ToggleSaved(shop.ID)
 			if err := a.state.Save(); err != nil {
 				return err
 			}
 			notice = "unsaved " + shop.Name
-			sel = min(list.Cursor(), len(results)-2)
+			sel = min(cur, len(results)-2)
 		default:
 			sel = got.Index
 			r := results[got.Index]

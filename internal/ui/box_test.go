@@ -64,6 +64,16 @@ func TestMeterFillsProportionally(t *testing.T) {
 	}
 }
 
+func TestTruncateNeverExceedsWidth(t *testing.T) {
+	SetDepth(DepthNone) // plain glyphs: the ellipsis is the 3-cell "..."
+	for _, w := range []int{1, 2, 3, 4, 8} {
+		got := truncate("abcdefghij", w)
+		if visibleWidth(got) > w {
+			t.Errorf("truncate(_, %d) = %q, width %d exceeds %d", w, got, visibleWidth(got), w)
+		}
+	}
+}
+
 func TestTruncateKeepsEscapesBalanced(t *testing.T) {
 	SetDepth(DepthTrue)
 	t.Cleanup(func() { SetDepth(DepthNone) })

@@ -73,6 +73,23 @@ func TestPositionCountsShops(t *testing.T) {
 	}
 }
 
+// Cursor() must report -1, never 0, when there is no selectable row -- an
+// empty view (filtered to nothing) or a heading -- so a save/unsave command
+// can't act on the wrong row or index a heading's -1 into a slice.
+func TestCursorIsMinusOneWhenNothingSelectable(t *testing.T) {
+	l := sectioned()
+	// Filter to zero matches, confirm, land back in ready with an empty view.
+	seq := []Key{{Type: KeyRune, Rune: '/'}, {Type: KeyRune, Rune: 'z'},
+		{Type: KeyRune, Rune: 'z'}, {Type: KeyEnter}}
+	l.Run(&keys{seq: seq}, 0)
+	if len(l.view) != 0 {
+		t.Fatalf("view should be empty after a no-match filter, got %d", len(l.view))
+	}
+	if c := l.Cursor(); c != -1 {
+		t.Errorf("Cursor() on empty view = %d, want -1", c)
+	}
+}
+
 // PageUp near the top of a grouped list must reach the first shop, not stall
 // because the paged target lands on the row-0 heading.
 func TestPageUpReachesTopShopPastAHeading(t *testing.T) {

@@ -123,7 +123,14 @@ func truncate(s string, width int) string {
 	}
 	g := Sym()
 	ell := g.Ellipsis
+	// When the width can't even fit the ellipsis, hard-cut to width with no
+	// ellipsis -- appending it anyway returned a string WIDER than requested
+	// and broke Box's equal-width rows on a very narrow terminal.
 	keep := width - visibleWidth(ell)
+	useEllipsis := keep > 0
+	if !useEllipsis {
+		keep = width
+	}
 
 	var b strings.Builder
 	n, inEscape := 0, false
@@ -149,7 +156,10 @@ func truncate(s string, width int) string {
 	if enabled && !strings.HasSuffix(out, reset) {
 		out += reset
 	}
-	return out + Subtle(ell)
+	if useEllipsis {
+		out += Subtle(ell)
+	}
+	return out
 }
 
 // stripANSI removes escape sequences, for matching and measuring.
