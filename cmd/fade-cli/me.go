@@ -108,7 +108,11 @@ FLAGS
 	interval, src := a.state.IntervalWithSource()
 	t.Row(ui.Dim("cut every"), ui.Duration(interval)+"  "+ui.Dim("("+src.Label()+")"))
 	t.Row(ui.Dim("cuts logged"), fmt.Sprint(len(a.state.Cuts)))
-	t.Row(ui.Dim("theme"), ui.Current().Name)
+	theme := ui.Current().Name
+	if bg, known := ui.Background(); known {
+		theme += "  " + ui.Dim("adapted to your "+bg.String()+" background")
+	}
+	t.Row(ui.Dim("theme"), theme)
 	if n := len(p.Saved); n > 0 {
 		t.Row(ui.Dim("saved shops"), fmt.Sprint(n))
 	}

@@ -107,7 +107,10 @@ func newApp() (*app, error) {
 		return nil, err
 	}
 	// A theme the profile names but this build lacks falls back silently;
-	// a color preference is not worth refusing to start over.
+	// a color preference is not worth refusing to start over. Whatever the
+	// theme, it is re-tuned to the terminal's real background so nothing
+	// disappears on a blue or white one.
+	ui.AdaptToTerminal()
 	ui.UseTheme(st.Profile.Theme)
 	return &app{cat: cat, state: st, reg: provider.NewRegistry(os.Getenv)}, nil
 }

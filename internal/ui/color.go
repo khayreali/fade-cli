@@ -154,6 +154,51 @@ func dist(a, b Color) float64 {
 	return 2*dr*dr + 4*dg*dg + 3*db*db
 }
 
+// Luminance is the WCAG relative luminance: 0 for black, 1 for white.
+func (c Color) Luminance() float64 {
+	lin := func(v uint8) float64 {
+		s := float64(v) / 255
+		if s <= 0.03928 {
+			return s / 12.92
+		}
+		return math.Pow((s+0.055)/1.055, 2.4)
+	}
+	return 0.2126*lin(c.R) + 0.7152*lin(c.G) + 0.0722*lin(c.B)
+}
+
+// Contrast is the WCAG contrast ratio between two colors, 1 to 21.
+func Contrast(a, b Color) float64 {
+	la, lb := a.Luminance(), b.Luminance()
+	if la < lb {
+		la, lb = lb, la
+	}
+	return (la + 0.05) / (lb + 0.05)
+}
+
+// IsDark reports whether text on this background should be light.
+func (c Color) IsDark() bool { return c.Luminance() < 0.4 }
+
+// Legible returns c nudged away from bg until their contrast reaches min,
+// blending toward whichever of white or black has more room against bg so
+// the hue survives as long as it can. A color that already passes comes
+// back untouched, which is what keeps a theme looking designed on the
+// background it was designed for.
+func Legible(c, bg Color, min float64) Color {
+	if Contrast(c, bg) >= min {
+		return c
+	}
+	toward := Color{255, 255, 255}
+	if Contrast(Color{}, bg) > Contrast(toward, bg) {
+		toward = Color{}
+	}
+	for t := 0.05; t < 1; t += 0.05 {
+		if n := Blend(c, toward, t); Contrast(n, bg) >= min {
+			return n
+		}
+	}
+	return toward
+}
+
 // Blend interpolates between two colors; t runs 0 (a) to 1 (b).
 func Blend(a, b Color, t float64) Color {
 	t = math.Max(0, math.Min(1, t))

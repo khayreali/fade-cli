@@ -4,8 +4,11 @@ import (
 	"bufio"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"golang.org/x/term"
 )
@@ -162,6 +165,13 @@ func (t *Raw) readEscape() Key {
 		return Key{Type: KeyEsc}
 	}
 
+	if b == ']' {
+		// An OSC reply (a late answer to the background query, say) is not
+		// keys. Swallow it through its BEL or ST terminator.
+		t.skipOSC()
+		return t.ReadKey()
+	}
+
 	b, err = t.r.ReadByte()
 	if err != nil {
 		return Key{Type: KeyEsc}
@@ -209,6 +219,135 @@ func (t *Raw) readEscape() Key {
 		}
 	}
 	return Key{Type: KeyEsc}
+}
+
+// skipOSC consumes the rest of an OSC sequence: everything up to BEL or
+// ESC-backslash, with a size cap so a malformed stream can't hang input.
+func (t *Raw) skipOSC() {
+	for i := 0; i < 256; i++ {
+		b, err := t.r.ReadByte()
+		if err != nil || b == '\a' {
+			return
+		}
+		if b == 27 {
+			if n, err := t.r.ReadByte(); err != nil || n == '\\' {
+				return
+			}
+		}
+	}
+}
+
+// QueryBackground asks the terminal for its background color (OSC 11) and
+// waits up to timeout for the answer. Most terminals reply in a millisecond;
+// one that never replies costs the timeout once, which is why callers keep
+// it short. Both ends must be a terminal.
+func QueryBackground(timeout time.Duration) (Color, bool) {
+	if !enabled || !IsInteractive() {
+		return Color{}, false
+	}
+	fd := int(os.Stdin.Fd())
+	state, err := term.MakeRaw(fd)
+	if err != nil {
+		return Color{}, false
+	}
+	defer term.Restore(fd, state)
+
+	// os.Stdin is opened blocking, which rules out read deadlines; a second
+	// File over the same descriptor in non-blocking mode gets them. It is
+	// never closed -- that would close fd 0 -- and the descriptor goes back
+	// to blocking afterwards so the bufio key reader behaves as before.
+	if err := syscall.SetNonblock(fd, true); err != nil {
+		return Color{}, false
+	}
+	defer syscall.SetNonblock(fd, false)
+	f := os.NewFile(uintptr(fd), "stdin")
+	if err := f.SetReadDeadline(time.Now().Add(timeout)); err != nil {
+		return Color{}, false
+	}
+
+	os.Stdout.WriteString("\033]11;?\033\\")
+	var buf []byte
+	one := make([]byte, 1)
+	for len(buf) < 64 {
+		n, err := f.Read(one)
+		if err != nil || n == 0 {
+			break
+		}
+		buf = append(buf, one[0])
+		if one[0] == '\a' || (len(buf) >= 2 && buf[len(buf)-2] == 27 && one[0] == '\\') {
+			break
+		}
+	}
+	return parseOSC11(string(buf))
+}
+
+// parseOSC11 reads "\e]11;rgb:RRRR/GGGG/BBBB\e\\" (or BEL-terminated, or
+// two-digit channels) into a Color.
+func parseOSC11(s string) (Color, bool) {
+	i := strings.Index(s, "rgb:")
+	if i < 0 {
+		return Color{}, false
+	}
+	s = strings.TrimRight(s[i+4:], "\a\\\033")
+	parts := strings.Split(s, "/")
+	if len(parts) != 3 {
+		return Color{}, false
+	}
+	var out [3]uint8
+	for k, p := range parts {
+		if len(p) == 0 || len(p) > 4 {
+			return Color{}, false
+		}
+		v, err := strconv.ParseUint(p, 16, 16)
+		if err != nil {
+			return Color{}, false
+		}
+		// Channels come as 1-4 hex digits; the leading byte is the value.
+		switch len(p) {
+		case 1:
+			out[k] = uint8(v * 17)
+		case 2:
+			out[k] = uint8(v)
+		default:
+			out[k] = uint8(v >> (4 * uint(len(p)-2)))
+		}
+	}
+	return Color{out[0], out[1], out[2]}, true
+}
+
+// backgroundFromEnv reads the COLORFGBG hint ("15;0" is white on black)
+// that rxvt-style terminals export, for when OSC 11 goes unanswered.
+func backgroundFromEnv() (Color, bool) {
+	v := os.Getenv("COLORFGBG")
+	if v == "" {
+		return Color{}, false
+	}
+	parts := strings.Split(v, ";")
+	idx, err := strconv.Atoi(parts[len(parts)-1])
+	if err != nil || idx < 0 || idx > 15 {
+		return Color{}, false
+	}
+	basics := []Color{
+		{0, 0, 0}, {205, 49, 49}, {13, 188, 121}, {229, 229, 16},
+		{36, 114, 200}, {188, 63, 188}, {17, 168, 205}, {229, 229, 229},
+		{102, 102, 102}, {241, 76, 76}, {35, 209, 139}, {245, 245, 67},
+		{59, 142, 234}, {214, 112, 214}, {41, 184, 219}, {255, 255, 255},
+	}
+	return basics[idx], true
+}
+
+// AdaptToTerminal finds the terminal's background and re-tunes the active
+// theme to stay legible on it. Nothing happens when color is off or the
+// terminal keeps its background to itself, in which case the theme is
+// rendered as designed, for a dark ground.
+func AdaptToTerminal() {
+	bg, ok := QueryBackground(80 * time.Millisecond)
+	if !ok {
+		bg, ok = backgroundFromEnv()
+	}
+	if ok {
+		SetBackground(bg)
+	}
 }
 
 // Width returns the terminal width, defaulting to 80 when it can't be read.

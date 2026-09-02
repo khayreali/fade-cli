@@ -130,10 +130,21 @@ fade-cli me --set-theme nord
 ```
 
 Six built in: `fade` (the default, charcoal and teal), `nord`, `dracula`,
-`gruvbox`, `paper` for light terminals, and `mono`. A theme is a set of named
-roles — accent, subtle, open, closed, overdue, selection, a low-to-high
-gradient for meters — rendered at whatever depth the terminal has: truecolor,
-256 colors, or the basic sixteen. `NO_COLOR` is honored.
+`gruvbox`, `paper`, and `mono`. A theme is a set of named roles — accent,
+subtle, open, closed, overdue, selection, a low-to-high gradient for meters —
+rendered at whatever depth the terminal has: truecolor, 256 colors, or the
+basic sixteen. `NO_COLOR` is honored.
+
+**Every theme adapts to your terminal's actual background.** On startup fade
+asks the terminal what color its background is (the OSC 11 query most
+terminals answer instantly; `COLORFGBG` is the fallback) and then pushes each
+role just far enough from that color to stay readable — WCAG contrast
+targets, per role: 4.5 for text and keys, 3 for secondary text, enough to
+exist for borders. A theme on the dark ground it was designed for doesn't
+move at all; the same theme on a blue, green or white terminal has its
+faint grays lifted, its accent deepened or brightened, and its selection wash
+rebuilt from the real ground, all keeping their hue. `fade-cli me` shows
+which background it adapted to.
 
 ## Once you know what you want
 
