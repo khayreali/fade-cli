@@ -81,19 +81,22 @@ func TestParseMultiWordShopName(t *testing.T) {
 }
 
 func TestParseDay(t *testing.T) {
-	// A Friday, so the weekday cases have a fixed reference.
+	ny := catalog.ShopLocation()
+	// Fri Aug 7, 10:30am ET (given as UTC), so the day is unambiguously the
+	// 7th in New York and the weekday cases have a fixed reference. Days are
+	// resolved in the shop's zone, so the expected midnights are New York's.
 	now := time.Date(2026, time.August, 7, 14, 30, 0, 0, time.UTC)
 
 	cases := []struct {
 		in   string
 		want time.Time
 	}{
-		{"today", time.Date(2026, time.August, 7, 0, 0, 0, 0, time.UTC)},
-		{"tomorrow", time.Date(2026, time.August, 8, 0, 0, 0, 0, time.UTC)},
-		{"mon", time.Date(2026, time.August, 10, 0, 0, 0, 0, time.UTC)},
+		{"today", time.Date(2026, time.August, 7, 0, 0, 0, 0, ny)},
+		{"tomorrow", time.Date(2026, time.August, 8, 0, 0, 0, 0, ny)},
+		{"mon", time.Date(2026, time.August, 10, 0, 0, 0, 0, ny)},
 		// "friday" on a Friday means next Friday, not today.
-		{"friday", time.Date(2026, time.August, 14, 0, 0, 0, 0, time.UTC)},
-		{"2026-09-01", time.Date(2026, time.September, 1, 0, 0, 0, 0, time.UTC)},
+		{"friday", time.Date(2026, time.August, 14, 0, 0, 0, 0, ny)},
+		{"2026-09-01", time.Date(2026, time.September, 1, 0, 0, 0, 0, ny)},
 	}
 	for _, c := range cases {
 		got, err := parseDay(c.in, now)
@@ -108,6 +111,25 @@ func TestParseDay(t *testing.T) {
 
 	if _, err := parseDay("someday", now); err == nil {
 		t.Error("expected an error for an unparseable day")
+	}
+}
+
+// A Pacific machine at 9pm is already on the next day in Brooklyn, and shop
+// hours are evaluated there -- so "today" must resolve to the New York day,
+// not the machine's. Regression for the slots timezone bug.
+func TestParseDayAnchorsToNewYork(t *testing.T) {
+	la, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		t.Skip("no tz database")
+	}
+	// Wed 9:30pm PT = Thu 12:30am ET.
+	now := time.Date(2026, time.September, 2, 21, 30, 0, 0, la)
+	got, err := parseDay("today", now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d := got.In(catalog.ShopLocation()).Day(); d != 3 {
+		t.Errorf("\"today\" resolved to NY day %d, want 3 (it is already Thursday in Brooklyn)", d)
 	}
 }
 

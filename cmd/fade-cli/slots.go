@@ -56,8 +56,10 @@ FLAGS
 	defer cancel()
 
 	fmt.Println()
+	// Both sides of RelDay in the shop's zone, so "today"/"tomorrow" agrees
+	// with the New-York day `when` was resolved to.
 	fmt.Printf("%s  %s\n\n",
-		ui.Bold(fmt.Sprintf("Open times %s", ui.RelDay(when, time.Now()))),
+		ui.Bold(fmt.Sprintf("Open times %s", ui.RelDay(when, catalog.InShopTime(time.Now())))),
 		ui.Dim(label))
 
 	results := a.reg.AvailabilityAcross(ctx, shops, when)
@@ -229,6 +231,11 @@ func openCell(s catalog.Shop, now time.Time) string {
 
 // parseDay accepts the words people actually type plus ISO dates.
 func parseDay(s string, now time.Time) (time.Time, error) {
+	// "today" and a weekday mean the shop's calendar day, not the machine's:
+	// a user on Pacific time at 9pm is already on tomorrow in Brooklyn, and
+	// the shop's hours are all evaluated in New York. Anchor here so the day
+	// boundary matches. ParseInLocation below also uses this zone.
+	now = now.In(catalog.ShopLocation())
 	s = strings.ToLower(strings.TrimSpace(s))
 	midnight := func(t time.Time) time.Time {
 		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())

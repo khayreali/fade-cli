@@ -45,6 +45,11 @@ func (s *Square) Availability(ctx context.Context, shop catalog.Shop, day time.T
 	}
 
 	from := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, day.Location())
+	// end is the close of the requested day. It is computed from the day's
+	// own midnight, NOT from the clamped start -- clamping start to now and
+	// then adding 24h spilled the window into tomorrow, so a mid-afternoon
+	// "today" query returned tomorrow morning's slots as if open today.
+	end := from.AddDate(0, 0, 1)
 	// Square rejects a start time in the past, so clamp to now for today.
 	if now := time.Now(); from.Before(now) {
 		from = now.Add(time.Minute)
@@ -55,7 +60,7 @@ func (s *Square) Availability(ctx context.Context, shop catalog.Shop, day time.T
 			"filter": map[string]any{
 				"start_at_range": map[string]string{
 					"start_at": from.Format(time.RFC3339),
-					"end_at":   from.AddDate(0, 0, 1).Format(time.RFC3339),
+					"end_at":   end.Format(time.RFC3339),
 				},
 				"location_id": locationID,
 				"segment_filters": []map[string]any{

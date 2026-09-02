@@ -95,7 +95,7 @@ func (a *app) devGeocode(args []string) error {
 	}
 
 	client := &http.Client{Timeout: 12 * time.Second}
-	var resolved, failed, drifted, approx int
+	var resolved, failed, drifted, approx, kept, changed int
 
 	for i := range cat.Shops {
 		s := &cat.Shops[i]
@@ -124,10 +124,20 @@ func (a *app) devGeocode(args []string) error {
 			approx++
 		}
 		stop := geo.NearestStop(pt)
+		// A street-level re-geocode would replace a stored house-number point
+		// with a fuzzier one, so keep what we have. Nominatim returns these
+		// imprecise, run-unstable matches for some addresses (the reason four
+		// shops carry geocode_as), and overwriting silently degraded the
+		// coordinate the catalog was hand-verified to.
+		degrade := !exact && hadPoint
 		// With --force the shop already had coordinates, so the useful output
 		// is what would change, not what the geocoder said. Reporting drift
 		// turns this into a way to audit the catalog against its source.
 		switch {
+		case degrade:
+			kept++
+			fmt.Printf("%s %-38s %s\n", ui.Yellow("kept"), s.ID,
+				ui.Dim("street-level only -- keeping the stored exact point"))
 		case !exact:
 			fmt.Printf("%s %-38s %s\n", ui.Yellow("approx"), s.ID,
 				ui.Yellow("no house number matched -- street-level only"))
@@ -151,11 +161,12 @@ func (a *app) devGeocode(args []string) error {
 					ui.Dim(fmt.Sprintf("%.3f mi from stored", moved)))
 			}
 		}
-		if !*dry {
+		if !*dry && !degrade {
 			s.Point = pt
 			if m, ok := rawShops[i].(map[string]any); ok {
 				m["point"] = map[string]any{"lat": pt.Lat, "lon": pt.Lon}
 			}
+			changed++
 		}
 		resolved++
 		time.Sleep(nominatimRate)
@@ -168,8 +179,11 @@ func (a *app) devGeocode(args []string) error {
 	if approx > 0 {
 		fmt.Printf(", %s", ui.Yellow(fmt.Sprintf("%d street-level only", approx)))
 	}
+	if kept > 0 {
+		fmt.Printf(", %s", ui.Yellow(fmt.Sprintf("%d kept (would degrade)", kept)))
+	}
 	fmt.Println()
-	if *dry || resolved == 0 {
+	if *dry || changed == 0 {
 		return nil
 	}
 
@@ -182,8 +196,16 @@ func (a *app) devGeocode(args []string) error {
 	if err := enc.Encode(doc); err != nil {
 		return err
 	}
-	if err := os.WriteFile(*file, buf.Bytes(), 0o644); err != nil {
-		return fmt.Errorf("writing %s: %w", *file, err)
+	// Write to a temp file and rename, so a failed or interrupted write can't
+	// truncate data/shops.json -- which is the embedded seed, and a partial
+	// file would both lose the catalog and break the next build.
+	tmp := *file + ".tmp"
+	if err := os.WriteFile(tmp, buf.Bytes(), 0o644); err != nil {
+		return fmt.Errorf("writing %s: %w", tmp, err)
+	}
+	if err := os.Rename(tmp, *file); err != nil {
+		os.Remove(tmp)
+		return fmt.Errorf("replacing %s: %w", *file, err)
 	}
 	fmt.Printf("wrote %s -- rebuild to embed the new coordinates\n", *file)
 	return nil
