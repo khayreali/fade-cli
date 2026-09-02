@@ -14,7 +14,7 @@
 
 <br>
 
-<img src="assets/terminal.png" alt="fade browsing shops near Graham Av: walk times, prices, ratings, open-now dots" width="94%">
+<img src="assets/terminal.png" alt="fade listing Williamsburg shops grouped by stop, Bedford Av then Lorimer St: walk times, prices, ratings, open-now dots" width="94%">
 
 </div>
 
@@ -28,9 +28,9 @@ works offline and starts in single-digit milliseconds.
 
 ## Highlights
 
-- **Walk-time search** anchored to real subway stops — "what's within a
-  20-minute walk of Graham Av", with a radius that widens on its own where the
-  map is sparse
+- **Walk times from real subway stops** — every shop is measured from the
+  stop it belongs to, and `find --near graham` answers "what's within a
+  20-minute walk of Graham Av"
 - **Open now**, evaluated on the shop's clock (DST-correct), with hours
   sourced per shop — a shop nobody researched shows *unknown*, never a false
   "closed"
@@ -40,9 +40,10 @@ works offline and starts in single-digit milliseconds.
   validated, prefilled call-or-text request, tracked until the shop answers
 - **A cut log** that learns your real cadence (median, outlier-resistant)
   and tells you when you're due
-- **A real TUI** — `/` to find, `?` for keys, `*` to pin a shop, sort by
-  nearest / cheapest / best-rated, panels that reflow to the terminal, six
-  color themes — and it degrades cleanly to flags and `--json` for scripts
+- **A real TUI** — the city as an index, shops grouped by stop in the order
+  the train reaches them, `/` to find, `?` for keys, `*` to save a shop,
+  panels that reflow to the terminal, six color themes — and it degrades
+  cleanly to flags and `--json` for scripts
 
 ## Install
 
@@ -63,17 +64,25 @@ Run it with no arguments:
 $ fade-cli
 ```
 
-First run asks one question — which L stop you'd walk from — then shows you
-what's nearby: the screen at the top of this page. Arrow keys move, enter
-selects, `/` finds (letters in order match, so `pwr` reaches Power Of
-Barbers), and `?` lists every key on any screen.
+There is nothing to set up. The first screen is the city as an index — the
+five neighborhoods, each with its line, its first and last stop, and how many
+shops it holds:
 
-`*` saves a shop. Saved shops are marked ◆ and stay pinned to the top of the
-list — the point of saving one is to stop scrolling for it.
+<img src="assets/landing.png" alt="the landing screen: New York, then Williamsburg, East Williamsburg, Bushwick, Greenpoint, Ridgewood" width="100%">
 
-`s` cycles the ordering between nearest, cheapest and best-rated. Shops with no
-price or no rating always sort last — a missing value never wins a ranking by
-looking like a zero.
+Pick one and you get its shops grouped by stop, in the order the train reaches
+them from Manhattan — Bedford Av first on the L, Halsey St last; Nassau Av
+before Greenpoint Av on the G; Seneca Av out to Fresh Pond Rd on the M. Within
+a stop, shops sort by walk time from that stop. That is the screen at the top
+of this page. Nothing about where you live is asked or remembered: the map is
+the same for everyone, and a stop heading is how you find your part of it.
+
+Arrow keys move (the cursor skips the headings), enter selects, `/` finds
+(letters in order match, so `pwr` reaches Power Of Barbers; headings drop away
+so the matches read as one list), and `?` lists every key on any screen.
+
+`*` saves a shop. Saved shops are marked ◆ in place, and a **Saved** entry
+appears at the top of the landing screen with all of them in one flat list.
 
 Shops that take walk-ins say so, and when one is open the shop screen leads
 with that rather than a phone number — for half the catalog "just turn up" is
@@ -81,17 +90,17 @@ the real answer, not "you can't book here".
 
 Shops with known hours are marked ● open / ○ closed, and `o` narrows to what's
 open right now. Hours are evaluated in New York time regardless of your
-machine's clock.
+machine's clock. `f` caps the price; a cap keeps shops with no published price
+and says so, because "unpriced" is not "over budget". If a filter empties the
+list, it is relaxed with a note rather than showing nothing.
 
-Browse shows what's actually walkable — a 20-minute radius that widens on its
-own where the map is sparse — and `a` switches to the whole directory. Columns
-with nothing in them are dropped, so a neighborhood of call-only shops doesn't
+Columns with nothing in them are dropped, so a stop of call-only shops doesn't
 render a column of dashes.
 
-Selecting a shop gets you the detail screen: what the place is, the whole
-week's hours with today marked, how they book, and a bar placing the price
-against every other shop in the catalog. The panels sit side by side in a
-wide terminal and stack in a narrow one.
+Selecting a shop gets you the detail screen: what the place is and how far
+it is from its stop, the whole week's hours with today marked, how they book,
+and a bar placing the price against every other shop in the catalog. The
+panels sit side by side in a wide terminal and stack in a narrow one.
 
 <img src="assets/shop.png" alt="the shop screen: Details, Hours and Book panels above the actions list" width="100%">
 

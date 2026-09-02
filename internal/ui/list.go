@@ -44,6 +44,11 @@ type List struct {
 	Note string
 	// Filterable turns on "/" search across the visible text of each row.
 	Filterable bool
+	// Sections marks rows that are headings, by index into Rows: drawn as a
+	// ruled label, skipped by the cursor, never returned, and dropped while
+	// a search is open so the matches read as one flat list. A heading row
+	// is {name, meta}.
+	Sections map[int]bool
 
 	state  listState
 	query  string
@@ -83,7 +88,7 @@ func (l *List) Run(t KeyReader, start int) Selection {
 	}
 	l.state, l.query = listReady, ""
 	l.refilter()
-	l.sel = clamp(start, 0, len(l.view)-1)
+	l.sel = l.settle(clamp(start, 0, len(l.view)-1), 1)
 
 	hideCursor()
 	defer showCursor()
@@ -136,9 +141,9 @@ func (l *List) keyReady(k Key) (Selection, bool) {
 	case KeyPageDown:
 		l.move(l.height())
 	case KeyHome:
-		l.sel = 0
+		l.sel = l.settle(0, 1)
 	case KeyEnd:
-		l.sel = len(l.view) - 1
+		l.sel = l.settle(len(l.view)-1, -1)
 	case KeyEsc, KeyLeft, KeyBackspace:
 		if l.query != "" {
 			// A confirmed filter is the first thing esc peels away.
@@ -156,18 +161,19 @@ func (l *List) keyReady(k Key) (Selection, bool) {
 		case k.Rune == 'j':
 			l.move(1)
 		case k.Rune == 'g':
-			l.sel = 0
+			l.sel = l.settle(0, 1)
 		case k.Rune == 'G':
-			l.sel = len(l.view) - 1
+			l.sel = l.settle(len(l.view)-1, -1)
 		case k.Rune == '/' && l.Filterable:
 			l.state = listFiltering
 		case k.Rune == '?':
 			l.state = listHelp
 		case k.Rune >= '1' && k.Rune <= '9':
 			// Digits jump the cursor without selecting, so typing "1" on
-			// the way to "10" doesn't fire the wrong row.
-			if n := int(k.Rune - '1'); n < len(l.view) {
-				l.sel = n
+			// the way to "10" doesn't fire the wrong row. They count
+			// selectable rows, so headings don't shift the numbering.
+			if i, ok := l.nthSelectable(int(k.Rune - '1')); ok {
+				l.sel = i
 			}
 		default:
 			if cmd, ok := l.hintFor(string(k.Rune)); ok {
@@ -222,10 +228,62 @@ func (l *List) Cursor() int {
 }
 
 func (l *List) choose() (Selection, bool) {
-	if len(l.view) == 0 {
+	if len(l.view) == 0 || l.isSection(l.sel) {
 		return Selection{}, false
 	}
 	return Selection{Index: l.view[l.sel], OK: true}, true
+}
+
+// isSection reports whether the view row is a heading.
+func (l *List) isSection(viewIdx int) bool {
+	return viewIdx >= 0 && viewIdx < len(l.view) && l.Sections[l.view[viewIdx]]
+}
+
+// settle walks from i in direction dir to the nearest selectable row,
+// turning back if it hits the edge, so the cursor never rests on a heading.
+func (l *List) settle(i, dir int) int {
+	n := len(l.view)
+	if n == 0 {
+		return 0
+	}
+	i = clamp(i, 0, n-1)
+	for j := i; j >= 0 && j < n; j += dir {
+		if !l.isSection(j) {
+			return j
+		}
+	}
+	for j := i; j >= 0 && j < n; j -= dir {
+		if !l.isSection(j) {
+			return j
+		}
+	}
+	return i
+}
+
+// nthSelectable maps a digit key to the n-th non-heading row.
+func (l *List) nthSelectable(n int) (int, bool) {
+	for i := range l.view {
+		if l.isSection(i) {
+			continue
+		}
+		if n == 0 {
+			return i, true
+		}
+		n--
+	}
+	return 0, false
+}
+
+// selectableBefore counts non-heading rows above view index i, for the
+// position readout: "3 of 22" should count shops, not labels.
+func (l *List) selectableBefore(i int) int {
+	n := 0
+	for j := 0; j < i && j < len(l.view); j++ {
+		if !l.isSection(j) {
+			n++
+		}
+	}
+	return n
 }
 
 func (l *List) hintFor(k string) (string, bool) {
@@ -238,11 +296,29 @@ func (l *List) hintFor(k string) (string, bool) {
 }
 
 func (l *List) move(d int) {
-	l.sel = clamp(l.sel+d, 0, max(0, len(l.view)-1))
+	if len(l.view) == 0 {
+		return
+	}
+	target := clamp(l.sel+d, 0, len(l.view)-1)
+	dir := 1
+	if d < 0 {
+		dir = -1
+	}
+	// A single step that lands on a heading keeps going in the same
+	// direction; at the edge it stays put rather than bouncing back.
+	if l.isSection(target) {
+		next := l.settle(target, dir)
+		if l.isSection(next) || (dir > 0 && next < target) || (dir < 0 && next > target) {
+			return
+		}
+		target = next
+	}
+	l.sel = target
 }
 
 // refilter rebuilds the visible set for the current query, keeping the
-// cursor on the same row when it survives.
+// cursor on the same row when it survives. Headings are shown only when no
+// search is open.
 func (l *List) refilter() {
 	keep := -1
 	if l.sel < len(l.view) {
@@ -250,6 +326,12 @@ func (l *List) refilter() {
 	}
 	l.view = l.view[:0]
 	for i, r := range l.Rows {
+		if l.Sections[i] {
+			if l.query == "" {
+				l.view = append(l.view, i)
+			}
+			continue
+		}
 		if l.query == "" || matches(rowText(r), l.query) {
 			l.view = append(l.view, i)
 		}
@@ -260,6 +342,7 @@ func (l *List) refilter() {
 			l.sel = i
 		}
 	}
+	l.sel = l.settle(l.sel, 1)
 	l.top = 0
 }
 
@@ -383,7 +466,7 @@ func (l *List) draw() {
 			b.WriteString("\r\n")
 		}
 	} else {
-		widths := colWidths(l.Rows)
+		widths := l.colWidths()
 		top, bottom := l.scroll()
 		positions := map[int][]int{}
 		if l.query != "" {
@@ -395,10 +478,16 @@ func (l *List) draw() {
 		// bar rather than a ragged edge that tracks each row's content.
 		full := 0
 		for i := top; i < bottom; i++ {
-			full = max(full, visibleWidth(l.renderRow(l.Rows[l.view[i]], widths)))
+			if !l.isSection(i) {
+				full = max(full, visibleWidth(l.renderRow(l.Rows[l.view[i]], widths)))
+			}
 		}
 		full = min(full, cols-6)
 		for i := top; i < bottom; i++ {
+			if l.isSection(i) {
+				b.WriteString("  " + l.renderSection(l.Rows[l.view[i]], full+2) + "\r\n")
+				continue
+			}
 			line := truncate(l.renderRow(l.Rows[l.view[i]], widths), full)
 			if p := positions[i]; len(p) > 0 {
 				line = underlineAt(line, p)
@@ -441,9 +530,13 @@ func (l *List) statusBar(cols int) string {
 	right := ""
 	if len(l.view) > 0 && l.state != listHelp {
 		top, bottom := l.scroll()
-		right = Subtle(fmt.Sprintf("%d–%d of %d", top+1, bottom, len(l.view)))
-		if len(l.view) > bottom-top {
-			right += Subtle(fmt.Sprintf("  %3d%%", bottom*100/len(l.view)))
+		first, last := l.selectableBefore(top)+1, l.selectableBefore(bottom)
+		total := l.selectableBefore(len(l.view))
+		if total > 0 {
+			right = Subtle(fmt.Sprintf("%d–%d of %d", first, last, total))
+			if len(l.view) > bottom-top {
+				right += Subtle(fmt.Sprintf("  %3d%%", last*100/total))
+			}
 		}
 	}
 	gap := cols - 4 - visibleWidth(left) - visibleWidth(right)
@@ -593,15 +686,41 @@ func keyLabel(k string) string {
 	return k
 }
 
-func colWidths(rows [][]string) []int {
+// renderSection draws a heading as a ruled label: two dashes, the name, its
+// meta, and a rule out to the row width.
+func (l *List) renderSection(cells []string, width int) string {
+	g := Sym()
+	name := ""
+	if len(cells) > 0 {
+		name = cells[0]
+	}
+	label := Border(g.H+g.H) + " " + Title(name)
+	if len(cells) > 1 && cells[1] != "" {
+		label += " " + Subtle(g.Divider+" "+cells[1])
+	}
+	label += " "
+	fill := width - visibleWidth(label)
+	if fill > 0 {
+		label += Border(strings.Repeat(g.H, fill))
+	}
+	return label
+}
+
+// colWidths measures the selectable rows; headings have their own layout.
+func (l *List) colWidths() []int {
 	n := 0
-	for _, r := range rows {
-		n = max(n, len(r))
+	for i, r := range l.Rows {
+		if !l.Sections[i] {
+			n = max(n, len(r))
+		}
 	}
 	w := make([]int, n)
-	for _, r := range rows {
-		for i, c := range r {
-			w[i] = max(w[i], visibleWidth(c))
+	for i, r := range l.Rows {
+		if l.Sections[i] {
+			continue
+		}
+		for j, c := range r {
+			w[j] = max(w[j], visibleWidth(c))
 		}
 	}
 	return w

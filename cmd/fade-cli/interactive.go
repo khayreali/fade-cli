@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -20,9 +21,10 @@ import (
 // the user quits or hits ctrl-C.
 var errAborted = errors.New("aborted")
 
-// interactive is what you get by running `fade-cli` with no arguments: an
-// arrow-key list of shops near you. The flag interface still exists underneath
-// for anyone who wants it.
+// interactive is what you get by running `fade-cli` with no arguments: the
+// city as an index. Neighborhood, then its shops grouped by stop in the order
+// the train reaches them from Manhattan. Nothing about where you live is
+// assumed or remembered; the map is the same for everyone.
 func (a *app) interactive() error {
 	raw, ok := ui.EnterRaw()
 	if !ok {
@@ -32,119 +34,122 @@ func (a *app) interactive() error {
 	// raw mode with echo off is a genuinely bad way to fail.
 	defer raw.Restore()
 
-	if err := a.ensureHome(raw); err != nil {
-		return err
-	}
-	return a.browse(raw)
-}
-
-// ensureHome runs first-time setup. Everything else needs somewhere to measure
-// from, so this is the only question the tool ever insists on.
-func (a *app) ensureHome(raw *ui.Raw) error {
-	if _, ok := a.state.Profile.Origin(); ok {
+	err := a.neighborhoods(raw)
+	if errors.Is(err, errAborted) {
 		return nil
 	}
-	return a.pickHome(raw, true)
+	return err
 }
 
-func (a *app) pickHome(raw *ui.Raw, firstRun bool) error {
+// neighborhoods is the landing screen. One city exists, so it is the title
+// rather than a list with a single row to press enter on; a second city is
+// what would earn a screen above this one.
+func (a *app) neighborhoods(raw *ui.Raw) error {
+	sel := 0
+	for {
+		counts := a.shopCountsByStop()
+		var rows [][]string
+		var open []func() error
+		if n := len(a.state.Profile.Saved); n > 0 {
+			rows = append(rows, []string{ui.Accent(ui.Sym().Pin), "Saved", ui.Subtle("your pinned shops"), plural(n, "shop")})
+			open = append(open, func() error { return a.savedList(raw) })
+		}
+		for _, nb := range geo.Neighborhoods {
+			n := 0
+			for _, id := range nb.Stops {
+				n += counts[id]
+			}
+			shops := ui.Subtle("none yet")
+			if n > 0 {
+				shops = plural(n, "shop")
+			}
+			rows = append(rows, []string{lineBadge(nb.Line()), nb.Name, ui.Subtle(nb.Span()), shops})
+			open = append(open, func() error { return a.neighborhoodList(raw, nb) })
+		}
+
+		list := &ui.List{
+			Title:      geo.City,
+			Subtitle:   "pick a neighborhood · shops run outbound from Union Sq",
+			Rows:       rows,
+			Right:      map[int]bool{3: true},
+			Height:     len(rows),
+			Filterable: true,
+			Hints: []ui.KeyHint{
+				{Key: "h", Label: "history"},
+				{Key: "q", Label: "quit"},
+			},
+		}
+		got := list.Run(raw, sel)
+		switch {
+		case !got.OK, got.Cmd == "q":
+			return errAborted
+		case got.Cmd == "h":
+			if err := a.historyScreen(raw); err != nil {
+				return err
+			}
+			continue
+		}
+		sel = got.Index
+		if err := open[got.Index](); err != nil {
+			return err
+		}
+	}
+}
+
+// shopCountsByStop tallies the catalog per stop, for the index rows.
+func (a *app) shopCountsByStop() map[string]int {
 	counts := map[string]int{}
 	for _, s := range a.cat.Shops {
 		if stop, ok := s.NearestStop(); ok {
 			counts[stop.ID]++
 		}
 	}
-
-	// Flatten every corridor into one list, tagging each row with its line so
-	// the grouping reads without needing section headers.
-	stops := geo.AllStops()
-	rows := make([][]string, 0, len(stops))
-	start := 0
-	for i, s := range stops {
-		shops := ui.Dim("none yet")
-		if n := counts[s.ID]; n > 0 {
-			shops = plural(n, "shop")
-		}
-		rows = append(rows, []string{lineBadge(s.Line), s.Name, shops})
-		if s.ID == a.state.Profile.HomeStop {
-			start = i
-		}
-	}
-
-	subtitle := geo.AreaName()
-	if !firstRun {
-		subtitle = "pick a new home stop"
-	}
-
-	list := &ui.List{
-		Title:      "Where do you walk from?",
-		Subtitle:   subtitle,
-		Rows:       rows,
-		Right:      map[int]bool{2: true},
-		Height:     len(stops),
-		Filterable: true,
-	}
-	if !firstRun {
-		list.Hints = []ui.KeyHint{{Key: ui.EscKey, Label: "back"}}
-	}
-
-	sel := list.Run(raw, start)
-	if !sel.OK || sel.Cmd != "" {
-		if firstRun {
-			return errAborted
-		}
-		return nil
-	}
-
-	stop := stops[sel.Index]
-	a.state.Profile.HomeStop = stop.ID
-	a.state.Profile.HomePoint = nil
-	if err := a.state.Save(); err != nil {
-		return fmt.Errorf("saving your stop: %w", err)
-	}
-	return nil
+	return counts
 }
 
-// walkTiers are the radii browse will try, in minutes. Sparse corners of the
-// map widen automatically rather than showing three shops and nothing else.
-var walkTiers = []int{20, 30, 45}
-
-// enoughShops is the point below which a radius is treated as too tight to be
-// worth showing on its own.
-const enoughShops = 6
-
-func (a *app) browse(raw *ui.Raw) error {
-	maxPrice, sel := a.state.Profile.MaxPrice, 0
-	showAll, openNow := false, false
-	sortBy := catalog.SortNearest
-	notice := "" // explains a filter that had to be dropped to show anything
-	focus := ""  // shop id to put the cursor on after the list is rebuilt
+// neighborhoodList is the shop list: grouped by stop, outbound, and within a
+// stop by walk time from it. Price and open-now filters apply on top; when
+// they empty the list one is relaxed with a note rather than showing nothing.
+func (a *app) neighborhoodList(raw *ui.Raw, nb geo.Neighborhood) error {
+	maxPrice, openNow := a.state.Profile.MaxPrice, false
+	sel, notice, focus := 0, "", ""
 
 	for {
-		origin, label, err := a.resolveOrigin("")
-		if err != nil {
-			return err
+		groups := a.shopsByStop(nb, maxPrice, openNow)
+		total := 0
+		for _, g := range groups {
+			total += len(g.shops)
 		}
-
-		results, within := a.walkableShops(origin, maxPrice, showAll, openNow, sortBy)
-		if len(results) == 0 {
-			// Relax one filter and retry. This must be guaranteed to run out:
-			// an earlier version just cleared the price cap on the assumption
-			// that nothing else could empty the list, which stopped being true
-			// when the open-now filter arrived and left the loop able to spin.
-			note, relaxed := relax(&openNow, &maxPrice, &showAll)
+		if total == 0 {
+			note, relaxed := relax(&openNow, &maxPrice)
 			if !relaxed {
-				return errors.New("no shops in the catalog to show")
+				raw.Suspend(func() {
+					fmt.Printf("\n  %s\n", ui.Subtle("No shops in "+nb.Name+" yet."))
+					pause()
+				})
+				return nil
 			}
 			notice = note
 			continue
 		}
 
-		subtitle := "all " + plural(len(results), "shop")
-		if within > 0 {
-			subtitle = fmt.Sprintf("%s within a %d min walk", plural(len(results), "shop"), within)
+		rows, right, results, resultAt := stopGroupedRows(groups, time.Now(), a.state.Profile.IsSaved)
+		sections := map[int]bool{}
+		for i, r := range resultAt {
+			if r < 0 {
+				sections[i] = true
+			}
 		}
-		subtitle += " · " + sortBy.Label()
+		if focus != "" {
+			for i, r := range resultAt {
+				if r >= 0 && results[r].Shop.ID == focus {
+					sel = i
+				}
+			}
+			focus = ""
+		}
+
+		subtitle := nb.Span() + " · " + plural(total, "shop")
 		if maxPrice > 0 {
 			// A price cap keeps shops whose price nobody has published -- we
 			// can't claim they're over budget. Say so, or a list of unpriced
@@ -157,58 +162,45 @@ func (a *app) browse(raw *ui.Raw) error {
 		if openNow {
 			subtitle += ", open now"
 		}
-		if stop, ok := geo.StopByID(a.state.Profile.HomeStop); ok {
-			if cor, ok := geo.CorridorByID(stop.Corridor); ok {
-				subtitle = cor.Name + " · " + subtitle
-			}
-		}
-
-		results = pinSaved(results, a.state.Profile)
-		if focus != "" {
-			// Pinning reorders the list; keep the cursor on the shop that
-			// was just saved rather than on whatever slid into its slot.
-			for i, r := range results {
-				if r.Shop.ID == focus {
-					sel = i
-				}
-			}
-			focus = ""
-		}
-		rows, right := browseTable(results, time.Now(), a.state.Profile.IsSaved)
-		allLabel := "show all"
-		if showAll {
-			allLabel = "nearby only"
-		}
 
 		list := &ui.List{
-			Title:      "Near " + label,
+			Title:      geo.City + " › " + nb.Name,
 			Subtitle:   subtitle,
 			Note:       notice,
 			Rows:       rows,
 			Right:      right,
+			Sections:   sections,
 			Filterable: true,
 			Hints: []ui.KeyHint{
 				{Key: "f", Label: "price"},
-				{Key: "a", Label: allLabel},
 				{Key: "o", Label: openLabel(openNow)},
-				{Key: "s", Label: "sort"},
 				{Key: "*", Label: "save"},
-				{Key: "c", Label: "change stop"},
 				{Key: "h", Label: "history"},
+				{Key: ui.EscKey, Label: "back"},
 				{Key: "q", Label: "quit"},
 			},
 		}
 		notice = ""
 
 		got := list.Run(raw, sel)
-		sel = got.Index
 		switch {
 		case !got.OK, got.Cmd == "q":
+			return errAborted
+		case got.Cmd == ui.EscKey:
 			return nil
+		case got.Cmd == "f":
+			raw.Suspend(func() {
+				fmt.Print("\n")
+				if n, ok := ui.Int("max price, or enter for any: $", 0); ok {
+					maxPrice = n
+				}
+			})
+			sel = 0
+		case got.Cmd == "o":
+			openNow = !openNow
+			sel = 0
 		case got.Cmd == "*":
-			// The list returns the cursor row only on a selection, so a
-			// save pins whatever was highlighted when the key was pressed.
-			shop := results[list.Cursor()].Shop
+			shop := results[resultAt[list.Cursor()]].Shop
 			if a.state.Profile.ToggleSaved(shop.ID) {
 				notice = "saved " + shop.Name
 			} else {
@@ -218,68 +210,157 @@ func (a *app) browse(raw *ui.Raw) error {
 				return err
 			}
 			focus = shop.ID
-		case got.Cmd == "c":
-			if err := a.pickHome(raw, false); err != nil {
-				return err
-			}
-			sel = 0
-		case got.Cmd == "f":
-			raw.Suspend(func() {
-				fmt.Print("\n")
-				if n, ok := ui.Int("max price, or enter for any: $", 0); ok {
-					maxPrice = n
-				}
-			})
-			sel = 0
-		case got.Cmd == "a":
-			showAll = !showAll
-			sel = 0
-		case got.Cmd == "o":
-			openNow = !openNow
-			sel = 0
-		case got.Cmd == "s":
-			sortBy = sortBy.Next()
-			sel = 0
 		case got.Cmd == "h":
-			if err := a.historyScreen(raw, origin, label); err != nil {
-				if errors.Is(err, errAborted) {
-					return nil
-				}
+			if err := a.historyScreen(raw); err != nil {
 				return err
 			}
+			sel = got.Index
 		default:
-			if err := a.shopScreen(raw, results[got.Index], label); err != nil {
-				if errors.Is(err, errAborted) {
-					return nil
-				}
+			sel = got.Index
+			r := results[resultAt[got.Index]]
+			if err := a.shopScreen(raw, r, r.Stop.Name); err != nil {
 				return err
 			}
 		}
 	}
 }
 
-// walkableShops returns the shops worth showing and the walk-minute radius
-// they were found within (0 meaning unbounded). Showing the whole directory
-// sorted by distance buries the eight shops you'd actually walk to under
-// thirty you wouldn't, so the default is a radius that widens only when the
-// neighborhood is genuinely sparse.
-func (a *app) walkableShops(origin *geo.Point, maxPrice int, showAll, openNow bool, by catalog.SortBy) ([]catalog.Result, int) {
-	q := catalog.Query{Origin: origin, MaxPrice: maxPrice, CollapseBy: "venue", Sort: by}
+// stopGroup is one stop's shops, nearest first.
+type stopGroup struct {
+	stop  geo.Stop
+	shops []catalog.Result
+}
+
+// shopsByStop buckets the filtered catalog by the neighborhood's stops, in
+// outbound order, measuring each shop from its own stop.
+func (a *app) shopsByStop(nb geo.Neighborhood, maxPrice int, openNow bool) []stopGroup {
+	q := catalog.Query{MaxPrice: maxPrice, CollapseBy: "venue"}
 	if openNow {
 		q.OpenAt = time.Now()
 	}
+	byStop := map[string][]catalog.Result{}
+	for _, r := range a.cat.Find(q) {
+		if r.Stop.ID == "" || !nb.Has(r.Stop.ID) {
+			continue
+		}
+		r = atStop(r)
+		byStop[r.Stop.ID] = append(byStop[r.Stop.ID], r)
+	}
 
-	if !showAll && origin != nil {
-		for _, minutes := range walkTiers {
-			q.MaxMiles = geo.MilesForWalkMinutes(minutes)
-			if got := a.cat.Find(q); len(got) >= enoughShops {
-				return got, minutes
+	var out []stopGroup
+	for _, stop := range nb.StopList() {
+		shops := byStop[stop.ID]
+		if len(shops) == 0 {
+			continue
+		}
+		sort.SliceStable(shops, func(i, j int) bool {
+			if shops[i].WalkMin != shops[j].WalkMin {
+				return shops[i].WalkMin < shops[j].WalkMin
+			}
+			return shops[i].Shop.Name < shops[j].Shop.Name
+		})
+		out = append(out, stopGroup{stop: stop, shops: shops})
+	}
+	return out
+}
+
+// atStop measures a result from its own nearest stop, which is the distance
+// that means something when nobody has said where they are.
+func atStop(r catalog.Result) catalog.Result {
+	if r.Stop.ID == "" || !r.Shop.Located() {
+		return r
+	}
+	r.HasOrigin = true
+	r.Miles = geo.MilesBetween(r.Stop.Point, r.Shop.Point)
+	r.WalkMin = geo.WalkMinutes(r.Stop.Point, r.Shop.Point)
+	return r
+}
+
+// resultAtStop builds the stop context for a shop reached by id -- from
+// history or the saved list -- rather than through a search.
+func (a *app) resultAtStop(shop catalog.Shop) catalog.Result {
+	r := catalog.Result{Shop: shop}
+	if stop, ok := shop.NearestStop(); ok {
+		r.Stop = stop
+	}
+	return atStop(r)
+}
+
+// stopGroupedRows flattens the groups into list rows with a heading per
+// stop. resultAt maps each row to its result, or -1 for a heading.
+func stopGroupedRows(groups []stopGroup, now time.Time, saved func(string) bool) (rows [][]string, right map[int]bool, results []catalog.Result, resultAt []int) {
+	for _, g := range groups {
+		results = append(results, g.shops...)
+	}
+	shopRows, right := browseTable(results, now, saved)
+	i := 0
+	for _, g := range groups {
+		rows = append(rows, []string{g.stop.Name, plural(len(g.shops), "shop")})
+		resultAt = append(resultAt, -1)
+		for range g.shops {
+			rows = append(rows, shopRows[i])
+			resultAt = append(resultAt, i)
+			i++
+		}
+	}
+	return rows, right, results, resultAt
+}
+
+// savedList is the pinned shops, flat, each measured from its own stop.
+func (a *app) savedList(raw *ui.Raw) error {
+	sel, notice := 0, ""
+	for {
+		var results []catalog.Result
+		for _, id := range a.state.Profile.Saved {
+			if s, ok := a.cat.Get(id); ok {
+				results = append(results, a.resultAtStop(s))
+			}
+		}
+		if len(results) == 0 {
+			return nil
+		}
+		rows, right := browseTable(results, time.Now(), nil)
+		for i := range rows {
+			rows[i] = append(rows[i], ui.Subtle(results[i].Stop.Name))
+		}
+
+		list := &ui.List{
+			Title:      geo.City + " › Saved",
+			Subtitle:   plural(len(results), "shop") + " · walk times from each shop's stop",
+			Note:       notice,
+			Rows:       rows,
+			Right:      right,
+			Filterable: true,
+			Hints: []ui.KeyHint{
+				{Key: "*", Label: "unsave"},
+				{Key: ui.EscKey, Label: "back"},
+				{Key: "q", Label: "quit"},
+			},
+		}
+		notice = ""
+
+		got := list.Run(raw, sel)
+		switch {
+		case !got.OK, got.Cmd == "q":
+			return errAborted
+		case got.Cmd == ui.EscKey:
+			return nil
+		case got.Cmd == "*":
+			shop := results[list.Cursor()].Shop
+			a.state.Profile.ToggleSaved(shop.ID)
+			if err := a.state.Save(); err != nil {
+				return err
+			}
+			notice = "unsaved " + shop.Name
+			sel = min(list.Cursor(), len(results)-2)
+		default:
+			sel = got.Index
+			r := results[got.Index]
+			if err := a.shopScreen(raw, r, r.Stop.Name); err != nil {
+				return err
 			}
 		}
 	}
-
-	q.MaxMiles = 0
-	return a.cat.Find(q), 0
 }
 
 // countUnpriced reports how many results carry no published price.
@@ -295,9 +376,9 @@ func countUnpriced(results []catalog.Result) int {
 
 // relax drops one filter so an empty result set can recover, returning a note
 // for the user and whether anything was actually relaxed. The false return is
-// what guarantees the browse loop terminates: every call either changes state
+// what guarantees the list loop terminates: every call either changes state
 // or reports that there is nothing left to change.
-func relax(openNow *bool, maxPrice *int, showAll *bool) (string, bool) {
+func relax(openNow *bool, maxPrice *int) (string, bool) {
 	switch {
 	case *openNow:
 		*openNow = false
@@ -305,33 +386,9 @@ func relax(openNow *bool, maxPrice *int, showAll *bool) (string, bool) {
 	case *maxPrice > 0:
 		*maxPrice = 0
 		return "nothing under that price -- price filter cleared", true
-	case !*showAll:
-		*showAll = true
-		return "nothing nearby -- widened to the whole directory", true
 	default:
 		return "", false
 	}
-}
-
-// pinSaved moves saved shops to the top of the list, keeping the sort order
-// within each group. Pinning rather than a separate screen: the point of
-// saving a shop is to stop scrolling for it.
-func pinSaved(results []catalog.Result, p store.Profile) []catalog.Result {
-	if len(p.Saved) == 0 {
-		return results
-	}
-	out := make([]catalog.Result, 0, len(results))
-	for _, r := range results {
-		if p.IsSaved(r.Shop.ID) {
-			out = append(out, r)
-		}
-	}
-	for _, r := range results {
-		if !p.IsSaved(r.Shop.ID) {
-			out = append(out, r)
-		}
-	}
-	return out
 }
 
 // browseTable builds the browse rows, dropping any column that carries no
@@ -435,13 +492,14 @@ func openLabel(on bool) string {
 // lineBadge renders a subway line in something close to its real colour, so
 // the corridors read as distinct groups without section headers.
 func lineBadge(line string) string {
+	g := ui.Sym()
 	switch line {
 	case "G":
-		return ui.Green("●") + " " + ui.Dim(line)
-	case "L":
-		return ui.Dim("●") + " " + ui.Dim(line)
-	default:
-		return ui.Dim("● " + line)
+		return ui.Good(g.Dot) + " " + ui.Subtle(line)
+	case "M":
+		return ui.Warning(g.Dot) + " " + ui.Subtle(line)
+	default: // the L is gray on the map too
+		return ui.Subtle(g.Dot) + " " + ui.Subtle(line)
 	}
 }
 
@@ -867,7 +925,7 @@ func (a *app) logCut(shop catalog.Shop) error {
 
 // historyScreen lists past cuts and opens the shop behind whichever one you
 // pick, which is the fastest route to rebooking a barber you liked.
-func (a *app) historyScreen(raw *ui.Raw, origin *geo.Point, from string) error {
+func (a *app) historyScreen(raw *ui.Raw) error {
 	if len(a.state.Cuts) == 0 {
 		raw.Suspend(func() {
 			fmt.Printf("\n  %s\n", ui.Dim("No cuts logged yet. Log one from any shop screen."))
@@ -925,7 +983,8 @@ func (a *app) historyScreen(raw *ui.Raw, origin *geo.Point, from string) error {
 		})
 		return nil
 	}
-	return a.shopScreen(raw, a.resultFor(shop, origin), from)
+	r := a.resultAtStop(shop)
+	return a.shopScreen(raw, r, r.Stop.Name)
 }
 
 // resultFor rebuilds the distance context Find would have attached, for paths

@@ -250,14 +250,14 @@ func TestResultForUnlocatedShop(t *testing.T) {
 // progress and must eventually report exhaustion. Without that the UI spins
 // forever with nothing on screen.
 func TestRelaxAlwaysTerminates(t *testing.T) {
-	openNow, maxPrice, showAll := true, 40, false
+	openNow, maxPrice := true, 40
 
 	var notes []string
 	for i := 0; ; i++ {
 		if i > 20 {
 			t.Fatal("relax never reported exhaustion")
 		}
-		note, ok := relax(&openNow, &maxPrice, &showAll)
+		note, ok := relax(&openNow, &maxPrice)
 		if !ok {
 			break
 		}
@@ -267,19 +267,19 @@ func TestRelaxAlwaysTerminates(t *testing.T) {
 		notes = append(notes, note)
 	}
 
-	if len(notes) != 3 {
-		t.Errorf("relaxed %d filters, want 3: %v", len(notes), notes)
+	if len(notes) != 2 {
+		t.Errorf("relaxed %d filters, want 2: %v", len(notes), notes)
 	}
-	if openNow || maxPrice != 0 || !showAll {
-		t.Errorf("filters not fully relaxed: openNow=%v maxPrice=%d showAll=%v", openNow, maxPrice, showAll)
+	if openNow || maxPrice != 0 {
+		t.Errorf("filters not fully relaxed: openNow=%v maxPrice=%d", openNow, maxPrice)
 	}
 }
 
 func TestRelaxDropsOpenNowFirst(t *testing.T) {
 	// Open-now is the most likely culprit and the least destructive to drop:
 	// clearing a price cap the user typed is more surprising.
-	openNow, maxPrice, showAll := true, 40, false
-	if _, ok := relax(&openNow, &maxPrice, &showAll); !ok {
+	openNow, maxPrice := true, 40
+	if _, ok := relax(&openNow, &maxPrice); !ok {
 		t.Fatal("expected a relaxation")
 	}
 	if openNow {
@@ -291,9 +291,34 @@ func TestRelaxDropsOpenNowFirst(t *testing.T) {
 }
 
 func TestRelaxExhaustedIsANoop(t *testing.T) {
-	openNow, maxPrice, showAll := false, 0, true
-	if note, ok := relax(&openNow, &maxPrice, &showAll); ok || note != "" {
+	openNow, maxPrice := false, 0
+	if note, ok := relax(&openNow, &maxPrice); ok || note != "" {
 		t.Errorf("got (%q, %v), want exhausted", note, ok)
+	}
+}
+
+// The index groups shops by stop in outbound order; a shop is measured from
+// its own stop, and headings sit exactly where a group starts.
+func TestStopGroupedRowsPutHeadingsBeforeEachGroup(t *testing.T) {
+	ui.SetColor(false)
+	graham, _ := geo.StopByID("graham")
+	grand, _ := geo.StopByID("grand")
+	groups := []stopGroup{
+		{stop: graham, shops: []catalog.Result{result("A", 3, true, 40, 60, 5), result("B", 6, true, 0, 0, 0)}},
+		{stop: grand, shops: []catalog.Result{result("C", 2, true, 30, 30, 4.8)}},
+	}
+	rows, _, results, at := stopGroupedRows(groups, testNow, nil)
+	if len(rows) != 5 || len(at) != 5 {
+		t.Fatalf("got %d rows / %d map entries, want 5", len(rows), len(at))
+	}
+	if at[0] != -1 || rows[0][0] != "Graham Av" {
+		t.Errorf("row 0 = %v (at %d), want the Graham heading", rows[0], at[0])
+	}
+	if at[3] != -1 || rows[3][0] != "Grand St" {
+		t.Errorf("row 3 = %v (at %d), want the Grand heading", rows[3], at[3])
+	}
+	if results[at[4]].Shop.Name != "C" {
+		t.Errorf("row 4 maps to %s, want C", results[at[4]].Shop.Name)
 	}
 }
 

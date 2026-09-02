@@ -123,7 +123,7 @@ FLAGS
 		}
 	}
 	if p.HomeStop == "" {
-		ui.Hint("no home stop -- the next `fade-cli` will ask where you walk from")
+		ui.Hint("optional: a home stop gives `fade-cli find` walk times -- fade-cli me --set-home graham")
 	}
 	return nil
 }

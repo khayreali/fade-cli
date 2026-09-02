@@ -62,13 +62,15 @@ var lCorridor = Corridor{
 	},
 }
 
+// gCorridor runs south to north, the direction the G leaves Manhattan-side
+// Brooklyn: Nassau Av is the stop nearer Union Square.
 var gCorridor = Corridor{
 	ID:   "g-greenpoint",
 	Name: "Greenpoint",
 	Line: "G",
 	Stops: []Stop{
-		stop("greenpoint-av", "Greenpoint Av", "G", "g-greenpoint", 1, 40.731352, -73.954449),
-		stop("nassau", "Nassau Av", "G", "g-greenpoint", 2, 40.724635, -73.951277),
+		stop("nassau", "Nassau Av", "G", "g-greenpoint", 1, 40.724635, -73.951277),
+		stop("greenpoint-av", "Greenpoint Av", "G", "g-greenpoint", 2, 40.731352, -73.954449),
 	},
 }
 
