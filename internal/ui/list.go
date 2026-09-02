@@ -61,12 +61,11 @@ type List struct {
 // KeyReader supplies keypresses. *Raw is the real one; tests script a slice.
 type KeyReader interface{ ReadKey() Key }
 
-// eventSource is what *Raw also satisfies: input as a channel alongside a
-// resize signal, so the list can redraw when the window changes rather than
+// eventReader is what *Raw also satisfies: a key or a resize, whichever
+// comes first, so the list can redraw when the window changes rather than
 // when the user next touches a key.
-type eventSource interface {
-	Keys() <-chan Key
-	Resized() <-chan struct{}
+type eventReader interface {
+	NextEvent() (k Key, resized bool)
 }
 
 // EscKey is the hint key for "go back", registered by screens that have a
@@ -93,15 +92,14 @@ func (l *List) Run(t KeyReader, start int) Selection {
 	hideCursor()
 	defer showCursor()
 
-	src, live := t.(eventSource)
+	src, live := t.(eventReader)
 	for {
 		l.draw()
 
 		var k Key
 		if live {
-			select {
-			case k = <-src.Keys():
-			case <-src.Resized():
+			var resized bool
+			if k, resized = src.NextEvent(); resized {
 				continue
 			}
 		} else {

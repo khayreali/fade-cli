@@ -832,7 +832,12 @@ func (a *app) bookInteractive(raw *ui.Raw, shop catalog.Shop) error {
 			pause()
 			return
 		case provider.ActionCall:
+			// The number is the product here; the tel: handoff is a bonus
+			// that depends on the machine having something to dial with.
 			fmt.Printf("  Call %s\n", ui.Bold(provider.PrettyPhone(shop.Phone)))
+			if provider.Copy(provider.PrettyPhone(shop.Phone)) {
+				fmt.Printf("  %s\n", ui.Dim("number copied to your clipboard"))
+			}
 		case provider.ActionOpen:
 			fmt.Printf("  %s\n", ui.Dim(action.Target))
 		}
@@ -842,6 +847,9 @@ func (a *app) bookInteractive(raw *ui.Raw, shop catalog.Shop) error {
 		}
 		if openErr := provider.Open(action.Target); openErr != nil {
 			ui.Warn("couldn't open it: %v", openErr)
+			if action.Type == provider.ActionCall {
+				fmt.Printf("  %s\n", ui.Dim("dial it from your phone -- the number is on your clipboard"))
+			}
 			pause()
 			return
 		}

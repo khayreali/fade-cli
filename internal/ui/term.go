@@ -9,6 +9,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"unicode/utf8"
 
 	"golang.org/x/term"
 )
@@ -49,10 +50,16 @@ type Raw struct {
 	sigs  chan os.Signal
 	once  sync.Once
 
-	// Set up lazily by Keys/Resized for screens that select on both.
+	// Set up lazily by NextEvent for screens that also want resize events.
+	// The reader goroutine reads one key per request and never reads
+	// speculatively, so a cooked-mode prompt during Suspend is the only
+	// thing touching stdin at that moment. A free-running reader raced the
+	// prompts for keystrokes and ate the enter that confirmed a booking.
 	watch   sync.Once
+	reqs    chan struct{}
 	keys    chan Key
 	resized chan struct{}
+	pending bool // a requested read has not been consumed yet
 }
 
 // EnterRaw switches to raw mode. It returns ok=false when stdin isn't a
@@ -67,7 +74,9 @@ func EnterRaw() (*Raw, bool) {
 	if err != nil {
 		return nil, false
 	}
-	t := &Raw{fd: fd, state: state, r: bufio.NewReader(os.Stdin)}
+	// One buffered reader is shared with the line prompts: two readers over
+	// the same descriptor would each swallow bytes the other never sees.
+	t := &Raw{fd: fd, state: state, r: stdin}
 
 	// A deferred Restore covers normal exits and panics, but not a signal --
 	// and a process killed in raw mode leaves the user's shell with no echo
@@ -117,108 +126,154 @@ func (t *Raw) Suspend(fn func()) {
 }
 
 // ReadKey blocks for a single keypress, decoding the ANSI escape sequences
-// that terminals use for arrows and navigation keys. Once a reader goroutine
-// owns stdin (see Keys), it is the only thing allowed to read, so ReadKey
-// takes from its channel instead.
+// that terminals use for arrows and navigation keys.
 func (t *Raw) ReadKey() Key {
-	if t.keys != nil {
-		return <-t.keys
+	if t.pending {
+		// A live read is already outstanding; take its result.
+		k := <-t.keys
+		t.pending = false
+		return k
 	}
 	return t.readKey()
 }
 
+// NextEvent waits for a keypress or a terminal resize, whichever comes
+// first. resized is true when the window changed and no key was read.
+func (t *Raw) NextEvent() (k Key, resized bool) {
+	t.startWatching()
+	if !t.pending {
+		t.pending = true
+		t.reqs <- struct{}{}
+	}
+	select {
+	case k = <-t.keys:
+		t.pending = false
+		return k, false
+	case <-t.resized:
+		return Key{}, true
+	}
+}
+
 func (t *Raw) readKey() Key {
+	for {
+		if k, ok := t.readOne(); ok {
+			return k
+		}
+	}
+}
+
+// readOne decodes one input unit. ok is false for input that means nothing
+// to a screen -- a mouse report, an unknown control sequence -- which the
+// caller skips rather than surfacing as a phantom key.
+func (t *Raw) readOne() (Key, bool) {
 	b, err := t.r.ReadByte()
 	if err != nil {
-		return Key{Type: KeyInterrupt}
+		return Key{Type: KeyInterrupt}, true
 	}
 
 	switch b {
 	case 3, 4: // ctrl-C, ctrl-D
-		return Key{Type: KeyInterrupt}
+		return Key{Type: KeyInterrupt}, true
 	case 13, 10: // CR, LF
-		return Key{Type: KeyEnter}
+		return Key{Type: KeyEnter}, true
 	case 127, 8:
-		return Key{Type: KeyBackspace}
+		return Key{Type: KeyBackspace}, true
 	case 27:
 		return t.readEscape()
 	}
-	if b < 32 {
-		return Key{Type: KeyRune, Rune: rune(b)}
+	if b < utf8.RuneSelf {
+		return Key{Type: KeyRune, Rune: rune(b)}, true
 	}
-	return Key{Type: KeyRune, Rune: rune(b)}
+
+	// A multi-byte rune: gather the continuation bytes and decode, so a
+	// name typed with an accent arrives as one character.
+	buf := []byte{b}
+	for !utf8.FullRune(buf) && len(buf) < utf8.UTFMax {
+		n, err := t.r.ReadByte()
+		if err != nil {
+			break
+		}
+		buf = append(buf, n)
+	}
+	r, _ := utf8.DecodeRune(buf)
+	if r == utf8.RuneError {
+		return Key{}, false
+	}
+	return Key{Type: KeyRune, Rune: r}, true
 }
 
-// readEscape decodes a CSI sequence. Terminals deliver the whole sequence in
-// one write, so an escape with nothing buffered behind it is a bare Esc press
-// rather than the start of a sequence -- checking Buffered avoids blocking
-// forever waiting for a continuation that will never come.
-func (t *Raw) readEscape() Key {
+// readEscape decodes what follows an ESC. Terminals deliver a whole sequence
+// in one write, so an escape with nothing buffered behind it is a bare Esc
+// press -- checking Buffered avoids blocking forever for a continuation
+// that will never come. Control sequences are read to their final byte
+// whatever they are, so an unrecognized one (a mouse report, a modified
+// arrow) is dropped whole instead of leaking its tail as typed letters.
+func (t *Raw) readEscape() (Key, bool) {
 	if t.r.Buffered() == 0 {
-		return Key{Type: KeyEsc}
+		return Key{Type: KeyEsc}, true
 	}
 	b, err := t.r.ReadByte()
 	if err != nil {
-		return Key{Type: KeyEsc}
-	}
-	if b != '[' && b != 'O' {
-		return Key{Type: KeyEsc}
-	}
-
-	if b == ']' {
-		// An OSC reply (a late answer to the background query, say) is not
-		// keys. Swallow it through its BEL or ST terminator.
-		t.skipOSC()
-		return t.ReadKey()
-	}
-
-	b, err = t.r.ReadByte()
-	if err != nil {
-		return Key{Type: KeyEsc}
+		return Key{Type: KeyEsc}, true
 	}
 	switch b {
-	case 'A':
-		return Key{Type: KeyUp}
-	case 'B':
-		return Key{Type: KeyDown}
-	case 'C':
-		return Key{Type: KeyRight}
-	case 'D':
-		return Key{Type: KeyLeft}
-	case 'H':
-		return Key{Type: KeyHome}
-	case 'F':
-		return Key{Type: KeyEnd}
+	case ']':
+		// An OSC reply (a late answer to the background query, say).
+		t.skipOSC()
+		return Key{}, false
+	case '[', 'O':
+	default:
+		// ESC followed by an ordinary key: alt-something. Treat as Esc.
+		return Key{Type: KeyEsc}, true
 	}
 
-	// Numeric sequences like ESC[5~ (page up) carry digits then a tilde.
-	if b >= '0' && b <= '9' {
-		digits := []byte{b}
-		for {
-			n, err := t.r.ReadByte()
-			if err != nil {
-				return Key{Type: KeyEsc}
-			}
-			if n == '~' {
-				break
-			}
-			if n < '0' || n > '9' {
-				return Key{Type: KeyEsc}
-			}
-			digits = append(digits, n)
+	// CSI: parameter bytes 0x30-0x3F, intermediates 0x20-0x2F, then one
+	// final byte 0x40-0x7E.
+	var params []byte
+	var final byte
+	for i := 0; i < 32; i++ {
+		n, err := t.r.ReadByte()
+		if err != nil {
+			return Key{Type: KeyEsc}, true
 		}
-		switch string(digits) {
+		if n >= 0x40 && n <= 0x7E {
+			final = n
+			break
+		}
+		params = append(params, n)
+	}
+	if final == 0 {
+		return Key{}, false
+	}
+
+	switch final {
+	case 'A':
+		return Key{Type: KeyUp}, true
+	case 'B':
+		return Key{Type: KeyDown}, true
+	case 'C':
+		return Key{Type: KeyRight}, true
+	case 'D':
+		return Key{Type: KeyLeft}, true
+	case 'H':
+		return Key{Type: KeyHome}, true
+	case 'F':
+		return Key{Type: KeyEnd}, true
+	case '~':
+		// ESC[5~ is page up; a modifier may follow the number as ";5".
+		num, _, _ := strings.Cut(string(params), ";")
+		switch num {
 		case "1", "7":
-			return Key{Type: KeyHome}
+			return Key{Type: KeyHome}, true
 		case "4", "8":
-			return Key{Type: KeyEnd}
+			return Key{Type: KeyEnd}, true
 		case "5":
-			return Key{Type: KeyPageUp}
+			return Key{Type: KeyPageUp}, true
 		case "6":
-			return Key{Type: KeyPageDown}
+			return Key{Type: KeyPageDown}, true
 		}
 	}
-	return Key{Type: KeyEsc}
+	return Key{}, false
 }
 
 // skipOSC consumes the rest of an OSC sequence: everything up to BEL or
@@ -366,25 +421,10 @@ func Size() (cols, rows int) {
 	return w, h
 }
 
-// Resized reports terminal size changes. A screen that selects on this
-// alongside its key channel can redraw at the new size instead of waiting
-// for the next keypress to notice it.
-func (t *Raw) Resized() <-chan struct{} {
-	t.startWatching()
-	return t.resized
-}
-
-// Keys delivers keypresses on a channel, for screens that need to select
-// between input and resize events. Once started, the reader goroutine owns
-// stdin for the life of the Raw session; ReadKey keeps working through it.
-func (t *Raw) Keys() <-chan Key {
-	t.startWatching()
-	return t.keys
-}
-
 func (t *Raw) startWatching() {
 	t.watch.Do(func() {
-		t.keys = make(chan Key, 8)
+		t.reqs = make(chan struct{}, 1)
+		t.keys = make(chan Key)
 		t.resized = make(chan struct{}, 1)
 
 		winch := make(chan os.Signal, 1)
@@ -399,12 +439,8 @@ func (t *Raw) startWatching() {
 			}
 		}()
 		go func() {
-			for {
-				k := t.readKey()
-				t.keys <- k
-				if k.Type == KeyInterrupt {
-					return
-				}
+			for range t.reqs {
+				t.keys <- t.readKey()
 			}
 		}()
 	})

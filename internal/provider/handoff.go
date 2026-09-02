@@ -95,20 +95,29 @@ func lookPath(bin string) bool {
 	return err == nil
 }
 
-// Open launches a URL or tel: link with the OS handler. It deliberately does
-// not wait: the browser taking a moment to start shouldn't block the CLI.
+// Open launches a URL or tel: link with the OS handler.
+//
+// On macOS `open` returns as soon as it has handed the target to Launch
+// Services, so it is safe to wait for it -- and worth it, because that is
+// where "no application knows how to open tel:" comes back. Elsewhere the
+// helper may stay alive as long as the browser does, so it is only started.
 func Open(target string) error {
 	if _, err := url.Parse(target); err != nil {
 		return fmt.Errorf("bad target %q: %w", target, err)
 	}
-	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "darwin":
-		cmd = exec.Command("open", target)
+		out, err := exec.Command("open", target).CombinedOutput()
+		if err != nil {
+			if msg := strings.TrimSpace(string(out)); msg != "" {
+				return fmt.Errorf("%s", msg)
+			}
+			return err
+		}
+		return nil
 	case "windows":
-		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", target)
+		return exec.Command("rundll32", "url.dll,FileProtocolHandler", target).Start()
 	default:
-		cmd = exec.Command("xdg-open", target)
+		return exec.Command("xdg-open", target).Start()
 	}
-	return cmd.Start()
 }
