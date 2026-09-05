@@ -172,9 +172,12 @@ func TestProvidersWithoutCredentialsReportSo(t *testing.T) {
 		shop catalog.Shop
 		want error
 	}{
-		{catalog.Shop{Booking: catalog.Booking{Kind: catalog.KindBooksy, ID: "215669"}}, ErrNeedsCredentials},
+		// Booksy and Fresha need no credentials -- they read live times through
+		// their marketplaces' public APIs -- and are covered by booksy_test.go
+		// and fresha_test.go against stub transports, never the network.
 		{catalog.Shop{Booking: catalog.Booking{Kind: catalog.KindSquare, ID: "loc:var"}}, ErrNeedsCredentials},
-		{catalog.Shop{Booking: catalog.Booking{Kind: catalog.KindFresha, ID: "slug"}}, ErrNoLiveAvailability},
+		// Fresha needs no credentials and reads live times; it is covered by
+		// fresha_test.go against a stub transport, never the network.
 		{catalog.Shop{Booking: catalog.Booking{Kind: catalog.KindLink, URL: "https://x.test"}}, ErrNoLiveAvailability},
 		{catalog.Shop{Booking: catalog.Booking{Kind: catalog.KindPhone}}, ErrNoLiveAvailability},
 	} {

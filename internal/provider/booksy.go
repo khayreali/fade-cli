@@ -1,11 +1,14 @@
 package provider
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"net/url"
+	"strings"
 	"time"
 
 	"fadecli/internal/catalog"
@@ -15,23 +18,33 @@ func defaultClient() *http.Client {
 	return &http.Client{Timeout: 8 * time.Second}
 }
 
-// booksyBase is the documented public-api host. Booksy issues X-API-Key
-// credentials per business rather than running an open developer program, so
-// this path only works for shops that have granted you access. Override with
-// FADE_BOOKSY_BASE if your key is scoped to a different region host.
-const booksyBase = "https://us.booksy.com/public-api/us"
-
-// Booksy reads availability from Booksy-hosted shops.
+// Booksy reads live availability from Booksy-hosted shops.
 //
-// Scope note: there is no open third-party Booksy API. Without a per-business
-// key this provider reports ErrNeedsCredentials and the shop falls back to a
-// deep link, which is the correct behaviour for the ~20 Booksy shops in the
-// seed catalog today.
+// Booksy runs no open partner program, but its own website is a client of a
+// public customer API: the booking widget fetches a business's services and
+// then posts for open time slots, authenticating with a web client key that
+// ships in the site's JavaScript. This provider speaks that same API -- two
+// requests, no login. If the key or the endpoints rotate, every failure
+// degrades to the handoff the CLI always had.
 type Booksy struct {
+	// APIKey overrides the built-in web client key (FADE_BOOKSY_API_KEY).
 	APIKey string
 	Base   string
 	Client *http.Client
 }
+
+const (
+	booksyBase = "https://us.booksy.com/core/v2/customer_api"
+	// booksyWebKey is the public client key Booksy's marketplace site sends
+	// on every request. It is not a secret -- it is in the page source -- and
+	// it is what makes the site's own availability calls work anonymously.
+	booksyWebKey = "web-e3d812bf-d7a2-445d-ab38-55589ae6a121"
+	booksyUA     = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+)
+
+// ErrBooksyChanged is returned when Booksy's customer API no longer accepts
+// the web key or answers in the shape this code expects.
+var ErrBooksyChanged = errors.New("booksy's customer API changed; live times unavailable until this is updated")
 
 func (*Booksy) Kind() catalog.BookingKind { return catalog.KindBooksy }
 
@@ -42,72 +55,173 @@ func (b *Booksy) base() string {
 	return booksyBase
 }
 
-func (b *Booksy) Availability(ctx context.Context, shop catalog.Shop, day time.Time) ([]Slot, error) {
-	if b.APIKey == "" {
-		return nil, ErrNeedsCredentials
+func (b *Booksy) key() string {
+	if b.APIKey != "" {
+		return b.APIKey
 	}
+	return booksyWebKey
+}
+
+func (b *Booksy) client() *http.Client {
+	if b.Client != nil {
+		return b.Client
+	}
+	return defaultClient()
+}
+
+func (b *Booksy) Availability(ctx context.Context, shop catalog.Shop, day time.Time) ([]Slot, error) {
 	if shop.Booking.ID == "" {
 		return nil, fmt.Errorf("booksy: shop %s has no business id", shop.ID)
 	}
-
-	from := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, day.Location())
-	till := from.AddDate(0, 0, 1)
-
-	q := url.Values{}
-	q.Set("booked_from", from.Format(time.RFC3339))
-	q.Set("booked_till", till.Format(time.RFC3339))
-
-	endpoint := fmt.Sprintf("%s/business/%s/appointments/?%s", b.base(), shop.Booking.ID, q.Encode())
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	svc, err := b.haircutVariant(ctx, shop.Booking.ID)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("X-API-Key", b.APIKey)
-	req.Header.Set("Accept", "application/json")
 
-	resp, err := b.Client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("booksy: %w", err)
-	}
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-	case http.StatusUnauthorized, http.StatusForbidden:
-		return nil, ErrNeedsCredentials
-	default:
-		return nil, fmt.Errorf("booksy: unexpected status %d", resp.StatusCode)
-	}
-
+	loc := catalog.ShopLocation()
+	day = day.In(loc)
+	date := day.Format("2006-01-02")
+	body, _ := json.Marshal(map[string]any{
+		"subbookings": []map[string]any{{"service_variant_id": svc.variantID, "staffer_id": -1}},
+		"start_date":  date,
+		"end_date":    date,
+	})
 	var payload struct {
 		TimeSlots []struct {
-			Time     string  `json:"time"`
-			Service  string  `json:"service_name"`
-			Staff    string  `json:"staffer_name"`
-			Price    float64 `json:"price"`
-			Duration int     `json:"duration"`
+			Date  string `json:"date"`
+			Slots []struct {
+				T string `json:"t"`
+			} `json:"slots"`
 		} `json:"time_slots"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-		return nil, fmt.Errorf("booksy: decoding response: %w", err)
+	if err := b.do(ctx, http.MethodPost, fmt.Sprintf("/me/businesses/%s/appointments/time_slots", shop.Booking.ID), body, &payload); err != nil {
+		return nil, err
 	}
 
-	slots := make([]Slot, 0, len(payload.TimeSlots))
-	for _, ts := range payload.TimeSlots {
-		start, err := parseSlotTime(ts.Time, day)
-		if err != nil {
-			continue // a slot we can't place in time is worse than no slot
+	slots := []Slot{}
+	for _, d := range payload.TimeSlots {
+		if d.Date != date {
+			continue
 		}
-		slots = append(slots, Slot{
-			Start:    start,
-			Duration: time.Duration(ts.Duration) * time.Minute,
-			Service:  ts.Service,
-			Barber:   ts.Staff,
-			Price:    int(ts.Price),
-			BookURL:  shop.Booking.URL,
-		})
+		for _, s := range d.Slots {
+			hh, mm, ok := splitClock(s.T)
+			if !ok {
+				continue
+			}
+			slots = append(slots, Slot{
+				Start:    time.Date(day.Year(), day.Month(), day.Day(), hh, mm, 0, 0, loc),
+				Duration: svc.duration,
+				Service:  svc.name,
+				Barber:   "any",
+				Price:    svc.price,
+				BookURL:  shop.Booking.URL,
+			})
+		}
 	}
 	return slots, nil
+}
+
+type booksyVariant struct {
+	variantID int
+	name      string
+	price     int
+	duration  time.Duration
+}
+
+// haircutVariant fetches the business and picks the service to price
+// availability against: the first whose name looks like a haircut, else the
+// first bookable service. Availability depends on the service's duration, so
+// the choice matters.
+func (b *Booksy) haircutVariant(ctx context.Context, businessID string) (*booksyVariant, error) {
+	var raw map[string]any
+	if err := b.do(ctx, http.MethodGet, "/businesses/"+businessID+"/?with_combos=1&with_markdown=1", nil, &raw); err != nil {
+		return nil, err
+	}
+	// The business may arrive bare or wrapped under "business".
+	biz := raw
+	if inner, ok := raw["business"].(map[string]any); ok {
+		biz = inner
+	}
+	var first, pick *booksyVariant
+	cats, _ := biz["service_categories"].([]any)
+	for _, c := range cats {
+		cm, _ := c.(map[string]any)
+		services, _ := cm["services"].([]any)
+		for _, s := range services {
+			sm, _ := s.(map[string]any)
+			name, _ := sm["name"].(string)
+			variants, _ := sm["variants"].([]any)
+			if len(variants) == 0 {
+				continue
+			}
+			vm, _ := variants[0].(map[string]any)
+			id, _ := vm["id"].(float64)
+			if id == 0 {
+				continue
+			}
+			v := &booksyVariant{variantID: int(id), name: strings.TrimSpace(name)}
+			if p, _ := vm["price"].(float64); p > 0 {
+				v.price = int(p)
+			}
+			if d, _ := vm["duration"].(float64); d > 0 {
+				v.duration = time.Duration(d) * time.Minute
+			}
+			if first == nil {
+				first = v
+			}
+			if pick == nil && haircutLike.MatchString(name) && v.price > 0 {
+				pick = v
+			}
+		}
+	}
+	if pick == nil {
+		pick = first
+	}
+	if pick == nil {
+		return nil, ErrBooksyChanged
+	}
+	return pick, nil
+}
+
+// do performs one customer-API call and decodes the JSON into out.
+func (b *Booksy) do(ctx context.Context, method, path string, body []byte, out any) error {
+	req, err := http.NewRequestWithContext(ctx, method, b.base()+path, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("x-api-key", b.key())
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", booksyUA)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := b.client().Do(req)
+	if err != nil {
+		return fmt.Errorf("booksy: %w", err)
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case http.StatusOK, http.StatusCreated:
+	case http.StatusUnauthorized, http.StatusForbidden:
+		// The built-in key is Booksy's own web client key; if it stops
+		// working, Booksy rotated it -- that is not the user's credentials.
+		if b.APIKey != "" {
+			return ErrNeedsCredentials
+		}
+		return ErrBooksyChanged
+	case http.StatusNotFound:
+		return ErrBooksyChanged
+	default:
+		return fmt.Errorf("booksy: HTTP %d", resp.StatusCode)
+	}
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
+	if err != nil {
+		return fmt.Errorf("booksy: %w", err)
+	}
+	if err := json.Unmarshal(raw, out); err != nil {
+		return fmt.Errorf("booksy: decoding response: %w", err)
+	}
+	return nil
 }
 
 func (*Booksy) Handoff(shop catalog.Shop) Action {

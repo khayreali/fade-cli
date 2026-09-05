@@ -876,11 +876,17 @@ func (a *app) timesInteractive(raw *ui.Raw, shop catalog.Shop) {
 			for _, line := range wrap(slotTimes(r.Slots), 8) {
 				fmt.Println("  " + ui.Green(line))
 			}
+		case r.Err == nil:
+			// The platform answered: the day is full, or they're closed.
+			fmt.Printf("  %s\n", ui.Subtle("no openings today"))
 		case errors.Is(r.Err, provider.ErrNeedsCredentials):
 			ui.Warn("%s has times, but this install has no API access to them", bookingPhrase(shop))
 			fmt.Printf("  %s\n", ui.Dim("book it and you'll see their calendar"))
-		default:
+		case errors.Is(r.Err, provider.ErrNoLiveAvailability):
 			ui.Warn("no live times here -- book it to see their calendar")
+		default:
+			ui.Warn("couldn't check live times: %v", r.Err)
+			fmt.Printf("  %s\n", ui.Dim("book it to see their calendar"))
 		}
 		pause()
 	})

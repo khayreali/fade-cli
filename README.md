@@ -36,6 +36,9 @@ works offline and starts in single-digit milliseconds.
   "closed"
 - **Every booking link opened and verified by hand.** Directory pages that
   only say "call to book" are never presented as bookable — a test enforces it
+- **Live availability, no API keys** — real open times for the 31 Booksy and
+  Fresha shops, read from the same public endpoints their own booking pages
+  use; a neighborhood sweep answers in about two seconds
 - **Manual connectors** for the thirty shops with no booking platform: a
   validated, prefilled call-or-text request, tracked until the shop answers
 - **A cut log** that learns your real cadence (median, outlier-resistant)
@@ -169,15 +172,15 @@ fade-cli stops                          # the service area
 
 Every shop is bookable on day one. How depends on what the shop uses:
 
-| Kind     | Live times | How you book                     |
-| -------- | ---------- | -------------------------------- |
-| `booksy` | with a key | deep link to the shop's page     |
-| `square` | with a key | deep link to the shop's page     |
-| `fresha` | no         | deep link to the venue           |
-| `link`   | no         | the shop's own site              |
-| `vagaro` | no         | deep link to the venue           |
-| `squire` | no         | deep link to the venue           |
-| `phone`  | no         | the manual connector (below)     |
+| Kind     | Live times      | How you book                     |
+| -------- | --------------- | -------------------------------- |
+| `booksy` | **yes**         | deep link to the shop's page     |
+| `fresha` | **yes**         | deep link to the venue           |
+| `square` | with a token    | deep link to the shop's page     |
+| `link`   | no              | the shop's own site              |
+| `vagaro` | no              | deep link to the venue           |
+| `squire` | no              | deep link to the venue           |
+| `phone`  | no              | the manual connector (below)     |
 
 Fresha publishes two kinds of page. `/a/` is a partner venue with a booking
 flow. `/lvp/` is a directory listing it generates for shops that are *not*
@@ -188,34 +191,55 @@ which is never presented as a way to book.
 
 ### Live availability
 
-`fade-cli slots` shows real open times for any shop whose provider this install has
-credentials for. Today that means:
+`fade-cli slots` shows real open times — no account, no API key, no browser —
+for the **31 shops** on Booksy and Fresha, which is every online-bookable shop
+in the catalog except the two on Square. A sweep of a neighborhood checks every
+shop concurrently and comes back in about two seconds:
 
-- **Square** — the one genuinely open path. Square documents a
-  [Bookings API](https://developer.squareup.com/docs/bookings-api/what-it-does)
-  and a shop can OAuth-authorize your app. Set `FADE_SQUARE_TOKEN`, and give the
-  shop a `booking.id` of `"<location_id>:<service_variation_id>"` — Square won't
-  quote open time without knowing which service you want.
-- **Booksy** — their public API issues an `X-API-Key` per business; there is no
-  open developer program. Set `FADE_BOOKSY_API_KEY` for shops that have granted
-  you access.
-- **Fresha** and **Vagaro** — no third-party availability API exists for
-  either; their integration programs are merchant-facing. Handoff only.
+```
+$ fade-cli slots --near graham --within 0.5 --day tue
 
-Shops without credentials degrade to a deep link rather than erroring. That's
-the intended state, not a bug — the CLI is useful with zero API access.
+  Roots Radicals Salon  434 Graham Ave
+    12:45pm  1:45pm  2:45pm
 
-**No third-party client can complete a booking here, and that is structural.**
-Square's Bookings API is seller-scoped: creating a booking at a shop requires
-that shop to OAuth-authorize this application into its own Square account. A
-customer cannot obtain those credentials by pasting a token. The same is true
-of Booksy, Fresha, Vagaro and Squire, whose APIs exist for merchants running
-their own chair.
+  SHEAR 483  483 Lorimer St
+    10:00am  10:30am  11:00am  11:30am  12:00pm  12:30pm  2:00pm  3:00pm
+    3:30pm   4:00pm   4:30pm   5:00pm   5:30pm   6:00pm   6:30pm   7:00pm
 
-So the handoff is not a fallback — for a customer-side tool it is the product.
-The work that pays off is making the moment of handoff good: knowing whether
-the shop is open, whether you can just walk in, and landing on the booking page
-rather than a homepage.
+  Cabello Brooklyn  476 Humboldt Street
+    no openings Tue
+```
+
+**How, when neither platform has a partner API:** their own websites do. A
+marketplace shows a venue's open times to anyone before they log in, so the
+page is a client of a public endpoint, and fade has the same conversation the
+browser has — in plain `net/http`, nothing added to the dependency list.
+
+- **Fresha** is a server-driven booking flow behind a GraphQL endpoint: each
+  screen returns the action tokens for its buttons and the client echoes one
+  back. fade opens a cart, adds the shop's haircut, picks "any professional",
+  reaches the time screen and reads the day's slots. Nothing is booked; the
+  cart is abandoned. The two mutations are addressed by persisted-query hash,
+  captured from Fresha's web bundle.
+- **Booksy** is two REST calls: the business (to find the haircut's service
+  variant, since availability depends on duration) and a `time_slots` query
+  for the day, sent with the public client key Booksy's own site uses.
+- **Square** has a real, documented [Bookings API](https://developer.squareup.com/docs/bookings-api/what-it-does),
+  but it is seller-scoped: set `FADE_SQUARE_TOKEN` once a shop has authorized
+  you. Two shops; not worth the same treatment yet.
+
+The hashes and the key are constants copied from the platforms' front ends, so
+they will rotate when Fresha or Booksy ships a new build. Every failure
+degrades to the handoff the CLI always had — "book it to see their calendar"
+— and says which platform changed, so a broken integration never looks like an
+empty calendar. Refreshing them is a capture away; `FADE_BOOKSY_API_KEY`
+overrides the built-in key without a rebuild.
+
+**Completing the booking stays a handoff, by choice.** The same flows would
+let fade submit an appointment, but that means creating a real booking on a
+real shop's calendar under someone's name from a terminal. That is a place to
+land people, not to automate — so fade opens the exact page or dials the shop,
+with the open times already known.
 
 ### Manual connectors
 

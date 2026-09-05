@@ -97,6 +97,7 @@ func (a *app) slotTargets(nameArgs []string, near string, within float64, under 
 func printSlots(results []provider.ShopSlots, when time.Time) {
 	var (
 		live      int
+		checked   int // answered live with no openings that day
 		handoffs  []provider.ShopSlots
 		failed    []provider.ShopSlots
 		needsCred bool
@@ -108,10 +109,18 @@ func printSlots(results []provider.ShopSlots, when time.Time) {
 			printShopSlots(r)
 			continue
 		}
+		if r.Err == nil {
+			// The provider answered and the day is simply full or closed. That
+			// is real information, not "no live availability".
+			checked++
+			fmt.Printf("  %s  %s\n    %s\n\n", ui.Bold(r.Shop.Name), ui.Dim(r.Shop.Address),
+				ui.Subtle("no openings "+ui.RelDay(when, catalog.InShopTime(time.Now()))))
+			continue
+		}
 		switch {
 		case errors.Is(r.Err, provider.ErrNeedsCredentials):
 			needsCred = true
-		case r.Err != nil && !errors.Is(r.Err, provider.ErrNoLiveAvailability):
+		case !errors.Is(r.Err, provider.ErrNoLiveAvailability):
 			// A bad token, a dead network or a changed API used to render
 			// identically to "this shop has no live availability", so a broken
 			// setup looked exactly like a working one.
@@ -120,7 +129,7 @@ func printSlots(results []provider.ShopSlots, when time.Time) {
 		handoffs = append(handoffs, r)
 	}
 
-	if live == 0 {
+	if live == 0 && checked == 0 {
 		fmt.Println(ui.Dim("  No live availability for these shops yet."))
 		fmt.Println()
 	}
