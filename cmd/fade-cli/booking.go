@@ -231,8 +231,8 @@ type bookingChoice struct {
 	provider provider.ServiceProvider
 }
 
-// handoffScreen makes the transition explicit. A shop URL does not preserve
-// our service/time selection, and opening it is not a confirmed appointment.
+// handoffScreen distinguishes resumable checkout from a plain shop link.
+// Neither preparing a cart nor opening it is a confirmed appointment.
 func (a *app) handoffScreen(raw *ui.Raw, shop catalog.Shop, note string, choice *bookingChoice) error {
 	action := a.reg.For(shop).Handoff(shop)
 	sel := 0
@@ -258,24 +258,51 @@ func (a *app) handoffScreen(raw *ui.Raw, shop catalog.Shop, note string, choice 
 				lines = append(lines, "Any available professional")
 			}
 			explanation = "Select this service and time again on the booking page.\nYour appointment is confirmed only when the shop confirms it."
+			if _, ok := choice.provider.(provider.CheckoutProvider); ok {
+				verb = "Continue with this service and time"
+				explanation = "Your selection carries into the shop's checkout.\nReview, sign in and confirm there. Nothing is booked yet."
+			}
 			copyLabel, copyText = "Copy booking details", bookingSummary(shop, *choice, action.Target)
 		}
 		panel := strings.Join(ui.Box("Your visit", lines, min(cols-4, 68)), "\n")
 		rows := [][]string{{ui.Accent(verb)}, {copyLabel}, {"Back"}}
+		aiRow, backRow := -1, 2
+		if action.Type == provider.ActionCall && shop.WalkIn != catalog.WalkInOnly {
+			rows = [][]string{{ui.Accent(verb)}, {copyLabel}, {"Ask an AI to call (opt-in pilot)"}, {"Back"}}
+			aiRow, backRow = 2, 3
+		}
 		if action.Type == provider.ActionNone {
 			rows = [][]string{{"Back"}}
 			explanation = action.Label
 		}
 		list := &ui.List{Title: title, Subtitle: subtitle, Hint: panel + "\n" + explanation, Note: note, Rows: rows,
 			Hints: []ui.KeyHint{{Key: ui.EscKey, Label: "back"}, {Key: "q", Label: "quit"}}}
+		if shop.Booking.Kind == catalog.KindFresha || shop.Booking.Kind == catalog.KindBooksy {
+			list.Hints = append([]ui.KeyHint{{Key: "p", Label: "payment setup"}}, list.Hints...)
+		}
 		got := list.Run(raw, sel)
 		if !got.OK || got.Cmd == "q" {
 			return errAborted
 		}
-		if got.Cmd == ui.EscKey || got.Index == 2 || action.Type == provider.ActionNone {
+		if got.Cmd == "p" {
+			raw.Suspend(func() {
+				if err := paymentsCmd([]string{"setup", string(shop.Booking.Kind)}); err != nil {
+					ui.Warn("%v", err)
+				}
+				pause()
+			})
+			continue
+		}
+		if got.Cmd == ui.EscKey || got.Index == backRow || action.Type == provider.ActionNone {
 			return nil
 		}
 		sel = got.Index
+		if got.Index == aiRow {
+			if err := a.callScreen(raw, shop); err != nil {
+				return err
+			}
+			continue
+		}
 		if got.Index == 1 {
 			if provider.Copy(copyText) {
 				note = "Copied."
@@ -284,6 +311,7 @@ func (a *app) handoffScreen(raw *ui.Raw, shop catalog.Shop, note string, choice 
 			}
 			continue
 		}
+		target := action.Target
 		if choice != nil {
 			var current provider.Slot
 			err := bookingWait(raw, "Rechecking your time", func(ctx context.Context) error {
@@ -307,8 +335,22 @@ func (a *app) handoffScreen(raw *ui.Raw, shop catalog.Shop, note string, choice 
 				note = "The shop updated its details. Review them before continuing."
 				continue
 			}
+			if checkout, ok := choice.provider.(provider.CheckoutProvider); ok {
+				err := bookingWait(raw, "Preparing your checkout", func(ctx context.Context) error {
+					var err error
+					target, err = checkout.PrepareCheckout(ctx, shop, current)
+					return err
+				})
+				if errors.Is(err, errAborted) {
+					return err
+				}
+				if err != nil {
+					note = "Could not carry your selection over. Go back to refresh or use the booking page."
+					continue
+				}
+			}
 		}
-		if err := provider.Open(action.Target); err != nil {
+		if err := provider.Open(target); err != nil {
 			note = "Could not open: " + err.Error()
 			continue
 		}
@@ -344,8 +386,12 @@ func serviceFromSlot(s provider.Service, slot provider.Slot) provider.Service {
 }
 
 func bookingSummary(shop catalog.Shop, c bookingChoice, url string) string {
+	next := "Not booked yet. Select these details on the booking page:"
+	if _, ok := c.provider.(provider.CheckoutProvider); ok {
+		next = "Not booked yet. Continue from fade's review screen to carry this selection into checkout. Shop page:"
+	}
 	return strings.Join([]string{shop.Name, shop.Address, c.service.Name + " · " + servicePrice(c.service) + " · " + serviceDuration(c.service),
-		catalog.InShopTime(c.slot.Start).Format("Mon, Jan 2, 2006 · 3:04pm MST"), "Any available professional", "Not booked yet. Select these details on the booking page:", url}, "\n")
+		catalog.InShopTime(c.slot.Start).Format("Mon, Jan 2, 2006 · 3:04pm MST"), "Any available professional", next, url}, "\n")
 }
 
 func servicePrice(s provider.Service) string {

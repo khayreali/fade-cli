@@ -15,7 +15,7 @@ import (
 	"fadecli/internal/ui"
 )
 
-var version = "0.3.0"
+var version = "0.4.0"
 
 // app carries the wiring every command needs, so each command body can stay
 // about its own job.
@@ -59,6 +59,12 @@ func main() {
 			os.Exit(1)
 		}
 		return
+	case "payments":
+		if err := paymentsCmd(args); err != nil {
+			ui.Errf("%v", err)
+			os.Exit(1)
+		}
+		return
 	}
 
 	a, err := newApp()
@@ -79,6 +85,8 @@ func main() {
 		runErr = a.againCmd(args)
 	case "appts", "appointments":
 		runErr = a.appts(args)
+	case "calls":
+		runErr = a.calls(args)
 	case "log", "l":
 		runErr = a.log(args)
 	case "due":
@@ -197,6 +205,8 @@ COMMANDS
   find      search shops by distance, price, rating
   slots     check open appointment times
   book      book, or hand off to the shop's booking system
+  calls     opt-in AI phone booking (start with calls setup)
+  payments  set up saved payments in your existing booking accounts
   log       record a haircut, or review your history
   due       when you're next due for a cut
   me        view or set your profile

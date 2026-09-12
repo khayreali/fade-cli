@@ -25,6 +25,7 @@ type Appointment struct {
 	Status  string    `json:"status"`
 	Created time.Time `json:"created"`
 	Notes   string    `json:"notes,omitempty"`
+	CallID  string    `json:"call_id,omitempty"` // deduplicates human-reviewed AI call results
 }
 
 const (

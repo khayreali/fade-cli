@@ -161,9 +161,11 @@ All dates and times use New York time. `esc` goes back and cancels an in-flight
 request; `ctrl-C` quits. A full day offers another date, and an unavailable
 provider offers its booking page. Opening a page does not log a completed cut.
 
-The booking page currently needs you to select the service and time again.
-Your selected time is not held, and only the shop's confirmation completes
-the appointment. **Copy booking details** keeps your choices handy.
+**Fresha carries your service and time into checkout.** Continue from the
+review screen to resume the same cart in your browser, then sign in and
+confirm with Fresha. Other platforms currently require reselecting the service
+and time. A visible opening or prepared cart is not a confirmed appointment;
+**Copy booking details** keeps your choices handy.
 
 ### Controls
 
@@ -283,9 +285,10 @@ browser has — in plain `net/http`, nothing added to the dependency list.
 - **Fresha** is a server-driven booking flow behind a GraphQL endpoint: each
   screen returns the action tokens for its buttons and the client echoes one
   back. fade opens a cart, adds the chosen service, picks "any professional",
-  reaches the time screen and reads the day's slots. It does not select a
-  timeslot or submit an appointment. The two mutations use persisted-query hashes,
-  captured from Fresha's web bundle.
+  reaches the time screen and reads the day's slots. Only when you continue
+  from review does it select the rechecked time and open a short-lived cart
+  link in your browser. It never presses confirmation or submits a payment.
+  The two mutations use persisted-query hashes captured from Fresha's web bundle.
 - **Booksy** fetches the business's service variants, then sends a `time_slots`
   query for the selected variant and day using the site's public client key.
   Changing dates reuses the loaded menu; final review refreshes it for price
@@ -301,10 +304,13 @@ degrades to the handoff the CLI always had — "book it to see their calendar"
 empty calendar. Refreshing them is a capture away; `FADE_BOOKSY_API_KEY`
 overrides the built-in key without a rebuild.
 
-**Completing the booking currently happens on the provider's page.** fade
-rechecks your selected time and opens the shop's booking URL. That URL does
-not carry the chosen service or time, so both must be selected again. Provider
-login, checkout and appointment creation have not been implemented.
+**Completing the booking happens on the provider's page.** fade rechecks your
+selection and, on Fresha, resumes a prepared cart with that service and time.
+Other providers open their booking page without carrying the selection.
+Login, final appointment confirmation and any payment remain with the provider.
+Cart links are short-lived bearer links: do not share them. They are not saved
+in your profile or included in JSON slot output. The Fresha resume behavior
+was verified with an anonymous Otis & Finn cart; provider changes can break it.
 
 The plain `slots` command selects a default haircut and labels it with the
 service, price and duration returned by the provider. Use `--services` and
@@ -340,6 +346,87 @@ and every time it renders is the shop's clock, not your laptop's.
 
 Availability queries fan out concurrently across every shop and provider, so
 the wait is bounded by groups of requests rather than a sequential shop list.
+
+### AI phone booking: opt-in pilot
+
+Phone shops now offer **Ask an AI to call**. The pilot uses your own
+[Vapi account and imported outbound number](https://docs.vapi.ai/calls/outbound-calling);
+it is not a free, centrally operated calling service. No new runtime dependency.
+
+```sh
+fade-cli calls setup
+fade-cli calls preview eddo --at "fri 3pm" --under 60
+fade-cli calls start eddo --at "fri 3pm" --under 60
+fade-cli calls list
+fade-cli calls status <request-id>
+fade-cli calls confirm <request-id>  # only after reviewing the shop's response
+```
+
+Set your name and callback through `fade-cli me`. Configure
+`FADE_VAPI_API_KEY` privately via your shell or secret manager, and
+`FADE_VAPI_PHONE_NUMBER_ID` with the imported number ID. Free Vapi numbers
+cannot place outbound calls. Set `FADE_AI_CALL_ALLOWED_NUMBERS` to the
+comma-separated numbers whose owners agreed to AI calls. Start with your own
+number using `--test-to <your-number>`; this explicitly simulates a booking.
+Never paste keys into chat or commit them. Voice service charges apply.
+
+Before dialing, fade shows the exact destination, name, callback, service,
+time and maximum total. You must type `CALL`; scripts cannot bypass approval.
+Calls are capped at three minutes, within published hours and 9am-8pm New York
+time. Unknown hours are not a guarantee the shop is open. The assistant
+identifies itself as AI, asks permission, and is instructed to reserve only
+the exact request within budget, otherwise report alternatives. It must not
+agree to deposits, no-show fees or payments. Walk-in-only shops are excluded.
+
+A private receipt is written **before** dialing. Only one attempt per number
+per New York calendar day is permitted; network errors never trigger a retry.
+If submission is uncertain, inspect the Vapi dashboard for `fade-<request-id>`
+and use `fade-cli calls attach <request-id> <vapi-call-id>` to recover the
+matching call. Do not manually delete receipts to redial an uncertain request.
+Closing the CLI does not stop a submitted call; manage an active call in Vapi.
+
+Audio recording and call logging are disabled in the assistant configuration.
+Vapi and its voice/model providers still process the conversation, and text
+and extracted results may be retained in the account; review their retention
+settings. Local receipts contain the reviewed contact details with owner-only
+file permissions. `calls status` fetches results without storing transcripts.
+AI-extracted results are labelled as such: an exact, within-budget reservation
+still requires your review with `calls confirm` before appearing in `appts`.
+Tests and incomplete or contradictory results cannot become appointments.
+`appts cancel` changes local history only; contact the shop to cancel a booking.
+
+This integration is mock-tested, **not yet live-call tested**. A managed rollout
+needs a hosted backend with user authentication, protected provider keys,
+merchant opt-in records, abuse controls and per-user spending limits.
+
+### Payments
+
+fade never collects card numbers, CVV, bank credentials or payment secrets.
+Complete Fresha/Booksy payments in their own checkout. An AI caller can ask
+the shop to send its secure payment link to your callback; it cannot pay it.
+
+**No shop onboarding to fade is required.** Use your existing customer account
+and the payment methods already supported by the shop's booking platform:
+
+```sh
+fade-cli payments setup fresha
+fade-cli payments setup booksy
+```
+
+These open the provider in your normal browser, where your login and payment
+details stay. Press `p` from the booking review to open the same setup.
+[Fresha's customer Wallet](https://www.fresha.com/help-center/knowledge-base/clients/206-manage-client-wallets-1)
+lets you manage a saved card. It can also be saved during booking.
+[Booksy Mobile Payments](https://help.booksy.com/hc/en-us/articles/21619656357266-What-payment-methods-are-accepted-on-Booksy)
+supports a card on file or Apple/Google Pay where the business enables it;
+card setup may require the Booksy customer app.
+
+On Fresha, fade carries the selection into the cart and the provider handles
+login, saved-card selection, the final total and bank authentication. On Booksy,
+the service/time handoff still requires reselecting them. Setup does not copy
+cookies into fade, prove a card is connected, or charge anything. No universal
+fade payment token is injected into third-party checkouts. A provider checkout
+page, not a separate fade charge, is the source of payment and booking truth.
 
 ## Expanding to a new neighborhood
 

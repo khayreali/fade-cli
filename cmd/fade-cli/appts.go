@@ -154,6 +154,9 @@ the shop answers.
 		}
 		fmt.Printf("%s %s %s at %s\n", ui.Green(status), appt.ID, ui.Bold(appt.ShopName),
 			catalog.InShopTime(appt.When).Format("Mon Jan 2, 3:04pm"))
+		if status == store.ApptCancelled {
+			ui.Hint("changed local history only; contact the shop to cancel the actual appointment")
+		}
 		return nil
 	}
 	if len(rest) == 1 {

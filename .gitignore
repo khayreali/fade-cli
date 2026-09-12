@@ -2,3 +2,5 @@
 # match the cmd/fade-cli/ source directory and silently untrack the whole CLI.
 /fade-cli
 /dist/
+.env
+.env.*

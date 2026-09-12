@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -114,6 +115,69 @@ func (*Fresha) Handoff(shop catalog.Shop) Action {
 		}
 	}
 	return Action{Type: ActionNone, Label: "no Fresha link on file"}
+}
+
+// PrepareCheckout selects only the reviewed time in the rechecked cart.
+// The browser resumes that cart; login, confirmation and payment stay there.
+// Never press onScreenTimeContinue or any confirmation action here.
+func (f *Fresha) PrepareCheckout(ctx context.Context, shop catalog.Shop, slot Slot) (string, error) {
+	if slot.freshaCartID == "" || slot.freshaAction == "" || !slot.Start.After(time.Now()) {
+		return "", errors.New("Fresha checkout expired; refresh the available times")
+	}
+	start := catalog.InShopTime(slot.Start)
+	h, m, ok := freshaSlotClock(map[string]any{"action": map[string]any{"id": slot.freshaAction}}, start.Format("2006-01-02"))
+	if !ok || h != start.Hour() || m != start.Minute() {
+		return "", ErrFreshaFlowChanged
+	}
+	client := f.Client
+	if client == nil {
+		client = defaultClient()
+	}
+	flow := &freshaFlow{ctx: ctx, client: client, slug: freshaSlug(shop), cartID: slot.freshaCartID}
+	screen, err := flow.press(slot.freshaAction)
+	if err != nil {
+		return "", err
+	}
+	if !freshaTimeSelected(screen, start) {
+		return "", ErrFreshaFlowChanged
+	}
+	return "https://www.fresha.com/a/" + url.PathEscape(flow.slug) + "/booking?" + url.Values{"cartId": {flow.cartID}}.Encode(), nil
+}
+
+// A rejected selection can still return a time screen. Require the exact
+// date and radio selection, not merely a successful GraphQL response.
+func freshaTimeSelected(screen map[string]any, start time.Time) bool {
+	if screenType(screen) != "BookingFlowScreenTime" {
+		return false
+	}
+	st, _ := screen["screenTime"].(map[string]any)
+	dates, _ := st["dates"].([]any)
+	dateMatches := false
+	for _, raw := range dates {
+		d, _ := raw.(map[string]any)
+		if selected, _ := d["isSelected"].(bool); !selected {
+			continue
+		}
+		date, _ := d["date"].(map[string]any)
+		iso, _ := date["iso"].(string)
+		dateMatches = strings.HasPrefix(iso, start.Format("2006-01-02"))
+		break
+	}
+	if !dateMatches {
+		return false
+	}
+	day, _ := st["day"].(map[string]any)
+	slots, _ := day["timeslots"].([]any)
+	for _, raw := range slots {
+		s, _ := raw.(map[string]any)
+		if selected, _ := s["isSelected"].(bool); !selected {
+			continue
+		}
+		label, _ := s["time"].(string)
+		h, m, ok := splitClock(label)
+		return ok && h == start.Hour() && m == start.Minute()
+	}
+	return false
 }
 
 // freshaSlug is the venue's /a/<slug> identifier, from the booking id or URL.
@@ -447,7 +511,12 @@ func (f *freshaFlow) slotsOn(screen map[string]any, day time.Time, svc *freshaSe
 		if !ok {
 			return nil, ErrFreshaFlowChanged
 		}
-		slots = append(slots, svc.slot(time.Date(day.Year(), day.Month(), day.Day(), hh, mm, 0, 0, loc), (&Fresha{}).Handoff(shop).Target))
+		slot := svc.slot(time.Date(day.Year(), day.Month(), day.Day(), hh, mm, 0, 0, loc), (&Fresha{}).Handoff(shop).Target)
+		if action, _ := tm["action"].(map[string]any); action != nil {
+			slot.freshaAction, _ = action["id"].(string)
+			slot.freshaCartID = f.cartID
+		}
+		slots = append(slots, slot)
 	}
 	return slots, nil
 }

@@ -34,6 +34,15 @@ type Slot struct {
 	DurationLabel string
 	// BookURL deep-links to this specific slot where the provider supports it.
 	BookURL string
+	// Short-lived Fresha cart state. Never serialize these bearer tokens.
+	freshaCartID string
+	freshaAction string
+}
+
+// CheckoutProvider can carry a reviewed selection into hosted checkout.
+// Preparing a cart must never submit an appointment or payment.
+type CheckoutProvider interface {
+	PrepareCheckout(context.Context, catalog.Shop, Slot) (string, error)
 }
 
 // ActionType is how a user completes a booking outside the terminal.
