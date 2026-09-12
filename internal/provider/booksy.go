@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -70,19 +71,20 @@ func (b *Booksy) client() *http.Client {
 }
 
 func (b *Booksy) Availability(ctx context.Context, shop catalog.Shop, day time.Time) ([]Slot, error) {
-	if shop.Booking.ID == "" {
-		return nil, fmt.Errorf("booksy: shop %s has no business id", shop.ID)
-	}
-	svc, err := b.haircutVariant(ctx, shop.Booking.ID)
-	if err != nil {
-		return nil, err
+	return defaultAvailability(ctx, b, shop, day)
+}
+
+func (b *Booksy) AvailabilityFor(ctx context.Context, shop catalog.Shop, day time.Time, svc Service) ([]Slot, error) {
+	id, err := strconv.Atoi(svc.ID)
+	if err != nil || id <= 0 || shop.Booking.ID == "" {
+		return nil, ErrServiceUnavailable
 	}
 
 	loc := catalog.ShopLocation()
 	day = day.In(loc)
 	date := day.Format("2006-01-02")
 	body, _ := json.Marshal(map[string]any{
-		"subbookings": []map[string]any{{"service_variant_id": svc.variantID, "staffer_id": -1}},
+		"subbookings": []map[string]any{{"service_variant_id": id, "staffer_id": -1}},
 		"start_date":  date,
 		"end_date":    date,
 	})
@@ -97,6 +99,9 @@ func (b *Booksy) Availability(ctx context.Context, shop catalog.Shop, day time.T
 	if err := b.do(ctx, http.MethodPost, fmt.Sprintf("/me/businesses/%s/appointments/time_slots", shop.Booking.ID), body, &payload); err != nil {
 		return nil, err
 	}
+	if payload.TimeSlots == nil {
+		return nil, ErrBooksyChanged
+	}
 
 	slots := []Slot{}
 	for _, d := range payload.TimeSlots {
@@ -106,81 +111,69 @@ func (b *Booksy) Availability(ctx context.Context, shop catalog.Shop, day time.T
 		for _, s := range d.Slots {
 			hh, mm, ok := splitClock(s.T)
 			if !ok {
-				continue
+				return nil, ErrBooksyChanged
 			}
-			slots = append(slots, Slot{
-				Start:    time.Date(day.Year(), day.Month(), day.Day(), hh, mm, 0, 0, loc),
-				Duration: svc.duration,
-				Service:  svc.name,
-				Barber:   "any",
-				Price:    svc.price,
-				BookURL:  shop.Booking.URL,
-			})
+			slots = append(slots, svc.slot(time.Date(day.Year(), day.Month(), day.Day(), hh, mm, 0, 0, loc), shop.Booking.URL))
 		}
 	}
 	return slots, nil
 }
 
-type booksyVariant struct {
-	variantID int
-	name      string
-	price     int
-	duration  time.Duration
-}
-
-// haircutVariant fetches the business and picks the service to price
-// availability against: the first whose name looks like a haircut, else the
-// first bookable service. Availability depends on the service's duration, so
-// the choice matters.
-func (b *Booksy) haircutVariant(ctx context.Context, businessID string) (*booksyVariant, error) {
-	var raw map[string]any
-	if err := b.do(ctx, http.MethodGet, "/businesses/"+businessID+"/?with_combos=1&with_markdown=1", nil, &raw); err != nil {
+// Services flattens every variant, including different durations/prices of
+// the same service. Reading this once lets a date change cost just one request.
+func (b *Booksy) Services(ctx context.Context, shop catalog.Shop) ([]Service, error) {
+	if shop.Booking.ID == "" {
+		return nil, fmt.Errorf("booksy: shop %s has no business id", shop.ID)
+	}
+	type business struct {
+		Categories []struct {
+			Services []struct {
+				Name     string `json:"name"`
+				Variants []struct {
+					ID       int      `json:"id"`
+					Name     string   `json:"name"`
+					Price    *float64 `json:"price"`
+					Duration int      `json:"duration"`
+				} `json:"variants"`
+			} `json:"services"`
+		} `json:"service_categories"`
+	}
+	var raw struct {
+		business
+		Business *business `json:"business"`
+	}
+	if err := b.do(ctx, http.MethodGet, "/businesses/"+shop.Booking.ID+"/?with_combos=1&with_markdown=1", nil, &raw); err != nil {
 		return nil, err
 	}
-	// The business may arrive bare or wrapped under "business".
-	biz := raw
-	if inner, ok := raw["business"].(map[string]any); ok {
-		biz = inner
+	biz := raw.business
+	if raw.Business != nil {
+		biz = *raw.Business
 	}
-	var first, pick *booksyVariant
-	cats, _ := biz["service_categories"].([]any)
-	for _, c := range cats {
-		cm, _ := c.(map[string]any)
-		services, _ := cm["services"].([]any)
-		for _, s := range services {
-			sm, _ := s.(map[string]any)
-			name, _ := sm["name"].(string)
-			variants, _ := sm["variants"].([]any)
-			if len(variants) == 0 {
-				continue
-			}
-			vm, _ := variants[0].(map[string]any)
-			id, _ := vm["id"].(float64)
-			if id == 0 {
-				continue
-			}
-			v := &booksyVariant{variantID: int(id), name: strings.TrimSpace(name)}
-			if p, _ := vm["price"].(float64); p > 0 {
-				v.price = int(p)
-			}
-			if d, _ := vm["duration"].(float64); d > 0 {
-				v.duration = time.Duration(d) * time.Minute
-			}
-			if first == nil {
-				first = v
-			}
-			if pick == nil && haircutLike.MatchString(name) && v.price > 0 {
-				pick = v
+	var services []Service
+	seen := map[int]bool{}
+	for _, c := range biz.Categories {
+		for _, s := range c.Services {
+			for _, v := range s.Variants {
+				if v.ID <= 0 || seen[v.ID] || strings.TrimSpace(s.Name) == "" {
+					continue
+				}
+				seen[v.ID] = true
+				svc := Service{ID: strconv.Itoa(v.ID), Name: strings.TrimSpace(s.Name), Duration: time.Duration(v.Duration) * time.Minute}
+				if v.Name != "" && v.Name != s.Name {
+					svc.Name += " / " + v.Name
+				}
+				if v.Price != nil {
+					svc.Price = int(*v.Price)
+					svc.PriceLabel = "$" + strconv.FormatFloat(*v.Price, 'f', -1, 64)
+				}
+				services = append(services, svc)
 			}
 		}
 	}
-	if pick == nil {
-		pick = first
-	}
-	if pick == nil {
+	if len(services) == 0 {
 		return nil, ErrBooksyChanged
 	}
-	return pick, nil
+	return services, nil
 }
 
 // do performs one customer-API call and decodes the JSON into out.

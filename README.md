@@ -10,7 +10,7 @@
 [![Platform](https://img.shields.io/badge/platform-macOS%20·%20Linux-64748b)]()
 [![Made in Brooklyn](https://img.shields.io/badge/made%20in-Brooklyn-ff6319)]()
 
-**Find, compare and book Brooklyn barbershops without leaving your terminal.**
+**Find your next haircut. Choose the service and time in your terminal.**
 
 <br>
 
@@ -34,11 +34,14 @@ works offline and starts in single-digit milliseconds.
 - **Open now**, evaluated on the shop's clock (DST-correct), with hours
   sourced per shop — a shop nobody researched shows *unknown*, never a false
   "closed"
-- **Every booking link opened and verified by hand.** Directory pages that
+- **Direct booking links.** Directory pages that
   only say "call to book" are never presented as bookable — a test enforces it
-- **Live availability, no API keys** — real open times for the 31 Booksy and
-  Fresha shops, read from the same public endpoints their own booking pages
-  use; a neighborhood sweep answers in about two seconds
+- **Service, day, time, review** — browse Booksy and Fresha's live menus with
+  prices and durations, choose a day, and select a time. Recheck availability
+  before continuing to the shop's booking page
+- **Live availability, no personal API keys** — integrations for Booksy and
+  Fresha, covering 31 catalog entries. Provider changes or individual listings
+  can affect coverage; failed checks are shown separately from full days
 - **Manual connectors** for the thirty shops with no booking platform: a
   validated, prefilled call-or-text request, tracked until the shop answers
 - **A cut log** that learns your real cadence (median, outlier-resistant)
@@ -51,6 +54,8 @@ works offline and starts in single-digit milliseconds.
 ## Install
 
 ```sh
+git clone https://github.com/khayreali/fade-cli.git
+cd fade-cli
 make install       # builds and puts fade-cli on your PATH
 ```
 
@@ -58,6 +63,10 @@ Or just `make build` and run `./fade-cli` in place. One direct dependency,
 `golang.org/x/term` for raw-mode key input (which pulls in `golang.org/x/sys`);
 everything else is the standard library. The shop catalog is compiled into the
 binary, so it works offline and starts in single-digit milliseconds.
+
+To update an existing clone, run `git pull --ff-only` followed by `make install`
+from that directory. `fade-cli --version` shows your installed version.
+Updates require a rebuild; an already installed binary does not update itself.
 
 ## Start here
 
@@ -106,6 +115,25 @@ and a bar placing the price against every other shop in the catalog. The
 panels sit side by side in a wide terminal and stack in a narrow one.
 
 <img src="assets/shop.png" alt="the shop screen: Details, Hours and Book panels above the actions list" width="100%">
+
+### Choose a service and time
+
+At Booksy and Fresha shops, **Choose service & time** opens a guided flow.
+`fade-cli book "Otis & Finn Williamsburg"` goes straight to the same screen:
+
+1. Choose a service from the live menu, with its published price and duration.
+2. Pick a date from the next two weeks. Times are grouped into morning,
+   afternoon and evening; `d` changes the day and `r` refreshes availability.
+3. Review the shop, service, price and time. Copy the details, or continue to
+   the booking page after one more availability check.
+
+All dates and times use New York time. `esc` goes back and cancels an in-flight
+request; `ctrl-C` quits. A full day offers another date, and an unavailable
+provider offers its booking page. Opening a page does not log a completed cut.
+
+The booking page currently needs you to select the service and time again.
+Your selected time is not held, and only the shop's confirmation completes
+the appointment. **Copy booking details** keeps your choices handy.
 
 ### Controls
 
@@ -159,7 +187,11 @@ fade-cli find --under 45 --min-rating 4.9
 fade-cli find --sort cheapest           # or: rated, nearest (default)
 fade-cli find --to montrose --collapse  # one row per address
 fade-cli slots --near graham --day fri  # sweep every shop in range at once
+fade-cli slots shear-483 --services    # list the live menu, including IDs
+fade-cli slots shear-483 --service 21896801 --day tomorrow
 fade-cli book "power of barbers"
+fade-cli book "Otis & Finn Williamsburg" --service Buzzcut
+fade-cli book shear-483 --print        # link only; no interactive flow
 fade-cli book eddo --at "fri 3pm"       # manual connector: prepared call/text
 fade-cli appts                          # track those requests
 fade-cli log add --shop cabello --price 55 --tip 10 --rating 5
@@ -170,7 +202,7 @@ fade-cli stops                          # the service area
 
 ## How booking works
 
-Every shop is bookable on day one. How depends on what the shop uses:
+Each shop has a route to arrange a visit. How depends on what the shop uses:
 
 | Kind     | Live times      | How you book                     |
 | -------- | --------------- | -------------------------------- |
@@ -191,10 +223,12 @@ which is never presented as a way to book.
 
 ### Live availability
 
-`fade-cli slots` shows real open times — no account, no API key, no browser —
-for the **31 shops** on Booksy and Fresha, which is every online-bookable shop
-in the catalog except the two on Square. A sweep of a neighborhood checks every
-shop concurrently and comes back in about two seconds:
+`fade-cli slots` can read open times without an account, personal API key or
+browser for the **31 catalog entries** on Booksy and Fresha. This is provider
+coverage, not a guarantee that every listing answers on every run. Square,
+Squire, Vagaro and custom websites have separate capabilities listed above.
+A neighborhood sweep checks shops concurrently. This example is illustrative;
+times and response speed vary:
 
 ```
 $ fade-cli slots --near graham --within 0.5 --day tue
@@ -217,16 +251,17 @@ browser has — in plain `net/http`, nothing added to the dependency list.
 
 - **Fresha** is a server-driven booking flow behind a GraphQL endpoint: each
   screen returns the action tokens for its buttons and the client echoes one
-  back. fade opens a cart, adds the shop's haircut, picks "any professional",
-  reaches the time screen and reads the day's slots. Nothing is booked; the
-  cart is abandoned. The two mutations are addressed by persisted-query hash,
+  back. fade opens a cart, adds the chosen service, picks "any professional",
+  reaches the time screen and reads the day's slots. It does not select a
+  timeslot or submit an appointment. The two mutations use persisted-query hashes,
   captured from Fresha's web bundle.
-- **Booksy** is two REST calls: the business (to find the haircut's service
-  variant, since availability depends on duration) and a `time_slots` query
-  for the day, sent with the public client key Booksy's own site uses.
+- **Booksy** fetches the business's service variants, then sends a `time_slots`
+  query for the selected variant and day using the site's public client key.
+  Changing dates reuses the loaded menu; final review refreshes it for price
+  or duration changes.
 - **Square** has a real, documented [Bookings API](https://developer.squareup.com/docs/bookings-api/what-it-does),
   but it is seller-scoped: set `FADE_SQUARE_TOKEN` once a shop has authorized
-  you. Two shops; not worth the same treatment yet.
+  you.
 
 The hashes and the key are constants copied from the platforms' front ends, so
 they will rotate when Fresha or Booksy ships a new build. Every failure
@@ -235,11 +270,15 @@ degrades to the handoff the CLI always had — "book it to see their calendar"
 empty calendar. Refreshing them is a capture away; `FADE_BOOKSY_API_KEY`
 overrides the built-in key without a rebuild.
 
-**Completing the booking stays a handoff, by choice.** The same flows would
-let fade submit an appointment, but that means creating a real booking on a
-real shop's calendar under someone's name from a terminal. That is a place to
-land people, not to automate — so fade opens the exact page or dials the shop,
-with the open times already known.
+**Completing the booking currently happens on the provider's page.** fade
+rechecks your selected time and opens the shop's booking URL. That URL does
+not carry the chosen service or time, so both must be selected again. Provider
+login, checkout and appointment creation have not been implemented.
+
+The plain `slots` command selects a default haircut and labels it with the
+service, price and duration returned by the provider. Use `--services` and
+`--service <id>` for an explicit choice; duplicate service names require an ID.
+A missing schedule or invalid time is an error, not an empty calendar.
 
 ### Manual connectors
 
@@ -269,7 +308,7 @@ claims a chair the shop hasn't promised. `due` shows your next appointment,
 and every time it renders is the shop's clock, not your laptop's.
 
 Availability queries fan out concurrently across every shop and provider, so
-checking twenty shops costs one round trip rather than twenty.
+the wait is bounded by groups of requests rather than a sequential shop list.
 
 ## Expanding to a new neighborhood
 

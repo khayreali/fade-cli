@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -539,12 +538,15 @@ func (a *app) shopScreen(raw *ui.Raw, r catalog.Result, from string) error {
 	for {
 		shop := chairs[cur]
 
-		actions := [][]string{
-			{ui.Green("Book it"), ui.Dim(bookingAction(shop))},
-			{"See open times", ui.Dim("today")},
-			{"Log a cut here", ui.Dim("record what you paid")},
+		bookTitle, bookHint := "Arrange a visit", bookingAction(shop)
+		if _, ok := a.reg.For(shop).(provider.ServiceProvider); ok {
+			bookTitle, bookHint = "Choose service & time", "live menu and availability"
 		}
-		kinds := []string{"book", "times", "log"}
+		actions := [][]string{
+			{ui.Accent(bookTitle), ui.Dim(bookHint)},
+			{"Log a completed cut", ui.Dim("record what you paid")},
+		}
+		kinds := []string{"book", "log"}
 		if shop.Booking.Kind == catalog.KindPhone && shop.Phone != "" {
 			actions = append(actions, []string{"Request a time", ui.Dim("prepared call or text")})
 			kinds = append(kinds, "request")
@@ -584,7 +586,7 @@ func (a *app) shopScreen(raw *ui.Raw, r catalog.Result, from string) error {
 			return errAborted
 		case got.Cmd == "*":
 			if a.state.Profile.ToggleSaved(shop.ID) {
-				note = "saved -- pinned to the top of browse"
+				note = "saved -- available from Saved on the home screen"
 			} else {
 				note = "unsaved"
 			}
@@ -601,11 +603,9 @@ func (a *app) shopScreen(raw *ui.Raw, r catalog.Result, from string) error {
 		case "back":
 			return nil
 		case "book":
-			if err := a.bookInteractive(raw, shop); err != nil {
+			if err := a.bookingScreen(raw, shop, ""); err != nil {
 				return err
 			}
-		case "times":
-			a.timesInteractive(raw, shop)
 		case "request":
 			var reqErr error
 			raw.Suspend(func() {
@@ -819,77 +819,6 @@ func (a *app) pickBarber(raw *ui.Raw, chairs []catalog.Shop, cur int) (int, erro
 		return cur, nil
 	}
 	return got.Index, nil
-}
-
-func (a *app) bookInteractive(raw *ui.Raw, shop catalog.Shop) error {
-	action := a.reg.For(shop).Handoff(shop)
-	var err error
-
-	raw.Suspend(func() {
-		fmt.Println()
-		switch action.Type {
-		case provider.ActionNone:
-			ui.Warn("%s", action.Label)
-			pause()
-			return
-		case provider.ActionCall:
-			// The number is the product here; the tel: handoff is a bonus
-			// that depends on the machine having something to dial with.
-			fmt.Printf("  Call %s\n", ui.Bold(provider.PrettyPhone(shop.Phone)))
-			if provider.Copy(provider.PrettyPhone(shop.Phone)) {
-				fmt.Printf("  %s\n", ui.Dim("number copied to your clipboard"))
-			}
-		case provider.ActionOpen:
-			fmt.Printf("  %s\n", ui.Dim(action.Target))
-		}
-
-		if !ui.Yes(action.Label + "? [Y/n] ") {
-			return
-		}
-		if openErr := provider.Open(action.Target); openErr != nil {
-			ui.Warn("couldn't open it: %v", openErr)
-			if action.Type == provider.ActionCall {
-				fmt.Printf("  %s\n", ui.Dim("dial it from your phone -- the number is on your clipboard"))
-			}
-			pause()
-			return
-		}
-		fmt.Printf("\n  %s\n", ui.Green("opened"))
-		if ui.Yes("log this cut now? [Y/n] ") {
-			err = a.logCut(shop)
-		}
-	})
-	return err
-}
-
-func (a *app) timesInteractive(raw *ui.Raw, shop catalog.Shop) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	raw.Suspend(func() {
-		fmt.Printf("\n  %s\n", ui.Dim("checking..."))
-		got := a.reg.AvailabilityAcross(ctx, []catalog.Shop{shop}, time.Now())
-		fmt.Println()
-
-		switch r := got[0]; {
-		case r.Live():
-			for _, line := range wrap(slotTimes(r.Slots), 8) {
-				fmt.Println("  " + ui.Green(line))
-			}
-		case r.Err == nil:
-			// The platform answered: the day is full, or they're closed.
-			fmt.Printf("  %s\n", ui.Subtle("no openings today"))
-		case errors.Is(r.Err, provider.ErrNeedsCredentials):
-			ui.Warn("%s has times, but this install has no API access to them", bookingPhrase(shop))
-			fmt.Printf("  %s\n", ui.Dim("book it and you'll see their calendar"))
-		case errors.Is(r.Err, provider.ErrNoLiveAvailability):
-			ui.Warn("no live times here -- book it to see their calendar")
-		default:
-			ui.Warn("couldn't check live times: %v", r.Err)
-			fmt.Printf("  %s\n", ui.Dim("book it to see their calendar"))
-		}
-		pause()
-	})
 }
 
 func (a *app) logInteractive(raw *ui.Raw, shop catalog.Shop) error {
@@ -1115,14 +1044,6 @@ func bookingAction(s catalog.Shop) string {
 		return "no number on file"
 	}
 	return "opens in your browser"
-}
-
-func slotTimes(slots []provider.Slot) []string {
-	out := make([]string, 0, len(slots))
-	for _, s := range slots {
-		out = append(out, s.Start.Format("3:04pm"))
-	}
-	return out
 }
 
 func plural(n int, word string) string {

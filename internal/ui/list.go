@@ -400,7 +400,7 @@ func matchPositions(text, query string) []int {
 // height is how many rows fit, leaving room for the header and footer.
 func (l *List) height() int {
 	cols, rows := l.size()
-	chrome := 5 // top blank, title, blank, blank, status
+	chrome := 6 // top blank, title, blanks, status, and one row to avoid scrolling on the final newline
 	chrome += len(l.footerLines(cols))
 	if l.Subtitle != "" {
 		chrome++
@@ -410,7 +410,7 @@ func (l *List) height() int {
 	}
 	if l.Hint != "" {
 		// A multi-line hint (the shop screen's panels) costs its line count.
-		chrome += strings.Count(l.Hint, "\n")
+		chrome += len(Wrap(l.Hint, max(1, cols-4))) - 1
 	}
 	fit := max(3, rows-chrome)
 	if l.Height > 0 {
@@ -448,13 +448,13 @@ func (l *List) draw() {
 	b.WriteString("\033[?2026h\033[H\033[2J")
 
 	b.WriteString("\r\n")
-	b.WriteString("  " + Title(l.Title) + "\r\n")
+	b.WriteString("  " + Title(truncate(l.Title, cols-4)) + "\r\n")
 	if l.Subtitle != "" {
-		b.WriteString("  " + Subtle(l.Subtitle) + "\r\n")
+		b.WriteString("  " + Subtle(truncate(l.Subtitle, cols-4)) + "\r\n")
 	}
 	b.WriteString("\r\n")
 	if l.Hint != "" {
-		for _, line := range strings.Split(l.Hint, "\n") {
+		for _, line := range Wrap(l.Hint, max(1, cols-4)) {
 			b.WriteString("  " + line + "\r\n")
 		}
 		b.WriteString("\r\n")
@@ -508,7 +508,7 @@ func (l *List) draw() {
 		}
 	}
 
-	b.WriteString("\r\n  " + l.statusBar(cols) + "\r\n")
+	b.WriteString("\r\n  " + truncate(l.statusBar(cols), cols-4) + "\r\n")
 	for _, line := range l.footerLines(cols) {
 		b.WriteString("  " + line + "\r\n")
 	}
@@ -635,6 +635,7 @@ func (l *List) out() io.Writer {
 func (l *List) renderRow(cells []string, widths []int) string {
 	parts := make([]string, len(cells))
 	for i, c := range cells {
+		c = truncate(c, widths[i])
 		pad := widths[i] - visibleWidth(c)
 		if pad < 0 {
 			pad = 0
@@ -707,7 +708,7 @@ func (l *List) renderSection(cells []string, width int) string {
 	if fill > 0 {
 		label += Border(strings.Repeat(g.H, fill))
 	}
-	return label
+	return truncate(label, max(1, width))
 }
 
 // colWidths measures the selectable rows; headings have their own layout.
@@ -726,6 +727,27 @@ func (l *List) colWidths() []int {
 		for j, c := range r {
 			w[j] = max(w[j], visibleWidth(c))
 		}
+	}
+	// Fit columns individually so a long name can't push price and duration
+	// off-screen. Short numeric columns keep their width until necessary.
+	cols, _ := l.size()
+	budget := max(n, cols-6-2*max(0, n-1))
+	total := 0
+	for _, width := range w {
+		total += width
+	}
+	for total > budget {
+		largest := 0
+		for i := range w {
+			if w[i] > w[largest] {
+				largest = i
+			}
+		}
+		if w[largest] <= 1 {
+			break
+		}
+		w[largest]--
+		total--
 	}
 	return w
 }

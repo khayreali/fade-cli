@@ -15,7 +15,7 @@ import (
 	"fadecli/internal/ui"
 )
 
-const version = "0.1.0"
+const version = "0.2.0"
 
 // app carries the wiring every command needs, so each command body can stay
 // about its own job.

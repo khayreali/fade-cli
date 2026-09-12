@@ -27,6 +27,24 @@ func TestBoxLinesAreUniformWidth(t *testing.T) {
 	}
 }
 
+func TestWrapFitsInstructionsAndPreservesPanels(t *testing.T) {
+	SetColor(false)
+	panel := strings.Join(Box("Visit", []string{"Haircut", "$55"}, 36), "\n")
+	text := panel + "\nSelect this service and time again on the booking page."
+	lines := Wrap(text, 38)
+	for _, line := range lines {
+		if visibleWidth(line) > 38 {
+			t.Fatalf("overflow: %q", line)
+		}
+	}
+	if strings.Join(lines[:4], "\n") != panel {
+		t.Fatal("panel layout changed")
+	}
+	if !strings.Contains(strings.Join(lines[4:], " "), "time again on the booking page.") {
+		t.Fatal("instruction was truncated")
+	}
+}
+
 func TestBesideStacksWhenNarrow(t *testing.T) {
 	a := Box("A", []string{"x"}, 20)
 	b := Box("B", []string{"y", "z"}, 20)

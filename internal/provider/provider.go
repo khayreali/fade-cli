@@ -25,11 +25,13 @@ var (
 
 // Slot is one open appointment.
 type Slot struct {
-	Start    time.Time
-	Duration time.Duration
-	Service  string
-	Barber   string
-	Price    int
+	Start         time.Time
+	Duration      time.Duration
+	Service       string
+	Barber        string
+	Price         int
+	PriceLabel    string
+	DurationLabel string
 	// BookURL deep-links to this specific slot where the provider supports it.
 	BookURL string
 }
@@ -119,7 +121,12 @@ func (r *Registry) AvailabilityAcross(ctx context.Context, shops []catalog.Shop,
 		wg.Add(1)
 		go func(i int, shop catalog.Shop) {
 			defer wg.Done()
-			sem <- struct{}{}
+			select {
+			case sem <- struct{}{}:
+			case <-ctx.Done():
+				out[i] = ShopSlots{Shop: shop, Err: ctx.Err()}
+				return
+			}
 			defer func() { <-sem }()
 
 			slots, err := r.For(shop).Availability(ctx, shop, day)

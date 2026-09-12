@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"fadecli/internal/catalog"
 )
@@ -52,9 +53,13 @@ var ErrFreshaFlowChanged = errors.New("fresha's booking flow changed; live times
 func (*Fresha) Kind() catalog.BookingKind { return catalog.KindFresha }
 
 func (f *Fresha) Availability(ctx context.Context, shop catalog.Shop, day time.Time) ([]Slot, error) {
+	return f.AvailabilityFor(ctx, shop, day, Service{})
+}
+
+func (f *Fresha) openFlow(ctx context.Context, shop catalog.Shop) (*freshaFlow, map[string]any, error) {
 	slug := freshaSlug(shop)
 	if slug == "" {
-		return nil, ErrNoLiveAvailability
+		return nil, nil, ErrNoLiveAvailability
 	}
 	client := f.Client
 	if client == nil {
@@ -63,10 +68,30 @@ func (f *Fresha) Availability(ctx context.Context, shop catalog.Shop, day time.T
 	flow := &freshaFlow{ctx: ctx, client: client, slug: slug}
 
 	screen, err := flow.initialize()
+	return flow, screen, err
+}
+
+func (f *Fresha) Services(ctx context.Context, shop catalog.Shop) ([]Service, error) {
+	_, screen, err := f.openFlow(ctx, shop)
 	if err != nil {
 		return nil, err
 	}
-	service, err := flow.addHaircut(screen)
+	var services []Service
+	for _, item := range freshaServiceItems(screen) {
+		services = append(services, item.Service)
+	}
+	if len(services) == 0 {
+		return nil, ErrFreshaFlowChanged
+	}
+	return services, nil
+}
+
+func (f *Fresha) AvailabilityFor(ctx context.Context, shop catalog.Shop, day time.Time, chosen Service) ([]Slot, error) {
+	flow, screen, err := f.openFlow(ctx, shop)
+	if err != nil {
+		return nil, err
+	}
+	service, err := flow.addService(screen, chosen.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,10 +142,8 @@ type freshaFlow struct {
 
 // freshaService is the service we put in the cart, for labelling slots.
 type freshaService struct {
-	name     string
-	price    int
-	duration time.Duration
-	screen   map[string]any // the services screen after the add
+	Service
+	screen map[string]any // the services screen after the add
 }
 
 // gql posts one persisted-query operation and returns data[field].
@@ -229,17 +252,24 @@ func (f *freshaFlow) press(actionID string) (map[string]any, error) {
 
 var haircutLike = regexp.MustCompile(`(?i)cut|fade`)
 
-// addHaircut puts the shop's haircut (or its first service) in the cart.
-// Availability depends on the service's duration, so this matters: a shave
-// slot is not a haircut slot.
-func (f *freshaFlow) addHaircut(services map[string]any) (*freshaService, error) {
+// addService resolves the choice against a fresh menu, then follows only
+// action tokens returned by this cart. Tokens from an earlier cart aren't reused.
+func (f *freshaFlow) addService(services map[string]any, id string) (*freshaService, error) {
 	items := freshaServiceItems(services)
 	if len(items) == 0 {
 		return nil, ErrFreshaFlowChanged
 	}
-	pick := items[0]
+	menu := make([]Service, 0, len(items))
 	for _, it := range items {
-		if haircutLike.MatchString(it.name) {
+		menu = append(menu, it.Service)
+	}
+	chosen, err := ResolveService(menu, id)
+	if err != nil {
+		return nil, err
+	}
+	var pick freshaItem
+	for _, it := range items {
+		if it.ID == chosen.ID {
 			pick = it
 			break
 		}
@@ -260,24 +290,24 @@ func (f *freshaFlow) addHaircut(services map[string]any) (*freshaService, error)
 			return nil, err
 		}
 	}
-	return &freshaService{name: pick.name, price: pick.price, duration: pick.duration, screen: screen}, nil
+	return &freshaService{Service: pick.Service, screen: screen}, nil
 }
 
 type freshaItem struct {
-	name     string
-	price    int
-	duration time.Duration
-	action   string
+	Service
+	action string
 }
 
 var (
 	priceRe    = regexp.MustCompile(`(\d+)`)
 	durationRe = regexp.MustCompile(`(\d+)\s*min`)
+	hoursRe    = regexp.MustCompile(`(\d+)\s*h`)
 )
 
 // freshaServiceItems flattens screenServices.categories[].items[].
 func freshaServiceItems(screen map[string]any) []freshaItem {
 	var out []freshaItem
+	seen := map[string]bool{}
 	ss, _ := screen["screenServices"].(map[string]any)
 	cats, _ := ss["categories"].([]any)
 	for _, c := range cats {
@@ -291,18 +321,32 @@ func freshaServiceItems(screen map[string]any) []freshaItem {
 			if name == "" || id == "" {
 				continue
 			}
-			it := freshaItem{name: strings.TrimSpace(name), action: id}
+			var tokens []json.RawMessage
+			var token struct {
+				CatalogID string `json:"catalogId"`
+			}
+			if json.Unmarshal([]byte(id), &tokens) != nil || len(tokens) == 0 || json.Unmarshal(tokens[0], &token) != nil || token.CatalogID == "" || seen[token.CatalogID] {
+				continue
+			}
+			seen[token.CatalogID] = true
+			it := freshaItem{Service: Service{ID: token.CatalogID, Name: strings.TrimSpace(name)}, action: id}
 			if p, _ := im["price"].(map[string]any); p != nil {
 				if s, _ := p["formatted"].(string); s != "" {
+					it.PriceLabel = s
 					if m := priceRe.FindString(s); m != "" {
-						it.price, _ = strconv.Atoi(m)
+						it.Price, _ = strconv.Atoi(m)
 					}
 				}
 			}
 			if cap, _ := im["caption"].(string); cap != "" {
+				it.DurationLabel = cap
+				if m := hoursRe.FindStringSubmatch(cap); m != nil {
+					n, _ := strconv.Atoi(m[1])
+					it.Duration += time.Duration(n) * time.Hour
+				}
 				if m := durationRe.FindStringSubmatch(cap); m != nil {
 					n, _ := strconv.Atoi(m[1])
-					it.duration = time.Duration(n) * time.Minute
+					it.Duration += time.Duration(n) * time.Minute
 				}
 			}
 			out = append(out, it)
@@ -392,38 +436,57 @@ func (f *freshaFlow) slotsOn(screen map[string]any, day time.Time, svc *freshaSe
 	}
 
 	dayNode, _ := st["day"].(map[string]any)
-	raw, _ := dayNode["timeslots"].([]any)
+	raw, ok := dayNode["timeslots"].([]any)
+	if !ok {
+		return nil, ErrFreshaFlowChanged
+	}
 	slots := make([]Slot, 0, len(raw))
 	for _, t := range raw {
 		tm, _ := t.(map[string]any)
-		hhmm, _ := tm["time"].(string)
-		hh, mm, ok := splitClock(hhmm)
+		hh, mm, ok := freshaSlotClock(tm, want)
 		if !ok {
-			continue
+			return nil, ErrFreshaFlowChanged
 		}
-		slots = append(slots, Slot{
-			Start:    time.Date(day.Year(), day.Month(), day.Day(), hh, mm, 0, 0, loc),
-			Duration: svc.duration,
-			Service:  svc.name,
-			Barber:   "any",
-			Price:    svc.price,
-			BookURL:  (&Fresha{}).Handoff(shop).Target,
-		})
+		slots = append(slots, svc.slot(time.Date(day.Year(), day.Month(), day.Day(), hh, mm, 0, 0, loc), (&Fresha{}).Handoff(shop).Target))
 	}
 	return slots, nil
 }
 
 func splitClock(s string) (hh, mm int, ok bool) {
-	h, m, found := strings.Cut(s, ":")
-	if !found {
-		return 0, 0, false
+	// Marketplace locale can change the display from 14:30 to 2:30 PM,
+	// including non-breaking spaces. Both represent the same shop time.
+	s = strings.ToUpper(strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, s))
+	for _, layout := range []string{"15:04", "3:04PM"} {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t.Hour(), t.Minute(), true
+		}
 	}
-	hh, err1 := strconv.Atoi(h)
-	mm, err2 := strconv.Atoi(m)
-	if err1 != nil || err2 != nil || hh < 0 || hh > 23 || mm < 0 || mm > 59 {
-		return 0, 0, false
+	return 0, 0, false
+}
+
+func freshaSlotClock(slot map[string]any, date string) (hh, mm int, ok bool) {
+	// Prefer the machine-readable date/seconds in the returned button token.
+	// Reading this token does not select or hold the time.
+	action, _ := slot["action"].(map[string]any)
+	if id, _ := action["id"].(string); id != "" {
+		var tokens []json.RawMessage
+		var token struct {
+			Type string `json:"type"`
+			Date string `json:"date"`
+			Time *int   `json:"time"`
+		}
+		if json.Unmarshal([]byte(id), &tokens) != nil || len(tokens) == 0 || json.Unmarshal(tokens[0], &token) != nil || token.Type != "onScreenTimeSet" || token.Date != date || token.Time == nil || *token.Time < 0 || *token.Time >= 86400 {
+			return 0, 0, false
+		}
+		return *token.Time / 3600, *token.Time % 3600 / 60, true
 	}
-	return hh, mm, true
+	label, _ := slot["time"].(string)
+	return splitClock(label)
 }
 
 func screenType(screen map[string]any) string {
@@ -440,6 +503,9 @@ func screenType(screen map[string]any) string {
 func findAction(node any, typ, must string) (string, bool) {
 	switch n := node.(type) {
 	case map[string]any:
+		if disabled, _ := n["isDisabled"].(bool); disabled {
+			return "", false
+		}
 		if id, ok := n["id"].(string); ok && strings.HasPrefix(id, "[{") &&
 			strings.Contains(id, `"type":"`+typ+`"`) && (must == "" || strings.Contains(id, must)) {
 			return id, true

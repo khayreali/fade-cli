@@ -79,6 +79,17 @@ func TestVimKeysMove(t *testing.T) {
 	}
 }
 
+func TestNarrowListKeepsPriceAndDurationVisible(t *testing.T) {
+	l := &List{Rows: [][]string{{"Apprentice Haircut or Shave", "45 min", "$30"}, {"Haircut", "30 min", "$55"}}, sizeFn: func() (int, int) { return 42, 24 }}
+	widths := l.colWidths()
+	for _, row := range l.Rows {
+		line := l.renderRow(row, widths)
+		if visibleWidth(line) > 36 || !strings.Contains(line, row[1]) || !strings.Contains(line, row[2]) {
+			t.Fatalf("lost booking details: %q", line)
+		}
+	}
+}
+
 func TestHomeAndEnd(t *testing.T) {
 	if got := run(newList(9), Key{Type: KeyEnd}, Key{Type: KeyEnter}); got.Index != 8 {
 		t.Errorf("End gave %d, want 8", got.Index)
@@ -184,16 +195,15 @@ func TestDrawUsesCarriageReturns(t *testing.T) {
 	}
 }
 
-func TestSelectedSurvivesInnerResets(t *testing.T) {
+func TestSelectedKeepsAllCellsOnItsContrastPair(t *testing.T) {
 	SetDepth(DepthTrue)
 	t.Cleanup(func() { SetDepth(DepthNone) })
 
-	// A colored cell ends with a reset; without re-arming, the selection
-	// wash would stop partway across the row.
 	bg := Current().Selected.Bg.Bg()
-	got := Selected("plain" + Green("green") + "tail")
-	if strings.Count(got, bg) < 2 {
-		t.Errorf("selection not re-armed after inner reset: %q", got)
+	fg := Current().Selected.Fg.Fg()
+	got := Selected("plain" + Green("green") + Subtle("duration") + "tail")
+	if got != bg+fg+"plaingreendurationtail"+reset {
+		t.Errorf("cell colors override the selection contrast: %q", got)
 	}
 }
 
@@ -281,12 +291,12 @@ func TestHeightFitsTheTerminal(t *testing.T) {
 	l.Height = 0
 	l.Subtitle = "s"
 	l.sizeFn = func() (int, int) { return 80, 20 }
-	// 20 rows minus 7 lines of chrome (with a subtitle) leaves 13.
-	if h := l.height(); h != 13 {
-		t.Errorf("height = %d, want 13", h)
+	// Leave a spare row for the final newline so a full frame doesn't scroll.
+	if h := l.height(); h != 12 {
+		t.Errorf("height = %d, want 12", h)
 	}
 	l.Height = 30
-	if h := l.height(); h != 13 {
+	if h := l.height(); h != 12 {
 		t.Errorf("explicit height should still be capped to fit, got %d", h)
 	}
 }

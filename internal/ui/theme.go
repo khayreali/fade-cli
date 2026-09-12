@@ -230,15 +230,14 @@ func Warning(s string) string { return tint(current.Warn, s) }
 func Bad(s string) string     { return tint(current.Bad, s) }
 func Border(s string) string  { return tint(current.Line, s) }
 
-// Selected paints a whole row as the focused one: theme background, theme
-// foreground, re-armed after every inner reset so a colored cell can't end
-// the wash halfway across.
+// Selected uses one tested foreground/background pair for the entire row.
+// Cell colors tuned for the terminal background can disappear on the selection.
 func Selected(s string) string {
 	if !enabled {
-		return "[" + s + "]"
+		return "[" + stripANSI(s) + "]"
 	}
 	on := current.Selected.Bg.Bg() + current.Selected.Fg.Fg()
-	return on + strings.ReplaceAll(s, reset, reset+on) + reset
+	return on + stripANSI(s) + reset
 }
 
 // LogoPill renders the wordmark the way glow badges its name in the status

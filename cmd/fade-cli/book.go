@@ -20,7 +20,8 @@ func (a *app) book(args []string) error {
 	fs.Usage = func() {
 		fmt.Fprint(os.Stderr, `fade-cli book <shop> [flags]
 
-Open a shop's booking system, or dial it if they only take calls.
+Choose a service, day and time, then review before continuing to booking.
+Use --print for just the link, or -y to open the shop's page directly.
 
 FLAGS
 `)
@@ -50,6 +51,12 @@ FLAGS
 	// channel, record the appointment.
 	if *at != "" {
 		return a.manualBook(shop, *at, *service, *yes, *print)
+	}
+	if !*yes && !*print && ui.IsInteractive() {
+		if raw, ok := ui.EnterRaw(); ok {
+			defer raw.Restore()
+			return a.bookingScreen(raw, shop, *service)
+		}
 	}
 	action := a.reg.For(shop).Handoff(shop)
 	if action.Type == provider.ActionNone {

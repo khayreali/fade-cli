@@ -28,10 +28,12 @@ FLAGS
 	}
 
 	var (
-		day    = fs.String("day", "today", "today, tomorrow, a weekday, or YYYY-MM-DD")
-		near   = fs.String("near", "", "sweep shops around this stop instead of naming one")
-		within = fs.Float64("within", 0.75, "with --near, max distance in miles")
-		under  = fs.Int("under", 0, "with --near, max price")
+		day     = fs.String("day", "today", "today, tomorrow, a weekday, or YYYY-MM-DD")
+		near    = fs.String("near", "", "sweep shops around this stop instead of naming one")
+		within  = fs.Float64("within", 0.75, "with --near, max distance in miles")
+		under   = fs.Int("under", 0, "with --near, max price")
+		service = fs.String("service", "", "service name or ID (name one shop)")
+		menu    = fs.Bool("services", false, "list a shop's live service menu")
 	)
 	if err := parse(fs, args); err != nil {
 		return nil
@@ -49,12 +51,47 @@ FLAGS
 	if len(shops) == 0 {
 		return errors.New("no shops to check")
 	}
+	if (*menu || *service != "") && len(fs.Args()) == 0 {
+		return errors.New("name one shop to choose or list its services")
+	}
 
 	// One context for the whole sweep: if the user ctrl-Cs or a provider
 	// stalls, every in-flight request gives up together.
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
+	if *menu || *service != "" {
+		shop := shops[0]
+		p, ok := a.reg.For(shop).(provider.ServiceProvider)
+		if !ok {
+			return errors.New("this shop's menu is available through its booking page or phone number")
+		}
+		services, err := p.Services(ctx, shop)
+		if err != nil {
+			return err
+		}
+		if *menu {
+			fmt.Printf("\n%s · live services\n\n", ui.Bold(shop.Name))
+			t := ui.NewTable("id", "service", "duration", "price").Indent("  ")
+			for _, s := range services {
+				t.Row(s.ID, s.Name, serviceDuration(s), servicePrice(s))
+			}
+			t.Render(os.Stdout)
+			ui.Hint("fade-cli slots %s --service <id> --day tomorrow", shop.ID)
+			return nil
+		}
+		chosen, err := provider.ResolveService(services, *service)
+		if err != nil {
+			return fmt.Errorf("%w; use fade-cli slots %s --services", err, shop.ID)
+		}
+		fmt.Printf("\n%s · %s · %s\n\n", ui.Bold(shop.Name), chosen.Name, when.Format("Mon, Jan 2"))
+		slots, err := p.AvailabilityFor(ctx, shop, when, chosen)
+		if err == nil {
+			slots = futureSlots(slots, time.Now())
+		}
+		printSlots([]provider.ShopSlots{{Shop: shop, Slots: slots, Err: err}}, when)
+		return err
+	}
 	fmt.Println()
 	// Both sides of RelDay in the shop's zone, so "today"/"tomorrow" agrees
 	// with the New-York day `when` was resolved to.
@@ -63,6 +100,11 @@ FLAGS
 		ui.Dim(label))
 
 	results := a.reg.AvailabilityAcross(ctx, shops, when)
+	for i := range results {
+		if results[i].Err == nil {
+			results[i].Slots = futureSlots(results[i].Slots, time.Now())
+		}
+	}
 	printSlots(results, when)
 	return nil
 }
@@ -130,7 +172,11 @@ func printSlots(results []provider.ShopSlots, when time.Time) {
 	}
 
 	if live == 0 && checked == 0 {
-		fmt.Println(ui.Dim("  No live availability for these shops yet."))
+		if len(failed) > 0 {
+			fmt.Println(ui.Warning("  Could not retrieve live times. You can retry or book directly."))
+		} else {
+			fmt.Println(ui.Dim("  Check these shops through their booking page or contact details."))
+		}
 		fmt.Println()
 	}
 
@@ -167,10 +213,17 @@ func printSlots(results []provider.ShopSlots, when time.Time) {
 
 func printShopSlots(r provider.ShopSlots) {
 	fmt.Printf("  %s  %s\n", ui.Bold(r.Shop.Name), ui.Dim(r.Shop.Address))
+	if len(r.Slots) > 0 {
+		s := r.Slots[0]
+		if s.Service == "" {
+			s.Service = "Appointment"
+		}
+		fmt.Printf("    %s\n", ui.Subtle(strings.Join([]string{s.Service, servicePrice(provider.Service{Price: s.Price, PriceLabel: s.PriceLabel}), serviceDuration(provider.Service{Duration: s.Duration, DurationLabel: s.DurationLabel})}, " · ")))
+	}
 
 	var times []string
 	for _, s := range r.Slots {
-		times = append(times, s.Start.Format("3:04pm"))
+		times = append(times, catalog.InShopTime(s.Start).Format("3:04pm"))
 	}
 	// Wrap the time list rather than one-per-line: a day of slots is a shape
 	// you scan, not a list you read.
@@ -178,6 +231,7 @@ func printShopSlots(r provider.ShopSlots) {
 		fmt.Println("    " + ui.Green(line))
 	}
 	fmt.Println()
+	ui.Hint("fade-cli book %s to choose a service and time", r.Shop.ID)
 }
 
 func wrap(items []string, per int) []string {

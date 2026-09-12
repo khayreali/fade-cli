@@ -4,6 +4,32 @@ import (
 	"strings"
 )
 
+// Wrap fits prose to terminal cells while keeping existing short lines (such
+// as panel borders) intact. ANSI styling does not count against the width.
+func Wrap(text string, width int) []string {
+	width = max(1, width)
+	var lines []string
+	for _, paragraph := range strings.Split(text, "\n") {
+		if visibleWidth(paragraph) <= width {
+			lines = append(lines, paragraph)
+			continue
+		}
+		line := ""
+		for _, word := range strings.Fields(paragraph) {
+			if line != "" && visibleWidth(line)+1+visibleWidth(word) > width {
+				lines = append(lines, line)
+				line = ""
+			}
+			if line != "" {
+				line += " "
+			}
+			line += truncate(word, width)
+		}
+		lines = append(lines, line)
+	}
+	return lines
+}
+
 // Box draws a titled panel the way btop does: the title sits in a notch cut
 // into the top border rather than on a line of its own, so a stack of panels
 // reads as one surface. lines are pre-colored; width is the outer width and
