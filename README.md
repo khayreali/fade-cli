@@ -64,9 +64,39 @@ Or just `make build` and run `./fade-cli` in place. One direct dependency,
 everything else is the standard library. The shop catalog is compiled into the
 binary, so it works offline and starts in single-digit milliseconds.
 
-To update an existing clone, run `git pull --ff-only` followed by `make install`
-from that directory. `fade-cli --version` shows your installed version.
-Updates require a rebuild; an already installed binary does not update itself.
+Prebuilt binaries for macOS and Linux (Apple Silicon/ARM64 and Intel/AMD64)
+are also available on the [releases page](https://github.com/khayreali/fade-cli/releases).
+They do not require Go or a source checkout.
+
+### Updates
+
+Starting with **0.3.0**, the home screen checks for new stable releases in the
+background and shows **Update available** when one is ready. Press **`u`**,
+then choose **Install & restart**. You can keep browsing and update later.
+
+```sh
+fade-cli --version       # which version you are running
+fade-cli update --check  # check now without installing
+fade-cli update          # download and install the latest stable release
+```
+
+The updater chooses your platform, verifies the download's SHA-256 checksum,
+and replaces the executable you launched. A failed download leaves the current
+binary intact. Your settings, saved shops, history and local catalog are kept.
+Startup checks are cached for one hour and do not delay browsing; explicit
+checks always contact GitHub. Set `FADE_NO_UPDATE_CHECK=1` to disable background
+checks. Offline startup works as usual.
+
+**Already on 0.2.0 or earlier?** That binary does not contain an updater. From
+your existing clone, run this once to get the update feature:
+
+```sh
+git pull --ff-only
+make install
+```
+
+Future updates use the home-screen option or `fade-cli update`. Pushing source
+commits does not notify users: a new version must be published as a release.
 
 ## Start here
 
@@ -143,6 +173,7 @@ the appointment. **Copy booking details** keeps your choices handy.
 | `⏎` or `→` | select |
 | `/` | find — type to narrow, enter keeps the filter, esc clears it |
 | `*` | save or unsave the shop under the cursor |
+| `u` | check for updates on the home screen |
 | `?` | every key for the current screen |
 | `esc`, `←`, or backspace | back (clears a filter first) |
 | `1`–`9` | jump the cursor to that row (enter still confirms) |
@@ -371,7 +402,14 @@ read stale data without saying so.
 ```sh
 make check           # fmt, vet, build, and the race-enabled tests
 go test ./...        # unit tests only
+make dist            # build four release binaries and SHA256SUMS
 ```
+
+To ship an update, bump `version` in `cmd/fade-cli/main.go`, commit the change,
+then push a matching version tag (for example `v0.3.1`). The release workflow
+runs `make check`, verifies that the binary version matches the tag, and builds
+the platform binaries. It uploads to a draft release and publishes only after
+all assets are present. No personal API keys are needed for updates.
 
 User state lives in `~/.config/fade/state.json`. Set `FADE_HOME` to relocate it.
 Local shop corrections go in `~/.config/fade/shops.local.json` and override the

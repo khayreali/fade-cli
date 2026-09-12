@@ -1,3 +1,4 @@
 # The built binary, at the repo root only. An unanchored "fade-cli" would also
 # match the cmd/fade-cli/ source directory and silently untrack the whole CLI.
 /fade-cli
+/dist/

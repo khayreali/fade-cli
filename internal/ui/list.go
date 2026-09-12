@@ -49,6 +49,10 @@ type List struct {
 	// a search is open so the matches read as one flat list. A heading row
 	// is {name, meta}.
 	Sections map[int]bool
+	// Refresh redraws once when a background check completes, without losing
+	// the cursor, active filter or help screen. OnRefresh runs on the UI thread.
+	Refresh   <-chan struct{}
+	OnRefresh func()
 
 	state  listState
 	query  string
@@ -66,6 +70,10 @@ type KeyReader interface{ ReadKey() Key }
 // when the user next touches a key.
 type eventReader interface {
 	NextEvent() (k Key, resized bool)
+}
+
+type refreshReader interface {
+	NextEventOr(<-chan struct{}) (k Key, resized, refreshed bool)
 }
 
 // EscKey is the hint key for "go back", registered by screens that have a
@@ -97,7 +105,20 @@ func (l *List) Run(t KeyReader, start int) Selection {
 		l.draw()
 
 		var k Key
-		if live {
+		if refresh, ok := t.(refreshReader); ok && l.Refresh != nil {
+			var resized, refreshed bool
+			k, resized, refreshed = refresh.NextEventOr(l.Refresh)
+			if refreshed {
+				l.Refresh = nil
+				if l.OnRefresh != nil {
+					l.OnRefresh()
+				}
+				continue
+			}
+			if resized {
+				continue
+			}
+		} else if live {
 			var resized bool
 			if k, resized = src.NextEvent(); resized {
 				continue

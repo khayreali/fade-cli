@@ -5,7 +5,7 @@ PKG := ./cmd/fade-cli
 # system-wide install: make install PREFIX=/usr/local
 PREFIX ?= $(HOME)/.local
 
-.PHONY: build test race fmt vet check install uninstall geocode clean
+.PHONY: build debug test race fmt vet check install uninstall geocode clean dist
 
 # -s -w strips symbol tables and DWARF (measured: 9.7 MB -> 6.7 MB), -trimpath
 # drops absolute build paths. Use `make debug` for a symbolized binary.
@@ -14,6 +14,9 @@ build:
 
 debug:
 	go build -o $(BIN) $(PKG)
+
+dist:
+	sh scripts/release.sh
 
 test:
 	go test ./...

@@ -22,7 +22,7 @@ func (t *Raw) Wait(ctx context.Context, title string, work func(context.Context)
 	defer showCursor()
 	draw := func() {
 		cols, _ := Size()
-		lines := Box("Please wait", []string{Subtle("Fetching the shop's latest information."), Accent("esc") + " cancel   " + Accent("ctrl-C") + " quit"}, min(cols-4, 62))
+		lines := Box("Please wait", []string{Subtle("Working... you can cancel at any time."), Accent("esc") + " cancel   " + Accent("ctrl-C") + " quit"}, min(cols-4, 62))
 		fmt.Print("\033[H\033[2J\r\n  " + Title(truncate(title, cols-4)) + "\r\n\r\n  " + strings.Join(lines, "\r\n  ") + "\r\n")
 	}
 	draw()

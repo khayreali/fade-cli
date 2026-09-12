@@ -140,6 +140,11 @@ func (t *Raw) ReadKey() Key {
 // NextEvent waits for a keypress or a terminal resize, whichever comes
 // first. resized is true when the window changed and no key was read.
 func (t *Raw) NextEvent() (k Key, resized bool) {
+	k, resized, _ = t.NextEventOr(nil)
+	return k, resized
+}
+
+func (t *Raw) NextEventOr(refresh <-chan struct{}) (k Key, resized, refreshed bool) {
 	t.startWatching()
 	if !t.pending {
 		t.pending = true
@@ -148,9 +153,11 @@ func (t *Raw) NextEvent() (k Key, resized bool) {
 	select {
 	case k = <-t.keys:
 		t.pending = false
-		return k, false
+		return k, false, false
 	case <-t.resized:
-		return Key{}, true
+		return Key{}, true, false
+	case <-refresh:
+		return Key{}, false, true
 	}
 }
 

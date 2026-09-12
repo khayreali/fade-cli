@@ -301,6 +301,31 @@ func TestHeightFitsTheTerminal(t *testing.T) {
 	}
 }
 
+type refreshKeys struct {
+	keys
+	event int
+}
+
+func (k *refreshKeys) NextEvent() (Key, bool) { return k.ReadKey(), false }
+func (k *refreshKeys) NextEventOr(<-chan struct{}) (Key, bool, bool) {
+	k.event++
+	if k.event == 3 {
+		return Key{}, false, true
+	}
+	return k.ReadKey(), false, false
+}
+
+func TestBackgroundRefreshPreservesActiveFilter(t *testing.T) {
+	l := &List{Rows: [][]string{{"alpha"}, {"beta"}}, Filterable: true, Out: io.Discard, Refresh: make(chan struct{})}
+	refreshed := false
+	l.OnRefresh = func() { refreshed = true; l.Hint = "update available" }
+	k := &refreshKeys{keys: keys{seq: []Key{{Type: KeyRune, Rune: '/'}, {Type: KeyRune, Rune: 'b'}, {Type: KeyEnter}}}}
+	got := l.Run(k, 0)
+	if !refreshed || !got.OK || got.Index != 1 || l.query != "b" {
+		t.Fatalf("filter lost on background update: %+v, %q", got, l.query)
+	}
+}
+
 func TestMatchPositions(t *testing.T) {
 	if p := matchPositions("power of barbers", "pwr"); len(p) != 3 || p[0] != 0 || p[1] != 2 || p[2] != 4 {
 		t.Errorf("subsequence positions = %v", p)

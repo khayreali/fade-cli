@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"fadecli/internal/provider"
 	"fadecli/internal/store"
 	"fadecli/internal/ui"
+	"fadecli/internal/update"
 )
 
 // errAborted unwinds an interactive flow without printing an error, for when
@@ -44,8 +46,27 @@ func (a *app) interactive() error {
 // rather than a list with a single row to press enter on; a second city is
 // what would earn a screen above this one.
 func (a *app) neighborhoods(raw *ui.Raw) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var latest, offered update.Release
+	var ready <-chan struct{}
+	if os.Getenv("FADE_NO_UPDATE_CHECK") != "1" {
+		if dir, err := store.Dir(); err == nil {
+			done := make(chan struct{})
+			ready = done
+			go func() { latest, _ = (update.Client{}).CachedLatest(ctx, dir); close(done) }()
+		}
+	}
 	sel := 0
 	for {
+		if ready != nil {
+			select {
+			case <-ready:
+				offered = latest
+				ready = nil
+			default:
+			}
+		}
 		var rows [][]string
 		var open []func() error
 		if n := len(a.state.Profile.Saved); n > 0 {
@@ -77,13 +98,23 @@ func (a *app) neighborhoods(raw *ui.Raw) error {
 			Filterable: true,
 			Hints: []ui.KeyHint{
 				{Key: "h", Label: "history"},
+				{Key: "u", Label: "updates"},
 				{Key: "q", Label: "quit"},
 			},
 		}
+		updateNotice(list, offered)
+		list.Refresh = ready
+		list.OnRefresh = func() { offered = latest; ready = nil; updateNotice(list, offered) }
 		got := list.Run(raw, sel)
 		switch {
 		case !got.OK, got.Cmd == "q":
 			return errAborted
+		case got.Cmd == "u":
+			sel = max(0, list.Cursor())
+			if err := updateInteractive(raw); err != nil {
+				return err
+			}
+			continue
 		case got.Cmd == "h":
 			if err := a.historyScreen(raw); err != nil {
 				return err

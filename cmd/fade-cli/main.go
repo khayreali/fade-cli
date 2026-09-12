@@ -15,7 +15,7 @@ import (
 	"fadecli/internal/ui"
 )
 
-const version = "0.2.0"
+var version = "0.3.0"
 
 // app carries the wiring every command needs, so each command body can stay
 // about its own job.
@@ -52,6 +52,12 @@ func main() {
 		return
 	case "-v", "--version", "version":
 		fmt.Println("fade cli " + version)
+		return
+	case "update":
+		if err := updateCmd(args); err != nil {
+			ui.Errf("%v", err)
+			os.Exit(1)
+		}
 		return
 	}
 
@@ -196,6 +202,7 @@ COMMANDS
   me        view or set your profile
   stops     list the stops in the service area
   themes    preview the color themes
+  update    install the latest release (--check only checks)
   dev       maintenance tasks (geocode, check)
 
 EXAMPLES
